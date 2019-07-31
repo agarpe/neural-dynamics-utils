@@ -5,7 +5,7 @@ import os
 
 
 #############################################################################
-##############	READ, WRITE PLOT 
+##############	PLOT 
 ##############################################################################
 
 ##Plots isi and zoom in by xlim and y lim 
@@ -26,6 +26,40 @@ def plot_return_map(ISI,title,xlim=(10,50),ylim=(10,50),outliers=1):
     plt.ylabel('ISI_i+1 [s]')
     plt.show()
 
+
+def plot_hists(charac,neuron):
+
+	plt.subplot(1,3,1)
+	plt.title("Burst duration " + neuron)
+	plt.hist(charac[DUR],rwidth=0.4)
+	plt.xlabel("Time (s)")
+
+
+	plt.subplot(1,3,2)
+	plt.title("Burst Interval " + neuron)
+	plt.hist(charac[IBI],rwidth=0.4)
+	plt.xlabel("Time (s)")
+
+	plt.subplot(1,3,3)
+	plt.title("Burst Period " + neuron)
+	plt.hist(charac[PER],rwidth=0.4)
+	plt.xlabel("Time (s)")
+	plt.show()
+
+
+def plot_corr(elem1,elem2,title1,title2):
+
+	plt.plot(elem1,elem2,'.')
+	plt.xlabel(title1)
+	plt.ylabel(title2)
+	plt.show()
+
+
+
+
+#############################################################################
+##############	READ, WRITE PLOT 
+##############################################################################
 
 
 def save_events(events,file_name):
@@ -222,6 +256,11 @@ def get_burst_period(data):
 	return np.array([a-b for a,b in zip(data[1:,0],data[:,0])])
 
 
+DUR = 0
+IBI = 1
+PER = 2
+
+
 def analyse(data):
 	dur = get_burst_duration(data)
 
@@ -232,4 +271,14 @@ def analyse(data):
 	return dur,ibi,period
 
 
+
+###?¿? = analyse
+
+def analyse_hists(data,neuron,plot=True):
+	charac = analyse(data)
+
+	if plot:
+		plot_hists(charac,neuron)
+
+	return charac
 
