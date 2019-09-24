@@ -1,32 +1,63 @@
 
 from charact_utils import *
 
+N1m = 'N1m'
+N2v = 'N2v'
+N3t = 'N3t'
+
 
 #####################
-### Loads file from file name
+### Loads file from record
+# date = '08-Jul-2019'
+# file = 'burst_ph1.txt'
 
-file_name = '../10-Jul-2019/b_burst.txt'
-neuron1 = 'b'
-# file_name = '../model/model_'+neuron1+'_burst.txt'
-
-data1 = np.loadtxt(file_name)
-data1 /= 1000
+# N1m_data = read_bursts_events('../'+date+'/'+file)
+# N1m_interv = analyse(N1m_data,N1m)
 
 
-char1 = analyse_hists(data1,neuron1)
+# date = '08-Jul-2019'
+# file = 'burst_ph2.txt'
+
+# N2v_data = read_bursts_events('../'+date+'/'+file)
+# # N2v_data = N2v_data
+# N2v_interv = analyse(N2v_data,N2v)
+
+
+# date = '08-Jul-2019'
+# file = 'burst_ph3.txt'
+
+# N3t_data = read_bursts_events('../'+date+'/'+file)[1:]
+# N3t_interv = analyse(N3t_data,N3t)
+
+#####################
+
+#####################
+### Loads file from model neuron
+
+N1m = 'N1m'
+N1m_data = read_model_burst(N1m)
+N1m_interv = analyse(N1m_data,N1m)
+
+
+N2v = 'N2v'
+N2v_data = read_model_burst(N2v)
+N2v_interv = analyse(N2v_data,N2v)
 
 
 
-file_name2 = '../10-Jul-2019/b1_burst.txt'
-neuron2 = 'b1'
-# file_name = '../model/model_'+neuron+'_burst.txt'
-
-data2 = np.loadtxt(file_name2)
-data1 /= 1000
+N3t = 'N3t'
+N3t_data = read_model_burst(N3t)
+N3t_interv = analyse(N3t_data,N3t)
 
 
-char2 = analyse_hists(data2,neuron2)
 
+# print(N1m_data.shape,N2v_data.shape,N3t_data.shape)
+# # print(N1m_interv.shape,N2v_interv.shape,N3t_interv.shape)
+
+# #TODO: if shapes != then reshape(min(shape))
+
+
+#####################
 
 ###################################################
 ######## 2 burst plot 
@@ -66,21 +97,39 @@ char2 = analyse_hists(data2,neuron2)
 
 # plt.show()
 
+####################################
+######## STATS #####################
+####################################
+
+
 
 
 ####################################
 ########  CORRELATIONS  ############
 ####################################
 
-plot_corr(char1[IBI],char1[PER],"IBI","Period")
-plot_corr(char1[PER],char1[PER],"Period","Duration")
+# plot_corr(char1[PER],char2[IBI],"Period","Duration of "+neuron2)
+# plot_corr(char2[PER],char2[PER],"Period","Duration")
 
-# plt.plot(ibi1,per1,'.')
-# plt.xlabel("Period")
-# plt.ylabel("IBI")
-# plt.show()
+period = N1m_interv[PER]
 
-# plt.plot(per1,dur1[:-1],'.')
-# plt.xlabel("Period")
-# plt.ylabel("Duration")
-# plt.show()
+
+ran = (0.8,0.9)
+plt.subplot(1,3,1)
+# plt.ylim(0.1,1.2)
+plt.ylim(ran)
+plt.xlim(ran)
+plot_corr(period,N1m_interv[DUR][:-1],"Period","Duration of "+N1m,False)
+plt.subplot(1,3,2)
+# plt.ylim(0.1,1.2)
+plt.ylim(ran)
+plt.xlim(ran)
+plot_corr(period,N2v_interv[DUR],"Period","Duration of "+N2v,False)
+plt.subplot(1,3,3)
+# plt.ylim(0.1,1.2)
+plt.ylim(ran)
+plt.xlim(ran)
+plot_corr(period,N3t_interv[DUR],"Period","Duration of "+N3t,False)
+plt.show()
+
+

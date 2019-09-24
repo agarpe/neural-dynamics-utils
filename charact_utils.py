@@ -47,12 +47,13 @@ def plot_hists(charac,neuron):
 	plt.show()
 
 
-def plot_corr(elem1,elem2,title1,title2):
+def plot_corr(elem1,elem2,title1,title2,show=True):
 
 	plt.plot(elem1,elem2,'.')
 	plt.xlabel(title1)
 	plt.ylabel(title2)
-	plt.show()
+	if show:
+		plt.show()
 
 
 
@@ -61,7 +62,7 @@ def plot_corr(elem1,elem2,title1,title2):
 ##############	READ, WRITE PLOT 
 ##############################################################################
 
-
+#Saves events in same file than original data. 
 def save_events(events,file_name):
 
 	f1 = open(file_name,'w')
@@ -71,7 +72,12 @@ def save_events(events,file_name):
 	os.system("sed -i 's/\./,/g' "+file_name)
 
 
-def read_spike_events(file_name):
+#Read spike events from file as on/off events and returns single value from each event as mean(on/off). 
+
+def read_spike_events(file_name,dataview=True):
+	if dataview:
+		#changes , by . as separator (for dataview)
+		os.system("sed -i 's/\,/./g' "+file_name)
 
 	data_n = np.loadtxt(file_name)
 
@@ -91,6 +97,37 @@ def read_spike_events(file_name):
 	print(mean_evt_n[:4],mean_evt_n[-1])
 
 	return mean_evt_n
+
+
+
+
+#Read spike events from file as on/off events and returns single value from each event as mean(on/off). 
+
+def read_bursts_events(file_name,dataview=True):
+	if dataview:
+		#changes , by . as separator (for dataview)
+		os.system("sed -i 's/\,/./g' "+file_name)
+
+	data_n = np.loadtxt(file_name)
+
+	print(data_n.shape)
+
+	#Change to secs
+
+	data_n /= 100000
+
+
+	return data_n
+
+
+#Read spike events from file as on/off events and returns single value from each event as mean(on/off). 
+
+def read_model_burst(neuron,dataview=True):
+
+	file_name = '../model/'+neuron+'_burst.txt'
+
+	return read_bursts_events(file_name,dataview)
+
 
 #############################################################################
 ##############	SPIKES 
@@ -115,8 +152,8 @@ def sdf(spikes,window_size=3,sigma=2):
 											 #same: same size as in1, centered with respect to the full
 
 #Generates an array [0,1] where 0 := no event; 1 := event
-def get_spikes(events):
-	dt =0.001
+def get_spikes(events,dt=0.001):
+	# dt =0.001
 	N=int((events[-1]+0.1)/dt)
 	print(N)
 	act = np.full(N,0)
@@ -256,17 +293,27 @@ def get_burst_period(data):
 	return np.array([a-b for a,b in zip(data[1:,0],data[:,0])])
 
 
+
+
 DUR = 0
 IBI = 1
 PER = 2
 
 
-def analyse(data):
+def analyse(data,neuron,plot=True):
 	dur = get_burst_duration(data)
 
 	ibi = get_burst_interval(data)
 
 	period = get_burst_period(data)
+
+	print(neuron,"\t\t Duration  \t\t   IBI \t\t   Period")
+	print("\tMean: ",np.mean(dur),np.mean(ibi),np.mean(period))
+	print("\tStd: ",np.std(dur),np.std(ibi),np.std(period))
+
+	if plot:
+		plot_hists([dur,ibi,period],neuron)
+
 
 	return dur,ibi,period
 
@@ -274,11 +321,8 @@ def analyse(data):
 
 ###?¿? = analyse
 
-def analyse_hists(data,neuron,plot=True):
-	charac = analyse(data)
+# def analyse_hists(data,neuron,plot=True):
+# 	charac = analyse(data)
 
-	if plot:
-		plot_hists(charac,neuron)
-
-	return charac
+# 	return charac
 
