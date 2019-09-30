@@ -103,7 +103,7 @@ def read_spike_events(file_name,dataview=True):
 
 #Read spike events from file as on/off events and returns single value from each event as mean(on/off). 
 
-def read_bursts_events(file_name,dataview=True):
+def read_bursts_events(file_name,dataview=True,scale= 1000):
 	if dataview:
 		#changes , by . as separator (for dataview)
 		os.system("sed -i 's/\,/./g' "+file_name)
@@ -114,7 +114,7 @@ def read_bursts_events(file_name,dataview=True):
 
 	#Change to secs
 
-	data_n /= 100000
+	data_n /= scale
 
 
 	return data_n
@@ -122,11 +122,11 @@ def read_bursts_events(file_name,dataview=True):
 
 #Read spike events from file as on/off events and returns single value from each event as mean(on/off). 
 
-def read_model_burst(neuron,dataview=True):
+def read_model_burst(neuron,dataview=True,scale= 1000):
 
 	file_name = '../model/'+neuron+'_burst.txt'
 
-	return read_bursts_events(file_name,dataview)
+	return read_bursts_events(file_name,dataview,scale)
 
 
 #############################################################################
