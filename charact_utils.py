@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
 import os
+from sklearn.linear_model import LinearRegression
+import sys
 
 
 #############################################################################
@@ -47,13 +49,36 @@ def plot_hists(charac,neuron):
 	plt.show()
 
 
-def plot_corr(elem1,elem2,title1,title2,show=True):
+def plot_corr(x,y,title1,title2,ran,show=True):
 
-	plt.plot(elem1,elem2,'.')
+	r_sq,Y_pred = do_regression(x,y,False)
+
+	max_ = ran[1]
+	plt.ylim(ran)
+	plt.xlim(ran)
+	
+	plt.plot(x, Y_pred, color='red')
+	plt.plot(x,y,'.')
+	plt.text(max_-0.25*max_,max_-0.25*max_,"R² = "+str(r_sq)[:8])
+	
 	plt.xlabel(title1)
 	plt.ylabel(title2)
 	if show:
 		plt.show()
+
+def do_regression(x,y,show=True):
+
+	model = LinearRegression()
+	x = x.reshape((-1, 1))
+
+	model.fit(x,y)
+
+	r_sq = model.score(x, y)
+	print('coefficient of determination:', r_sq)
+
+	Y_pred = model.predict(x)  # make predictions
+
+	return r_sq,Y_pred
 
 
 
@@ -63,13 +88,18 @@ def plot_corr(elem1,elem2,title1,title2,show=True):
 ##############################################################################
 
 #Saves events in same file than original data. 
-def save_events(events,file_name):
+def save_events(events,file_name,split=False,dataview=False):
+	if(split):
+		if(events.shape[0]%2!=0):
+			events = events[:-1]
+		events = np.array([[a,b] for a,b in zip(events[:-1],events[1:])])
 
 	f1 = open(file_name,'w')
 	np.savetxt(f1,events,delimiter='\t')
 	f1.close()
-	#changes . by , as separator (for dataview)
-	os.system("sed -i 's/\./,/g' "+file_name)
+	if(dataview):
+		#changes . by , as separator (for dataview)
+		os.system("sed -i 's/\./,/g' "+file_name)
 
 
 #Read spike events from file as on/off events and returns single value from each event as mean(on/off). 
@@ -316,6 +346,9 @@ def analyse(data,neuron,plot=True):
 
 
 	return dur,ibi,period
+
+
+
 
 
 
