@@ -7,7 +7,7 @@ import pandas as pd
 if len(sys.argv) >1:
 	file_name = sys.argv[1]
 else:
-	file_name = "test.asc"
+	file_name = "prueba.asc"
 
 print("Analysing file from ",file_name)
 
@@ -32,7 +32,7 @@ params['N3t'] = [-30,-31]
 # os.system("mkdir "+path[:-4])
 
 
-for neu_name in ['N1M','N2v','N3t']:
+for neu_name in ['SO','N1M','N2v','N3t']:
 	data = pd.read_csv(path, delimiter = " ", names=headers,skiprows=1)
 
 	neuron = data[neu_name]
@@ -57,42 +57,35 @@ for neu_name in ['N1M','N2v','N3t']:
 	diff = diff[np.where(diff > 0.01)]
 
 
-	m = (max(diff)-min(diff))/2
-	# print(m)
+	###TODO: mejorar, max(diff)/3 valor aleatorio
+	m = min(diff) + max(diff)/3
+	print(min(diff),(max(diff)-min(diff))/2,m)
 
 
 	maxs = diff[np.where(diff > m)]
 	mins = diff[np.where(diff < m)]
 
-	# print(maxs)
-	# print(mins)
+	print(maxs)
+	print(mins)
 
-	mx = min(maxs)
+	ibi = min(maxs)
 	mx2 = max(maxs)
-	mn = max(mins)
+	isi = max(mins)
 
-	# print(mn,mx)
+	print(isi,ibi)
 
 
-	prev_in = mn
+	prev_in = isi
 	prev = 0
 	events.append(spk[0])
 
 
 	for i,p in enumerate(spk):
 		if(i>1 and i<spk.shape[0]-1):
-			# if(spk[i]-spk[i-1] <= mn and spk[i+1]-spk[i] >= mx):
-			# 	events.append(p)
-			# elif(spk[i]-spk[i-1] >= mx and spk[i+1]-spk[i] <= mn):
-			# 	events.append(p)
-			if(spk[i]-spk[i-1] <= mn and spk[i+1]-spk[i] >= mn):
+			if(abs(spk[i]-spk[i-1]) <= isi and abs(spk[i+1]-spk[i]) > isi): #Off event
 				events.append(p)
-			elif(spk[i]-spk[i-1] >= mn and spk[i+1]-spk[i] <= mn):
+			elif(abs(spk[i]-spk[i-1]) > isi and abs(spk[i+1]-spk[i]) <= isi): #On event 
 				events.append(p)
-			# if(spk[i+1]-spk[i] >= mx):
-			# 	events.append(p)
-			# if(spk[i+1]-spk[i] <= mn):
-			# 	events.append(p)
 
 	events =np.array(events)
 
@@ -100,8 +93,8 @@ for neu_name in ['N1M','N2v','N3t']:
 	plt.figure(figsize=(15,10))
 	plt.plot(events,np.zeros(events.shape),'.')
 	plt.plot(time,neuron)
-	# plt.savefig(path[:-4]+"/"+neu_name+".png")
+	plt.savefig(path[:-4]+"/"+neu_name+".png")
 	plt.show()
 
-	# save_events(events,path[:-4]+"/"+neu_name+"_burst.txt",split=True)
+	save_events(events,path[:-4]+"/"+neu_name+"_burst.txt",split=True)
 
