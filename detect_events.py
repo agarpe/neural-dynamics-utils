@@ -29,9 +29,10 @@ params['N2v'] = [-45,-45]
 params['N3t'] = [-30,-31]
 
 
-# os.system("mkdir "+path[:-4])
+os.system("mkdir -p "+path[:-4])
 
 
+# for neu_name in ['N1M','N2v','N3t']:
 for neu_name in ['SO','N1M','N2v','N3t']:
 	data = pd.read_csv(path, delimiter = " ", names=headers,skiprows=1)
 
@@ -58,21 +59,23 @@ for neu_name in ['SO','N1M','N2v','N3t']:
 
 
 	###TODO: mejorar, max(diff)/3 valor aleatorio
-	m = min(diff) + max(diff)/3
-	print(min(diff),(max(diff)-min(diff))/2,m)
+	med = np.median(diff)
+	m = min(diff) +  3
+	# print(m,med)
+#	print(min(diff),(max(diff)-min(diff))/2,m)
 
 
 	maxs = diff[np.where(diff > m)]
 	mins = diff[np.where(diff < m)]
 
-	print(maxs)
-	print(mins)
+	# print(maxs)
+	# print(mins)
 
 	ibi = min(maxs)
 	mx2 = max(maxs)
 	isi = max(mins)
 
-	print(isi,ibi)
+	# print(isi,ibi)
 
 
 	prev_in = isi
@@ -89,12 +92,13 @@ for neu_name in ['SO','N1M','N2v','N3t']:
 
 	events =np.array(events)
 
+	print(events.shape)
 
 	plt.figure(figsize=(15,10))
 	plt.plot(events,np.zeros(events.shape),'.')
 	plt.plot(time,neuron)
 	plt.savefig(path[:-4]+"/"+neu_name+".png")
-	plt.show()
+	# plt.show()
 
 	save_events(events,path[:-4]+"/"+neu_name+"_burst.txt",split=True)
 

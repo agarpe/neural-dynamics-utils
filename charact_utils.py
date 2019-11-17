@@ -90,10 +90,15 @@ def do_regression(x,y,show=True):
 #Saves events in same file than original data. 
 def save_events(events,file_name,split=False,dataview=False):
 	if(split):
+		result = []
 		if(events.shape[0]%2!=0):
 			events = events[:-1]
-		events = np.array([[a,b] for a,b in zip(events[:-1],events[1:])])
+		# for i in range(0,events.shape[0]-2,2):
+		# 	result.append([events[i,i+1]])
+		events = np.array([[events[i],events[i+1]] for i in range(0,events.shape[0]-2,2)])
 
+	print(events.shape)
+		# events = np.array(result)
 	f1 = open(file_name,'w')
 	np.savetxt(f1,events,delimiter='\t')
 	f1.close()
@@ -104,7 +109,7 @@ def save_events(events,file_name,split=False,dataview=False):
 
 #Read spike events from file as on/off events and returns single value from each event as mean(on/off). 
 
-def read_spike_events(file_name,dataview=True):
+def read_spike_events(file_name,dataview=True,dt=0.1):
 	if dataview:
 		#changes , by . as separator (for dataview)
 		os.system("sed -i 's/\,/./g' "+file_name)
@@ -115,7 +120,7 @@ def read_spike_events(file_name,dataview=True):
 
 	#Change to secs
 
-	data_n /= 1000
+	data_n *= dt
 
 	#get half
 
@@ -123,8 +128,8 @@ def read_spike_events(file_name,dataview=True):
 
 	#Gets spikes as mean from up off events. 
 	mean_evt_n = to_mean(data_n)
-	print(mean_evt_n.shape)
-	print(mean_evt_n[:4],mean_evt_n[-1])
+	# print(mean_evt_n.shape)
+	# print(mean_evt_n[:4],mean_evt_n[-1])
 
 	return mean_evt_n
 
@@ -155,7 +160,17 @@ def read_bursts_events(file_name,dataview=True,scale= 1000):
 def read_model_burst(neuron,dataview=True,scale= 1000):
 
 	file_name = '../model/'+neuron+'_burst.txt'
+	print(file_name)
 
+	return read_bursts_events(file_name,dataview,scale)
+
+
+#Read spike events from file as on/off events and returns single value from each event as mean(on/off). 
+
+def read_model_burst_path(path,dataview=True,scale= 1000):
+
+	file_name = path+'_burst.txt'
+	print(file_name)
 	return read_bursts_events(file_name,dataview,scale)
 
 
