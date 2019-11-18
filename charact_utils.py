@@ -322,6 +322,10 @@ def get_phases(data,init,end,th1=6,th2=7.5):
 #############################################################################
 ##############	BURSTS 
 ##############################################################################
+
+#########  SINGLE INTERVALS
+
+
 ## on = 0; off = 1
 
 ##off1 - on1 
@@ -338,11 +342,24 @@ def get_burst_period(data):
 	return np.array([a-b for a,b in zip(data[1:,0],data[:,0])])
 
 
+#########  PAIRED INTERVALS
+
+def get_intervals(d1,d2):
+	d1d2_interval = np.array([b-a for a,b in zip(d1[:,0],d2[:,0])])
+	d1d2_delay = np.array([b-a for a,b in zip(d1[:,1],d2[:,0])])
+	d2d1_interval = np.array([a-b for a,b in zip(d1[1:,0],d2[:-1,0])])
+	d2d1_delay = np.array([a-b for a,b in zip(d1[1:,1],d2[:-1,0])])
+
+	return [d1d2_interval,d1d2_delay],[d2d1_interval,d2d1_delay]
 
 
 DUR = 0
 IBI = 1
 PER = 2
+
+INTERVAL = 0
+DELAY = 1
+
 
 
 def analyse(data,neuron,plot=True):
@@ -361,6 +378,49 @@ def analyse(data,neuron,plot=True):
 
 
 	return dur,ibi,period
+
+#Equipares events length, fst is the reference
+#3 must be same size
+
+#input 3 events 
+def fix_length(fst,snd,thr):
+	fst,snd,thr = fix_init(fst,snd,thr)
+	fst,snd,thr = fix_end(fst,snd,thr)
+	return fst,snd,thr
+
+def fix_init(fst,snd,thr):
+	# print(fst.shape,snd.shape,thr.shape)
+	if (len(fst) != len(snd) or len(fst) != len(thr) or len(thr) != len(snd)):
+		while(thr[0][0]<fst[0][0]):
+			thr = thr[1:]
+
+		# print("1",fst.shape,snd.shape,thr.shape)
+		while(snd[0][0]<fst[0][0]):
+			snd = snd[1:]
+
+		# print("2",fst.shape,snd.shape,thr.shape)
+
+	return fst,snd,thr
+
+def fix_end(fst,snd,thr):
+	# print("3",fst.shape,snd.shape,thr.shape)
+	while(len(thr)>len(snd) or len(thr)>len(fst)):
+		thr = thr[:-1]
+	if (len(fst) != len(snd) or len(fst) != len(thr) or len(thr) != len(snd)):
+		while(snd[-1][0] > thr[-1][0]):
+			snd = snd[:-1]
+
+		# print("4",fst.shape,snd.shape,thr.shape)
+		while(fst[-1][0] > thr[-1][0]):
+			fst = fst[:-1]
+
+		# print("5",fst.shape,snd.shape,thr.shape)
+
+
+
+	return fst,snd,thr
+
+
 
 
 
