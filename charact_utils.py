@@ -1,5 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+plt.rcParams.update({'font.size': 17})
+from matplotlib import colors as mcolors
+
 from scipy import signal
 import os
 from sklearn.linear_model import LinearRegression
@@ -49,17 +52,18 @@ def plot_hists(charac,neuron):
 	plt.show()
 
 
-def plot_corr(x,y,title1,title2,ran,show=True):
+def plot_corr(x,y,title1,title2,ran,show=True,color='b'):
 
 	r_sq,Y_pred = do_regression(x,y,False)
 
 	max_ = ran[1]
 	plt.ylim(ran)
 	plt.xlim(ran)
-	
-	plt.plot(x, Y_pred, color='red')
-	plt.plot(x,y,'.')
-	plt.text(max_-0.25*max_,max_-0.25*max_,"R² = "+str(r_sq)[:8])
+	plt.title(title2[:-4])
+
+	plt.plot(x, Y_pred, color='maroon')
+	plt.plot(x,y,'.',color=color)
+	plt.text(max_-0.5*max_,max_-0.25*max_,"R² = "+str(r_sq)[:8])
 	
 	plt.xlabel(title1)
 	plt.ylabel(title2)
@@ -79,6 +83,67 @@ def do_regression(x,y,show=True):
 	Y_pred = model.predict(x)  # make predictions
 
 	return r_sq,Y_pred
+
+def get_global_color_list():
+	colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
+
+	by_hsv = sorted((tuple(mcolors.rgb_to_hsv(mcolors.to_rgba(color)[:3])), name)
+	                for name, color in colors.items())
+	
+
+	sorted_names = [name for hsv, name in by_hsv]
+			#dict and keys
+	return colors,sorted_names
+
+
+def plot_intervals_stats(stats):
+	keys = sorted(stats.keys())
+	intervals = []
+	labels = []
+
+	colors_map={"Period":'coral',"BD":'indianred',"Interval":'seagreen',"Delay":'brown'}
+
+
+	colors =[]
+	for key in keys:
+		elem = stats[key]
+		for e in reversed(sorted(elem.keys())):
+			if(key[1:] != "N1M" and e == "Period"):
+				pass
+			elif(e != "IBI"):
+				labels.append(key[1:]+"-"+e)
+				intervals.append(stats[key][e])
+				colors.append(colors_map[e])
+
+
+	plt.figure(figsize=(30,20))
+	bp = plt.boxplot(intervals, showfliers=False,labels=labels,patch_artist=True)
+	# for patch,color in zip(bp['boxes'],sorted_names[10:]):
+	used =[]
+	legends=[]
+	for patch,color in zip(bp['boxes'],colors):
+		patch.set_facecolor(color)
+		if(color not in used):
+			used.append(color)
+			legends.append([patch,list(colors_map.keys())[list(colors_map.values()).index(color)]])
+
+	legends = np.array(legends)
+
+	plt.tick_params(axis='both', labelsize=35)
+	plt.xticks(rotation=45, ha='right')
+
+	plt.legend(legends[:,0],legends[:,1],fontsize='xx-large')
+
+	# for i,item in enumerate(reversed(sorted(colors_map.keys()))):
+	# 	plt.text(15, 35-1*i, item,
+ #        	 backgroundcolor=colors_map[item],
+ #         	color='black', weight='roman', size='x-small')
+	plt.tight_layout()
+
+
+
+
+
 
 
 
@@ -348,7 +413,7 @@ def get_intervals(d1,d2):
 	d1d2_interval = np.array([b-a for a,b in zip(d1[:,0],d2[:,0])])
 	d1d2_delay = np.array([b-a for a,b in zip(d1[:,1],d2[:,0])])
 	d2d1_interval = np.array([a-b for a,b in zip(d1[1:,0],d2[:-1,0])])
-	d2d1_delay = np.array([a-b for a,b in zip(d1[1:,1],d2[:-1,0])])
+	d2d1_delay = np.array([a-b for a,b in zip(d1[1:,0],d2[:-1,1])])
 
 	return [d1d2_interval,d1d2_delay],[d2d1_interval,d2d1_delay]
 
@@ -360,24 +425,69 @@ PER = 2
 INTERVAL = 0
 DELAY = 1
 
+def analyse_pair(d1,d2,n1,n2,stats,index,plot=False):
+	d1d2,d2d1 = get_intervals(d1,d2)
+
+	print(n1,n2,"\t\t INTERVAL  \t\t   DELAY")
+	print("\tMean: ",np.mean(d1d2[INTERVAL]),np.mean(d1d2[DELAY]))
+	print("\tStd: ",np.std(d1d2[INTERVAL]),np.std(d1d2[DELAY]))
+
+	print(n2,n1,"\t\t INTERVAL  \t\t   DELAY")
+	print("\tMean: ",np.mean(d2d1[INTERVAL]),np.mean(d2d1[DELAY]))
+	print("\tStd: ",np.std(d2d1[INTERVAL]),np.std(d2d1[DELAY]))
 
 
-def analyse(data,neuron,plot=True):
+	# stats[str(index)+n1+n2] = [[np.mean(d1d2[INTERVAL]),np.std(d1d2[INTERVAL])],[np.mean(d1d2[DELAY]),np.std(d1d2[DELAY])]]
+	# index +=1
+	# stats[str(index)+n2+n1] = [[np.mean(d2d1[INTERVAL]),np.std(d2d1[INTERVAL])],[np.mean(d2d1[DELAY]),np.std(d2d1[DELAY])]]
+	# index +=1
+
+	stats[str(index[0])+n1+n2] = to_dict(d1d2,PAIR)
+	index[0] +=1
+	stats[str(index[0])+n2+n1] = to_dict(d2d1,PAIR)
+	index[0] +=1
+
+	return d1d2,d2d1
+
+
+PAIR = 2
+SINGLE = 1
+
+def to_dict(data,type_):
+	if(type_==PAIR):
+		return {'Interval':data[:][INTERVAL],'Delay':data[:][DELAY]}
+	elif(type_ == SINGLE):
+		return {'Period':data[:][PER],'BD':data[:][DUR],'IBI':data[:][IBI]}
+	else :
+		return {}
+
+def get_single_intervals(data):
+
 	dur = get_burst_duration(data)
 
 	ibi = get_burst_interval(data)
 
 	period = get_burst_period(data)
 
-	print(neuron,"\t\t Duration  \t\t   IBI \t\t   Period")
-	print("\tMean: ",np.mean(dur),np.mean(ibi),np.mean(period))
-	print("\tStd: ",np.std(dur),np.std(ibi),np.std(period))
-
-	if plot:
-		plot_hists([dur,ibi,period],neuron)
-
-
 	return dur,ibi,period
+
+def analyse(data,neuron,stats,index,plot=False):
+
+	n_intervals = get_single_intervals(data)
+
+
+	print(neuron,"\t\t Duration  \t\t   IBI \t\t   Period")
+	print("\tMean: ",np.mean(n_intervals[DUR]),np.mean(n_intervals[IBI]),np.mean(n_intervals[PER]))
+	print("\tStd: ",np.std(n_intervals[DUR]),np.std(n_intervals[IBI]),np.std(n_intervals[PER]))
+
+	# if plot:
+	# 	plot_hists([dur,ibi,period],neuron)
+
+	# stats[neuron] = [[np.mean(dur),np.std(dur)],[np.mean(ibi),np.std(ibi)],[np.mean(period),np.std(period)]]
+	stats[str(index[0])+neuron] = to_dict(n_intervals,SINGLE)
+	index[0] += 1
+
+	return n_intervals
 
 #Equipares events length, fst is the reference
 #3 must be same size
