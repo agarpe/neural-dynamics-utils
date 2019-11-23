@@ -181,7 +181,7 @@ def read_spike_events(file_name,dataview=True,dt=0.1):
 
 	data_n = np.loadtxt(file_name)
 
-	print(data_n.shape)
+	# print(data_n.shape)
 
 	#Change to secs
 
@@ -189,10 +189,14 @@ def read_spike_events(file_name,dataview=True,dt=0.1):
 
 	#get half
 
-	data_n = data_n[:(data_n.shape[0]//1)]
+	# data_n = data_n[:(data_n.shape[0]//1)]
 
+	if(dataview):
 	#Gets spikes as mean from up off events. 
-	mean_evt_n = to_mean(data_n)
+		mean_evt_n = to_mean(data_n)
+	else:
+		mean_evt_n = data_n
+	
 	# print(mean_evt_n.shape)
 	# print(mean_evt_n[:4],mean_evt_n[-1])
 

@@ -26,22 +26,33 @@ import charact_utils as utils
 folder = "/home/alicia/Documentos/data/3-impulse/14-11-2019/"
 exp_ = "exp3/"
 
-if(len(sys.argv)>1):
+
+if(len(sys.argv)>2):
+    folder = sys.argv[1]
+    exp_ = sys.argv[2]
+
+elif(len(sys.argv)>1):
     exp_ = sys.argv[1]
+    folder = ''
 
 path = folder+exp_
 FIGSIZE = (24,6)
 acc_color = 'forestgreen'
 dec_color = 'firebrick'
 
-print(path)
+# print(path)
 # ## Carga archivos en secs
 
 # In[3]:
 
+#From DataView
+# pulses = utils.read_spike_events(path + "events.txt",dt=0.001)
+# spikes = utils.read_spike_events(path + "spikes.txt",dt=0.001)
 
-pulses = utils.read_spike_events(path + "events.txt",dt=0.001)
-spikes = utils.read_spike_events(path + "spikes.txt",dt=0.001)
+
+#From Script
+pulses = utils.read_spike_events(path + "events.txt",dataview=False,dt=0.1)
+spikes = utils.read_spike_events(path + "spikes.txt",dataview=False,dt=0.1)
 
 
 # In[4]:
@@ -228,10 +239,13 @@ plt.savefig(path+"unique_spikes.png")
 # plt.plot(isi1,isi2,'.')
 plt.close(fig)
 
-print("Ocurrencia eventos:")
-print("\t Solo Spike 1  ",len(indexes_1_uniq))
-print("\t Solo Spike 2  ",len(indexes_2_uniq))
-print("\t Solo Spike 3  ",len(indexes_3_uniq))
+# print("Ocurrencia eventos:")
+# print("\t Solo Spike 1  ",len(indexes_1_uniq))
+# print("\t Solo Spike 2  ",len(indexes_2_uniq))
+# print("\t Solo Spike 3  ",len(indexes_3_uniq))
+# print("\t After Spike 1  ",len(indexes_1_uniq))
+# print("\t After Spike 2  ",len(indexes_2_uniq))
+# print("\t After Spike 3  ",len(indexes_3_uniq))
 
 
 # ## Activation to 2 & 3
@@ -289,12 +303,14 @@ def get_acc_dec(elems,i1,i2):
     return acc,dec
 
 
-def plot_stats(elems,title,labels,colors):
+def plot_stats(elems,title,labels,colors,print_=False):
     plt.title(title)
     x = range(len(elems))
     y = [len(elem) for elem in elems]
     plt.bar(x,y,width=0.1,label=labels,color=colors)
     plt.xticks(x, (labels))
+    if print_:
+        print(title.replace(" ","_"),len(elems[0]),len(elems[1]))
 
 
 fig=plt.figure()
@@ -303,16 +319,21 @@ plot_stats([indexes_1,indexes_2,indexes_3],"Spikes after each pulse",['1st','2nd
 plt.savefig(path+"stat_spikes.png")
 plt.close(fig)
 
-
+ad1 = get_acc_dec(indexes_1,isi1,isi2)
 ad2 = get_acc_dec(indexes_2,isi1,isi2)
 ad3 = get_acc_dec(indexes_3,isi1,isi2)
 
 fig=plt.figure()
-plot_stats(ad2,"Spikes after 2nd",["Acc.","Dec."],[acc_color,dec_color])
+plot_stats(ad1,"Spikes after 1nd",["Acc.","Dec."],[acc_color,dec_color],print_=True)
+plt.savefig(path+"stat_1.png")
+plt.close(fig)
+
+fig=plt.figure()
+plot_stats(ad2,"Spikes after 2nd",["Acc.","Dec."],[acc_color,dec_color],print_=True)
 plt.savefig(path+"stat_2.png")
 plt.close(fig)
 
 fig=plt.figure()
-plot_stats(ad3,"Spikes after 3nd",["Acc.","Dec."],[acc_color,dec_color])
+plot_stats(ad3,"Spikes after 3nd",["Acc.","Dec."],[acc_color,dec_color],print_=True)
 plt.savefig(path+"stat_3.png")
 plt.close(fig)

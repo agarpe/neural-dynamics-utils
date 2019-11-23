@@ -18,11 +18,11 @@ import charact_utils as utils
 if len(sys.argv) > 2:
 	path = sys.argv[1]
 	file = sys.argv[2]
-	filename = path + file
 else:
 	path = ''
-	filename  = 'test-spikes.asc'
+	file  = 'test-spikes.asc'
 
+filename = path + file
 
 # folder = "/home/alicia/Documentos/data/3-impulse/22-11-2019/"
 # exp_ = "exp1/"
@@ -36,32 +36,44 @@ else:
 
 f = open(filename)
 headers = f.readline().split()
-print(headers)
+# print(headers)
 f.close()
 
 data = pd.read_csv(filename, delimiter = " ", names=headers,skiprows=1)
 
 
-act =  np.array(data['v'])
-pulses =  np.array(data['pre'])
-time = np.array(data['t'])
-print(time)
+act =  np.array(data['v'])[2000:-2000]
+pulses =  np.array(data['pre'])[2000:-2000]
+time = np.array(data['t'])[2000:-2000]
+# print(time)
 
-th=-50
+th=-40
 
 events_spikes = time[np.where(act > th)]
 
-events_spikes = events_spikes[np.where((events_spikes[1:]-events_spikes[:-1]) > 0.5)]
+# print(events_spikes.shape)
+events_spikes = events_spikes[np.where((events_spikes[1:]-events_spikes[:-1]) > 0.2)]
+# print(events_spikes.shape)
+# print(events_spikes[:10])
 
 
-
-
-plt.plot(events_spikes,np.zeros(events_spikes.shape),'.')
+plt.plot(events_spikes[2:],np.zeros(events_spikes[2:].shape),'.')
 plt.plot(time,act)
-plt.show()
-
-events_pulses = time[np.where(pulses > 0.22)]
+# plt.show()
+plt.close()
+events_pulses = time[np.where(pulses > 0.3)]
 
 plt.plot(events_pulses,np.zeros(events_pulses.shape),'.')
 plt.plot(time,pulses)
-plt.show()
+# plt.show()
+plt.close()
+
+dirname = file[:-4]
+
+
+output = os.system("mkdir -p "+ filename[:-4])
+
+np.savetxt(filename[:-4]+"/spikes.txt",events_spikes[2:])
+np.savetxt(filename[:-4]+"/events.txt",events_pulses[1:])
+# np.savetxt(filename[:-4]+"/prueba.txt",(events_spikes,events_pulses))
+
