@@ -1,6 +1,6 @@
 import h5py
 import sys
-filename = '../24-10-2019/exp1.h5'
+filename = "../../3-impulse/22-11-2019/exp1.h5"
 
 ###############################################################
 ## Este programa realiza una exploración de un hd5,
