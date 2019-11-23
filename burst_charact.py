@@ -12,28 +12,28 @@ N3t = 'N3t'
 
 #####################
 ## Loads file from record
-# date = '08-Jul-2019'
-# file = 'burst_ph1.txt'
-# file_name = '08-Jul-2019'
+date = '08-Jul-2019'
+file = 'burst_ph1.txt'
+file_name = '08-Jul-2019'
 
-# N1m_data = read_bursts_events('../'+date+'/'+file)
+N1m_data = read_bursts_events('../'+date+'/'+file)
 
-# date = '08-Jul-2019'
-# file = 'burst_ph2.txt'
+date = '08-Jul-2019'
+file = 'burst_ph2.txt'
 
-# N2v_data = read_bursts_events('../'+date+'/'+file)
+N2v_data = read_bursts_events('../'+date+'/'+file)
 
-# date = '08-Jul-2019'
-# file = 'burst_ph3.txt'
+date = '08-Jul-2019'
+file = 'burst_ph3.txt'
 
-# N3t_data = read_bursts_events('../'+date+'/'+file)
+N3t_data = read_bursts_events('../'+date+'/'+file)
 
 
-# print(len(N1m_data),len(N2v_data),len(N3t_data))
-# #Adjust burst to periods
-# #Input: Ref, Snd, Thrd.
+print(len(N1m_data),len(N2v_data),len(N3t_data))
+#Adjust burst to periods
+#Input: Ref, Snd, Thrd.
 
-# N1m_data,N2v_data,N3t_data = fix_length(N1m_data,N2v_data,N3t_data)
+N1m_data,N2v_data,N3t_data = fix_length(N1m_data,N2v_data,N3t_data)
 
 # print(len(N1m_data),len(N2v_data),len(N3t_data))
 
@@ -58,31 +58,31 @@ N3t = 'N3t'
 ###  test3: n3t [1:] on load
 ###			n1m, n2v, n3t [:-1] on plot
 
-path = ""
+# path = ""
 
 
-# path = "../model/slow-fast/" + file_name + "/"
-# path = "../lymnaea-model/test_intervals_long/"
-# path = file_name +"/"
-path = "../model/N1m/test1/"
+# # path = "../model/slow-fast/" + file_name + "/"
+# # path = "../lymnaea-model/test_intervals_long/"
+# # path = file_name +"/"
+# path = "../model/N1m/test1/"
 
 
-if len(sys.argv) >2:
-	path = sys.argv[1]
-	file_name = sys.argv[2]
-else:
-	file_name = "test1"
+# if len(sys.argv) >2:
+# 	path = sys.argv[1]
+# 	file_name = sys.argv[2]
+# else:
+# 	file_name = "test1"
 
 
-N1m_data = read_model_burst_path(path+N1m,scale=100)
-N2v_data = read_model_burst_path(path+N2v,scale=100)
-N3t_data = read_model_burst_path(path+N3t,scale=100)
+# N1m_data = read_model_burst_path(path+N1m,scale=100)
+# N2v_data = read_model_burst_path(path+N2v,scale=100)
+# N3t_data = read_model_burst_path(path+N3t,scale=100)
 
-print(len(N1m_data),len(N2v_data),len(N3t_data))
-# #Adjust burst to periods
-# #Input: Ref, Snd, Thrd.
+# print(len(N1m_data),len(N2v_data),len(N3t_data))
+# # #Adjust burst to periods
+# # #Input: Ref, Snd, Thrd.
 
-N1m_data,N2v_data,N3t_data = fix_length(N1m_data,N2v_data,N3t_data)
+# N1m_data,N2v_data,N3t_data = fix_length(N1m_data,N2v_data,N3t_data)
 
 
 
@@ -195,11 +195,11 @@ plt.subplot(2,3,3)
 plot_corr(period,N2N3[INTERVAL][:-1],"Period (s)","N2-N3 interval (s)",ran,False,color='green')
 
 plt.subplot(2,3,6)
-plot_corr(period,N3N1[INTERVAL],"Period (s)","N3-N2 interval (s)",ran,False,color='green')
+plot_corr(period,N3N2[INTERVAL],"Period (s)","N3-N2 interval (s)",ran,False,color='green')
 
 
 plt.tight_layout()
-# plt.savefig("./results_invariant_tests/images/"+file_name+"_intervals.png")
+plt.savefig("./results_invariant_tests/images/"+file_name+"_intervals.png")
 # plt.show()
 
 
@@ -228,7 +228,7 @@ plot_corr(period,N3N2[DELAY],"Period (s)","N3-N2 delay (s)",ran,False,color='bro
 
 
 plt.tight_layout()
-# plt.savefig("./results_invariant_tests/images/"+file_name+"_delays.png")
+plt.savefig("./results_invariant_tests/images/"+file_name+"_delays.png")
 # plt.show()
 
 

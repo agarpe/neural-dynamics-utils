@@ -14,5 +14,6 @@ os.system("mkdir -p "+dest)
 
 for f in os.listdir(path1):
 	if f.endswith(".png"):
-		cmd = "cp "+path1+f+" "+dest+f[:-3]+"asc"
+		cmd = "cp "+path2+f[:-3]+"asc "+dest+f[:-3]+"asc"
+		print(cmd)
 		os.system(cmd)

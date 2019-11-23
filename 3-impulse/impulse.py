@@ -90,33 +90,35 @@ def check_spike(a,b,spikes):
 def plot_isi_cond(isi1,isi2,indexes,title,color='blue',label='',acc_decc=True):
     lim = max(max(isi1),max(isi2))+0.5
     #accelerating
-    
-    isi1 = isi1[indexes]
-    isi2 = isi2[indexes]
+    try: 
+        isi1 = isi1[indexes]
+        isi2 = isi2[indexes]
 
-    if(acc_decc):
-        x_1 = isi1[np.where(isi1>=isi2)]
-        y_1 = isi2[np.where(isi1>=isi2)]
-        
-        x_2 = isi1[np.where(isi1<isi2)]
-        y_2 = isi2[np.where(isi1<isi2)]
-        
-        scatter =  plt.scatter(x_1,y_1,c=acc_color,label="Accelerating")
-        scatter =  plt.scatter(x_2,y_2,c=dec_color,label="Deccelerating")
-        plt.legend()
-    else:
-#         col = np.full(isi1.shape,color)
-        scatter =  plt.scatter(isi1,isi2,c=color,label=label)
-        
+        if(acc_decc):
+            x_1 = isi1[np.where(isi1>=isi2)]
+            y_1 = isi2[np.where(isi1>=isi2)]
+            
+            x_2 = isi1[np.where(isi1<isi2)]
+            y_2 = isi2[np.where(isi1<isi2)]
+            
+            scatter =  plt.scatter(x_1,y_1,c=acc_color,label="Accelerating")
+            scatter =  plt.scatter(x_2,y_2,c=dec_color,label="Deccelerating")
+            plt.legend()
+        else:
+    #         col = np.full(isi1.shape,color)
+            scatter =  plt.scatter(isi1,isi2,c=color,label=label)
+            
 
-        
-    plt.xlabel('ISI1 (s)')
-    plt.ylabel('ISI2 (s)')
-    plt.xlim(0,lim)
-    plt.ylim(0,lim)
-    plt.title(title)
-    if(label!=''):
-        plt.legend()
+            
+        plt.xlabel('ISI1 (s)')
+        plt.ylabel('ISI2 (s)')
+        plt.xlim(0,lim)
+        plt.ylim(0,lim)
+        plt.title(title)
+        if(label!=''):
+            plt.legend()
+    except:
+        pass
 
 
 # ## Spikes según pulsos
@@ -319,21 +321,29 @@ plot_stats([indexes_1,indexes_2,indexes_3],"Spikes after each pulse",['1st','2nd
 plt.savefig(path+"stat_spikes.png")
 plt.close(fig)
 
-ad1 = get_acc_dec(indexes_1,isi1,isi2)
-ad2 = get_acc_dec(indexes_2,isi1,isi2)
-ad3 = get_acc_dec(indexes_3,isi1,isi2)
+try:
+    ad1 = get_acc_dec(indexes_1,isi1,isi2)
+    fig=plt.figure()
+    plot_stats(ad1,"Spikes after 1nd",["Acc.","Dec."],[acc_color,dec_color],print_=True)
+    plt.savefig(path+"stat_1.png")
+    plt.close(fig)
+except:
+    pass
 
-fig=plt.figure()
-plot_stats(ad1,"Spikes after 1nd",["Acc.","Dec."],[acc_color,dec_color],print_=True)
-plt.savefig(path+"stat_1.png")
-plt.close(fig)
+try:
+    ad2 = get_acc_dec(indexes_2,isi1,isi2)
+    fig=plt.figure()
+    plot_stats(ad2,"Spikes after 2nd",["Acc.","Dec."],[acc_color,dec_color],print_=True)
+    plt.savefig(path+"stat_2.png")
+    plt.close(fig)
+except:
+    pass
 
-fig=plt.figure()
-plot_stats(ad2,"Spikes after 2nd",["Acc.","Dec."],[acc_color,dec_color],print_=True)
-plt.savefig(path+"stat_2.png")
-plt.close(fig)
-
-fig=plt.figure()
-plot_stats(ad3,"Spikes after 3nd",["Acc.","Dec."],[acc_color,dec_color],print_=True)
-plt.savefig(path+"stat_3.png")
-plt.close(fig)
+try:
+    ad3 = get_acc_dec(indexes_3,isi1,isi2)
+    fig=plt.figure()
+    plot_stats(ad3,"Spikes after 3nd",["Acc.","Dec."],[acc_color,dec_color],print_=True)
+    plt.savefig(path+"stat_3.png")
+    plt.close(fig)
+except:
+    pass
