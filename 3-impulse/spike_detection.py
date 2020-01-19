@@ -41,10 +41,20 @@ f.close()
 
 data = pd.read_csv(filename, delimiter = " ", names=headers,skiprows=1)
 
+#init = 2000
+#end = 2000
+init = 0
+end = 0
 
-act =  np.array(data['v'])[2000:-2000]
-pulses =  np.array(data['pre'])[2000:-2000]
-time = np.array(data['t'])[2000:-2000]
+act =  np.array(data['v'])[init:-end]
+pulses =  np.array(data['pre'])[init:-end]
+
+if('t' not in data.keys()):
+	dt = 0.0001
+	max_ = act.shape[0] * dt
+	time = np.array(np.arange(0,max_,dt))
+else:
+	time = np.array(data['t'])[init:-end]
 # print(time)
 
 th=-40
@@ -59,13 +69,13 @@ events_spikes = events_spikes[np.where((events_spikes[1:]-events_spikes[:-1]) > 
 
 plt.plot(events_spikes[2:],np.zeros(events_spikes[2:].shape),'.')
 plt.plot(time,act)
-# plt.show()
+plt.show()
 plt.close()
 events_pulses = time[np.where(pulses > 0.3)]
 
 plt.plot(events_pulses,np.zeros(events_pulses.shape),'.')
 plt.plot(time,pulses)
-# plt.show()
+plt.show()
 plt.close()
 
 dirname = file[:-4]

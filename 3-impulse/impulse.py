@@ -28,8 +28,9 @@ exp_ = "exp3/"
 
 
 if(len(sys.argv)>2):
-    folder = sys.argv[1]
-    exp_ = sys.argv[2]
+    aux_name = sys.argv[2]
+    exp_ = sys.argv[1]
+    folder = ''
 
 elif(len(sys.argv)>1):
     exp_ = sys.argv[1]
@@ -51,8 +52,8 @@ dec_color = 'firebrick'
 
 
 #From Script
-pulses = utils.read_spike_events(path + "events.txt",dataview=False,dt=0.1)
-spikes = utils.read_spike_events(path + "spikes.txt",dataview=False,dt=0.1)
+pulses = utils.read_spike_events(path + "events.txt",dataview=False,dt=1)
+spikes = utils.read_spike_events(path + "spikes.txt",dataview=False,dt=1)
 
 
 # In[4]:
@@ -102,7 +103,7 @@ def plot_isi_cond(isi1,isi2,indexes,title,color='blue',label='',acc_decc=True):
             y_2 = isi2[np.where(isi1<isi2)]
             
             scatter =  plt.scatter(x_1,y_1,c=acc_color,label="Accelerating")
-            scatter =  plt.scatter(x_2,y_2,c=dec_color,label="Deccelerating")
+            scatter =  plt.scatter(x_2,y_2,c=dec_color,label="Decelerating")
             plt.legend()
         else:
     #         col = np.full(isi1.shape,color)
@@ -110,8 +111,8 @@ def plot_isi_cond(isi1,isi2,indexes,title,color='blue',label='',acc_decc=True):
             
 
             
-        plt.xlabel('ISI1 (s)')
-        plt.ylabel('ISI2 (s)')
+        plt.xlabel('ISI1 (ms)')
+        plt.ylabel('ISI2 (ms)')
         plt.xlim(0,lim)
         plt.ylim(0,lim)
         plt.title(title)
@@ -154,7 +155,7 @@ plt.subplot(1,3,3)
 plot_isi_cond(isi1,isi2,indexes_3,"Spike after 3rd",'red')
 
 
-plt.savefig(path+"spikes_per_pulse.png")
+plt.savefig(path+"spikes_per_pulse_"+aux_name+".png")
 
 # plt.show()
 plt.close(fig)

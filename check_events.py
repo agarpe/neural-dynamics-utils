@@ -29,7 +29,7 @@ for i,neu_name in enumerate(headers[1:]):
 	neuron = data[neu_name]
 	time = data['t']
 	time = np.array(time) 
-	time*=0.01
+	# time*=0.01
 	neuron = np.array(neuron)
 
 	if(i==0):
@@ -47,4 +47,4 @@ for i,neu_name in enumerate(headers[1:]):
 	plt.plot(time,neuron,color=colors[i%len(colors)])
 
 plt.savefig(path[:-4]+".png")
-# plt.show()
+plt.show()

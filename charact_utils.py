@@ -6,6 +6,7 @@ from matplotlib import colors as mcolors
 from scipy import signal
 import os
 from sklearn.linear_model import LinearRegression
+from scipy.stats import linregress
 import sys
 
 
@@ -78,7 +79,11 @@ def do_regression(x,y,show=True):
 	model.fit(x,y)
 
 	r_sq = model.score(x, y)
+	
+	# slope, intercept, r_value, p_value, std_err = linregress([x[0],x[1]],[y[0],y[1]])
+	# print(slope,intercept)
 	print('coefficient of determination:', r_sq)
+	# print('slope:', model.intercept_)
 
 	Y_pred = model.predict(x)  # make predictions
 
@@ -96,12 +101,16 @@ def get_global_color_list():
 	return colors,sorted_names
 
 
-def plot_intervals_stats(stats):
+
+from sklearn.preprocessing import normalize
+
+
+def plot_intervals_stats(stats,norm=False,pos=False):
 	keys = sorted(stats.keys())
 	intervals = []
 	labels = []
 
-	colors_map={"Period":'coral',"BD":'indianred',"Interval":'seagreen',"Delay":'brown'}
+	colors_map={"Period":'coral',"BD":'royalblue',"Interval":'seagreen',"Delay":'brown'}
 
 
 	colors =[]
@@ -112,7 +121,16 @@ def plot_intervals_stats(stats):
 				pass
 			elif(e != "IBI"):
 				labels.append(key[1:]+"-"+e)
-				intervals.append(stats[key][e])
+				if(norm):
+					if(pos):
+						# interval = np.absolute(stats[key][e])
+						intervals.append(np.absolute(stats[key][e])/np.linalg.norm(stats[key][e]))
+						# plt.plot()
+						# plt.show()
+					else:
+						intervals.append(stats[key][e]/np.linalg.norm(stats[key][e]))
+				else:
+					intervals.append(stats[key][e])
 				colors.append(colors_map[e])
 
 
@@ -127,10 +145,14 @@ def plot_intervals_stats(stats):
 			used.append(color)
 			legends.append([patch,list(colors_map.keys())[list(colors_map.values()).index(color)]])
 
+	for patch in bp['medians']:
+		plt.setp(patch, color='black')
+
 	legends = np.array(legends)
 
 	plt.tick_params(axis='both', labelsize=35)
 	plt.xticks(rotation=45, ha='right')
+	plt.ylim(-1,4)
 
 	plt.legend(legends[:,0],legends[:,1],fontsize='xx-large')
 
@@ -142,6 +164,34 @@ def plot_intervals_stats(stats):
 
 
 
+def plot_bar(stats):	
+	keys = sorted(stats.keys())
+	intervals = []
+	labels = []
+	x = []
+	colors=[]
+	index = 1
+
+	colors_map={"Period":'coral',"BD":'royalblue',"Interval":'seagreen',"Delay":'brown'}
+	for key in keys:
+		elem = stats[key]
+		for e in reversed(sorted(elem.keys())):
+			if(key[1:] != "N1M" and e == "Period"):
+				pass
+			elif(e != "IBI"):
+				labels.append(key[1:]+"-"+e)
+				print(key[1:]+"-"+e,np.std(stats[key][e]))
+				intervals.append(np.std(stats[key][e]))
+				colors.append(colors_map[e])
+				index +=1
+
+	plt.figure(figsize=(20,10))
+	plt.title("Standard deviation")
+	plt.bar(range(1,index),intervals,width=0.2,color=colors)
+	print(labels)
+	plt.xticks(range(1,index),(labels),rotation=45)
+	plt.tight_layout()
+	# plt.show()
 
 
 
@@ -503,7 +553,7 @@ def fix_length(fst,snd,thr):
 	return fst,snd,thr
 
 def fix_init(fst,snd,thr):
-	# print(fst.shape,snd.shape,thr.shape)
+	print(fst.shape,snd.shape,thr.shape)
 	if (len(fst) != len(snd) or len(fst) != len(thr) or len(thr) != len(snd)):
 		while(thr[0][0]<fst[0][0]):
 			thr = thr[1:]
@@ -517,7 +567,10 @@ def fix_init(fst,snd,thr):
 	return fst,snd,thr
 
 def fix_end(fst,snd,thr):
-	# print("3",fst.shape,snd.shape,thr.shape)
+	print("3",fst.shape,snd.shape,thr.shape)
+	#print(snd[-1][0],thr[-1][0])
+	#print(snd[-2][0],thr[-2][0])
+	#print(snd[-3][0],thr[-3][0])
 	while(len(thr)>len(snd) or len(thr)>len(fst)):
 		thr = thr[:-1]
 	if (len(fst) != len(snd) or len(fst) != len(thr) or len(thr) != len(snd)):
@@ -529,7 +582,6 @@ def fix_end(fst,snd,thr):
 			fst = fst[:-1]
 
 		# print("5",fst.shape,snd.shape,thr.shape)
-
 
 
 	return fst,snd,thr
