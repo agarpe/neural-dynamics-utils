@@ -16,7 +16,13 @@ path = file_name
 
 #Read header 
 f = open(path)
+
 headers = f.readline().split()
+# f.readline()
+# f.readline()
+# f.readline()
+# f.readline()
+# f.readline()
 print(headers)
 f.close()
 
@@ -27,8 +33,11 @@ os.system("mkdir -p "+path[:-4])
 # for neu_name in ['N1M','N2v']:
 # for neu_name in ['SO']:
 for neu_name in ['SO','N1M','N2v','N3t']:
+# for neu_name in ['N3t']:
+	#-------------------------------------------------------
 	#Read and parse data
-
+	#-------------------------------------------------------
+	print("Analysing neuron: ",neu_name)
 	data = pd.read_csv(path, delimiter = " ", names=headers,skiprows=1)
 	neuron = data[neu_name]
 	time = data['t']
@@ -40,7 +49,9 @@ for neu_name in ['SO','N1M','N2v','N3t']:
 	neuron = np.gradient(neuron) #Neuron gradient to ignore drift
 
 
+	#-------------------------------------------------------
 	#Obtain threshold as a 1/3 of max spike value
+	#-------------------------------------------------------
 
 	mx = max(abs(neuron))
 	th_u = mx/3
@@ -51,13 +62,18 @@ for neu_name in ['SO','N1M','N2v','N3t']:
 	print("threshold value: ",th_u)
 
 
+	#-------------------------------------------------------
 	#Get spikes := neuron values in threshold range
+	#-------------------------------------------------------
+
 	# spk = time[np.where(neuron<th_l)]
 	spk = time[np.where(neuron>th_u)]
 
 	# print(len(spk))
 
+	#-------------------------------------------------------
 	#Compute ISI and IBI
+	#-------------------------------------------------------
 
 	diff = spk[1:] - spk[:-1] #Intervals between events
 	diff_sor = np.sort(diff) #Intervals sorted 
@@ -69,39 +85,68 @@ for neu_name in ['SO','N1M','N2v','N3t']:
 
 	# print(len(diff))
 
-
+	#-------------------------------------------------------
 	#Detect 3 types of intervals --> artefact, ISI and IBI
+	#	get isi_max as the previous value before IBI.
+	#-------------------------------------------------------
 
+	# plt.plot(spk,np.ones(spk.shape)*th_u,'.')
+	# # plt.plot(events,np.zeros(events.shape),'.')
+	# plt.plot(time,neuron)
+
+	# plt.show()
+
+	# diff_sor = diff_sor[np.where(diff_sor[1:]-diff_sor[:-1] > diff_sor[:-1]*1.1)]
+	print(len(diff_sor))
 	intervals = []
-	for d,prev in zip(diff_sor[1:],diff_sor[:-1]):
-		if(intervals != [] and abs(d-prev) > prev*2): #IBI section
-			intervals.append(d)
-		if(abs(d-prev) > prev*10): #Artefact and ISI section
+	for inx,(d,prev) in enumerate(zip(diff_sor[1:],diff_sor[:-1])):
+		# if(intervals != [] and abs(d-prev) > prev*2): #IBI section
+		# 	intervals.append(d)
+		# 	print("A",inx,d,diff_sor[inx-1],diff_sor[inx+1],diff_sor[-1])
+		if(d > prev*1.5): #Artefact and ISI section
 			# print("Solved:",d,prev)
-			inx = np.where(diff_sor==d)
-			# print(inx,diff_sor[inx[0]-1],diff_sor[inx[0]+1],diff_sor[-1])
+			# inx = np.where(diff_sor==d)
+			# print("B",inx,d,diff_sor[inx-1],diff_sor[inx-10:inx],diff_sor[inx+1],diff_sor[-1],diff_sor[-2])
+			# print(diff_sor[-300:])
 			art = prev
 			isi = d
+			isi_max = diff_sor[inx-1]
 			if(intervals ==[]):
 				intervals.append(prev)
 			intervals.append(d)
 
-	print("artefact,ISI and IBI: ",intervals)
+	# print("artefact,ISI and IBI: ",intervals)
 	art,isi,ibi = intervals[:3]
+	# art,isi = intervals[:2]
 
+	isi = isi_max
+	# isi = 222.42
+	print("ISI (max):",isi,"IBI (min):",ibi)
 
 	# Get on and off events (init and end burst) 
 	# 		from spikes array and intervals ISI, IBI
 	events = []
-	# events.append(spk[0])
+	events.append(spk[0])
 
+	# for i,p in enumerate(spk):
+	# 	if(i>1 and i<spk.shape[0]-1):
+	# 		if(abs(spk[i]-spk[i-1]) <= isi and abs(spk[i+1]-spk[i]) >= ibi): #Off event: ibi after isi
+	# 			events.append(p)
+	# 		elif(abs(spk[i]-spk[i-1]) >= ibi and abs(spk[i+1]-spk[i]) <= isi): #On event: isi after ibi
+	# 			events.append(p)
+
+	# for i,p in enumerate(spk):
+	# 	if(i>1 and i<spk.shape[0]-1):
+	# 		if(abs(spk[i]-spk[i-1]) <= isi and abs(spk[i+1]-spk[i]) > isi): #Off event: ibi after isi
+	# 			events.append(p)
+	# 		elif(abs(spk[i]-spk[i-1]) > isi and abs(spk[i+1]-spk[i]) <= isi): #On event: isi after ibi
+	# 			events.append(p)
 	for i,p in enumerate(spk):
 		if(i>1 and i<spk.shape[0]-1):
-			if(abs(spk[i]-spk[i-1]) <= isi and abs(spk[i+1]-spk[i]) >= ibi): #Off event: ibi after isi
+			if(abs(spk[i]-spk[i-1]) >= ibi and abs(spk[i+1]-spk[i]) < ibi): #Off event: ibi after isi
 				events.append(p)
-			elif(abs(spk[i]-spk[i-1]) >= ibi and abs(spk[i+1]-spk[i]) <= isi): #On event: isi after ibi
+			elif(abs(spk[i]-spk[i-1]) < ibi and abs(spk[i+1]-spk[i]) >= ibi): #On event: isi after ibi
 				events.append(p)
-
 
 
 	events =np.array(events)
@@ -117,7 +162,7 @@ for neu_name in ['SO','N1M','N2v','N3t']:
 	plt.plot(events,np.zeros(events.shape),'.')
 	plt.plot(time,neuron)
 	plt.savefig(path[:-4]+"/"+neu_name+".png")
-	plt.show()
+	# plt.show()
 
 	save_events(events,path[:-4]+"/"+neu_name+"_burst.txt",split=True)
 

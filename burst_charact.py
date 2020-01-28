@@ -57,23 +57,42 @@ N3t = 'N3t'
 # # path = file_name +"/"
 path = "../model/no_variability/"
 
-path = "../model/N1m/"
 # path = "../model/SO/"
+path = "../model/N1m/"
 # path = "../model/N3t/test17/"
 
 
 if len(sys.argv) >2:
 	path = sys.argv[1]
 	file_name = sys.argv[2]
+	time_scale= int(sys.argv[3])
 else:
+	file_name = "so_test19"
 	file_name = "test1"
+	# file_name = "n3t_test17"
+	# time_scale = 10000
+	time_scale = 1000
+	# time_scale = 1000
+
+
+# python3 burst_charact.py ../model/N3t/test17/ n3t_test17 1000; python3 burst_charact.py ../model/SO/ so_test19 10000;python3 burst_charact.py ../model/N1m/ test1 1000
+
+
 
 path+= file_name + "/"
 
 
-N1m_data = read_model_burst_path(path+"N1M",scale=1000)
-N2v_data = read_model_burst_path(path+"N2v",scale=1000)
-N3t_data = read_model_burst_path(path+"N3t",scale=1000)
+
+N1m_data = read_model_burst_path(path+"N1M",scale=time_scale)
+N2v_data = read_model_burst_path(path+"N2v",scale=time_scale)
+N3t_data = read_model_burst_path(path+"N3t",scale=time_scale)
+
+
+print("-------",len(N1m_data),len(N2v_data),len(N3t_data))
+# N1m_data = N1m_data[:len(N1m_data)//2]
+# N2v_data = N2v_data[:len(N2v_data)//2]
+# N3t_data = N3t_data[:len(N3t_data)//2]
+
 
 print(len(N1m_data),len(N2v_data),len(N3t_data))
 # #Adjust burst to periods
@@ -137,24 +156,25 @@ plt.savefig("./results_invariant_tests/images/"+file_name+"_boxplot.png")
 
 
 
-####################################
-########  CORRELATIONS  ############
-####################################
+# ####################################
+# ########  CORRELATIONS  ############
+# ####################################
 
 period = N1m_interv[PER]
 print(period.shape,N3t_interv[DUR].shape)
 
 plt.figure(figsize=(20,5))
-ran = (0,5)
+ran_x = (1.5,5)
+ran_y = (0,5)
 
 plt.subplot(1,3,1)
-plot_corr(period,N1m_interv[DUR][:-1],"Period (s)","Duration of "+N1m +" (s)",ran,False,color='blue')
+plot_corr(period,N1m_interv[DUR][:-1],"Period (s)","Duration of "+N1m +" (s)",ran_x,ran_y,False,color='blue')
 
 plt.subplot(1,3,2)
-plot_corr(period,N2v_interv[DUR][:-1],"Period (s)","Duration of "+N2v +" (s)",ran,False,color='blue')
+plot_corr(period,N2v_interv[DUR][:-1],"Period (s)","Duration of "+N2v +" (s)",ran_x,ran_y,False,color='blue')
 
 plt.subplot(1,3,3)
-plot_corr(period,N3t_interv[DUR][:-1],"Period (s)","Duration of "+N3t +" (s)",ran,False,color='blue')
+plot_corr(period,N3t_interv[DUR][:-1],"Period (s)","Duration of "+N3t +" (s)",ran_x,ran_y,False,color='blue')
 
 
 plt.tight_layout()
@@ -166,15 +186,15 @@ plt.show()
 # # print(period.shape,N3t_interv[DUR].shape)
 
 # # plt.figure(figsize=(20,5))
-# # ran = (0,90.0)
+# # ran_x = (0,90.0)
 # # plt.subplot(1,3,1)
-# # plot_corr(period,N1m_interv[IBI],"Period (s)","IBI "+N1m +" (s)",ran,False,color='blue')
+# # plot_corr(period,N1m_interv[IBI],"Period (s)","IBI "+N1m +" (s)",ran_x,ran_y,False,color='blue')
 
 # # plt.subplot(1,3,2)
-# # plot_corr(period,N2v_interv[IBI],"Period (s)","IBI "+N2v +" (s)",ran,False,color='blue')
+# # plot_corr(period,N2v_interv[IBI],"Period (s)","IBI "+N2v +" (s)",ran_x,ran_y,False,color='blue')
 
 # # plt.subplot(1,3,3)
-# # plot_corr(period,N3t_interv[IBI],"Period (s)","IBI "+N3t +" (s)",ran,False,color='blue')
+# # plot_corr(period,N3t_interv[IBI],"Period (s)","IBI "+N3t +" (s)",ran_x,ran_y,False,color='blue')
 
 
 # # plt.tight_layout()
@@ -187,24 +207,24 @@ plt.show()
 period = N1m_interv[PER]
 
 plt.figure(figsize=(20,10))
-#ran = (-1,90.0)
+#ran_x = (-1,90.0)
 plt.subplot(2,3,1)
-plot_corr(period,N1N2[INTERVAL][:-1],"Period (s)","N1-N2 interval (s)",ran,False,color='green')
+plot_corr(period,N1N2[INTERVAL][:-1],"Period (s)","N1-N2 interval (s)",ran_x,ran_y,False,color='green')
 
 plt.subplot(2,3,4)
-plot_corr(period,N2N1[INTERVAL],"Period (s)","N2-N1 interval (s)",ran,False,color='green')
+plot_corr(period,N2N1[INTERVAL],"Period (s)","N2-N1 interval (s)",ran_x,ran_y,False,color='green')
 
 plt.subplot(2,3,2)
-plot_corr(period,N1N3[INTERVAL][:-1],"Period (s)","N1-N3 interval (s)",ran,False,color='green')
+plot_corr(period,N1N3[INTERVAL][:-1],"Period (s)","N1-N3 interval (s)",ran_x,ran_y,False,color='green')
 
 plt.subplot(2,3,5)
-plot_corr(period,N3N1[INTERVAL],"Period (s)","N3-N1 interval (s)",ran,False,color='green')
+plot_corr(period,N3N1[INTERVAL],"Period (s)","N3-N1 interval (s)",ran_x,ran_y,False,color='green')
 
 plt.subplot(2,3,3)
-plot_corr(period,N2N3[INTERVAL][:-1],"Period (s)","N2-N3 interval (s)",ran,False,color='green')
+plot_corr(period,N2N3[INTERVAL][:-1],"Period (s)","N2-N3 interval (s)",ran_x,ran_y,False,color='green')
 
 plt.subplot(2,3,6)
-plot_corr(period,N3N2[INTERVAL],"Period (s)","N3-N2 interval (s)",ran,False,color='green')
+plot_corr(period,N3N2[INTERVAL],"Period (s)","N3-N2 interval (s)",ran_x,ran_y,False,color='green')
 
 
 plt.tight_layout()
@@ -215,24 +235,25 @@ plt.show()
 period = N1m_interv[PER]
 
 plt.figure(figsize=(20,10))
-ran = (-1,5.0)
+ran_x = (1.5,5.0)
+ran_y = (-0.95,5.0)
 plt.subplot(2,3,1)
-plot_corr(period,N1N2[DELAY][:-1],"Period (s)","N1-N2 delay (s)",ran,False,color='brown')
+plot_corr(period,N1N2[DELAY][:-1],"Period (s)","N1-N2 delay (s)",ran_x,ran_y,False,color='brown')
 
 plt.subplot(2,3,4)
-plot_corr(period,N2N1[DELAY],"Period (s)","N2-N1 delay (s)",ran,False,color='brown')
+plot_corr(period,N2N1[DELAY],"Period (s)","N2-N1 delay (s)",ran_x,ran_y,False,color='brown')
 
 plt.subplot(2,3,2)
-plot_corr(period,N1N3[DELAY][:-1],"Period (s)","N1-N3 delay (s)",ran,False,color='brown')
+plot_corr(period,N1N3[DELAY][:-1],"Period (s)","N1-N3 delay (s)",ran_x,ran_y,False,color='brown')
 
 plt.subplot(2,3,5)
-plot_corr(period,N3N1[DELAY],"Period (s)","N3-N1 delay (s)",(-1,5.0),False,color='brown')
+plot_corr(period,N3N1[DELAY],"Period (s)","N3-N1 delay (s)",ran_x,ran_y,False,color='brown')
 
 plt.subplot(2,3,3)
-plot_corr(period,N2N3[DELAY][:-1],"Period (s)","N2-N3 delay (s)",ran,False,color='brown')
+plot_corr(period,N2N3[DELAY][:-1],"Period (s)","N2-N3 delay (s)",ran_x,ran_y,False,color='brown')
 
 plt.subplot(2,3,6)
-plot_corr(period,N3N2[DELAY],"Period (s)","N3-N2 delay (s)",ran,False,color='brown')
+plot_corr(period,N3N2[DELAY],"Period (s)","N3-N2 delay (s)",ran_x,ran_y,False,color='brown')
 
 
 

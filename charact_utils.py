@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 17})
 from matplotlib import colors as mcolors
-
+import statistics 
 from scipy import signal
 import os
 from sklearn.linear_model import LinearRegression
@@ -53,13 +53,13 @@ def plot_hists(charac,neuron):
 	plt.show()
 
 
-def plot_corr(x,y,title1,title2,ran,show=True,color='b'):
+def plot_corr(x,y,title1,title2,ran_x,ran_y,show=True,color='b'):
 
 	r_sq,Y_pred = do_regression(x,y,False)
 
-	max_ = ran[1]
-	plt.ylim(ran)
-	plt.xlim(ran)
+	max_ = ran_y[1]
+	plt.ylim(ran_y)
+	plt.xlim(ran_x)
 	plt.title(title2[:-4])
 
 	plt.plot(x, Y_pred, color='maroon')
@@ -82,6 +82,8 @@ def do_regression(x,y,show=True):
 	
 	# slope, intercept, r_value, p_value, std_err = linregress([x[0],x[1]],[y[0],y[1]])
 	# print(slope,intercept)
+	print('CV:',np.std(y)/np.mean(y))
+	print('median:',statistics.median(y))
 	print('coefficient of determination:', r_sq)
 	# print('slope:', model.intercept_)
 
@@ -114,6 +116,9 @@ def plot_intervals_stats(stats,norm=False,pos=False):
 
 
 	colors =[]
+	medians=[]
+	means=[]
+	cvs=[]
 	for key in keys:
 		elem = stats[key]
 		for e in reversed(sorted(elem.keys())):
@@ -131,11 +136,18 @@ def plot_intervals_stats(stats,norm=False,pos=False):
 						intervals.append(stats[key][e]/np.linalg.norm(stats[key][e]))
 				else:
 					intervals.append(stats[key][e])
+					# intervals.append(np.std(stats[key][e])/np.mean(stats[key][e])*100)					
+					cvs.append((np.std(stats[key][e])/np.mean(stats[key][e]))*100)
+					medians.append(statistics.median(stats[key][e])*100)
+					means.append(np.mean(stats[key][e])*100)
 				colors.append(colors_map[e])
 
 
-	plt.figure(figsize=(30,20))
+	plt.figure(figsize=(33,20))
 	bp = plt.boxplot(intervals, showfliers=False,labels=labels,patch_artist=True)
+	# plt.scatter(range(1,len(cvs)+1),cvs)
+	# plt.scatter(range(1,len(cvs)+1),medians)
+	# plt.scatter(range(1,len(cvs)+1),means)
 	# for patch,color in zip(bp['boxes'],sorted_names[10:]):
 	used =[]
 	legends=[]
@@ -150,9 +162,10 @@ def plot_intervals_stats(stats,norm=False,pos=False):
 
 	legends = np.array(legends)
 
-	plt.tick_params(axis='both', labelsize=35)
+	plt.tick_params(axis='both', labelsize=40)
 	plt.xticks(rotation=45, ha='right')
-	plt.ylim(-1,4)
+	plt.ylim(-0.95,4)
+	plt.ylabel("Time intervals (s)",fontsize=50)
 
 	plt.legend(legends[:,0],legends[:,1],fontsize='xx-large')
 
@@ -533,6 +546,7 @@ def analyse(data,neuron,stats,index,plot=False):
 	print(neuron,"\t\t Duration  \t\t   IBI \t\t   Period")
 	print("\tMean: ",np.mean(n_intervals[DUR]),np.mean(n_intervals[IBI]),np.mean(n_intervals[PER]))
 	print("\tStd: ",np.std(n_intervals[DUR]),np.std(n_intervals[IBI]),np.std(n_intervals[PER]))
+	print("\tCV: ",np.std(n_intervals[DUR])/np.mean(n_intervals[DUR]),np.std(n_intervals[IBI])/np.mean(n_intervals[IBI]),np.std(n_intervals[PER])/np.mean(n_intervals[PER]))
 
 	# if plot:
 	# 	plot_hists([dur,ibi,period],neuron)
