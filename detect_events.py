@@ -33,11 +33,12 @@ os.system("mkdir -p "+path[:-4])
 # for neu_name in ['N1M','N2v']:
 # for neu_name in ['SO']:
 for neu_name in ['SO','N1M','N2v','N3t']:
+# for neu_name in headers[1:]:
 # for neu_name in ['N3t']:
 	#-------------------------------------------------------
 	#Read and parse data
 	#-------------------------------------------------------
-	print("Analysing neuron: ",neu_name)
+	print("Detecting events in neuron: ",neu_name)
 	data = pd.read_csv(path, delimiter = " ", names=headers,skiprows=1)
 	neuron = data[neu_name]
 	time = data['t']
@@ -54,20 +55,37 @@ for neu_name in ['SO','N1M','N2v','N3t']:
 	#-------------------------------------------------------
 
 	mx = max(abs(neuron))
-	th_u = mx/3
+	min_dif=min(((neuron[1:])-(neuron[:-1])))
+	# print(min(neuron))
+
+	th_u = mx-mx/3
+	th_l = th_u+6*abs(min_dif)
 	# th_l = th_u+1
 
 	# print(mx,th_l,th_u)
 
-	print("threshold value: ",th_u)
+	print("threshold value: ",th_u,th_l,min_dif)
 
 
 	#-------------------------------------------------------
 	#Get spikes := neuron values in threshold range
 	#-------------------------------------------------------
 
-	# spk = time[np.where(neuron<th_l)]
-	spk = time[np.where(neuron>th_u)]
+	spk = time[np.where((neuron<=th_l)&(neuron>=th_u))]
+	spk_save=spk
+	spk = spk[np.where(abs(spk[1:]-spk[:-1])>dt*3)]
+	# spk2 = time[np.where(neuron>=th_u)]
+
+	# spk = np.union1d(spk1,spk2)
+	print(spk.shape)
+	plt.figure(figsize=(15,10))
+
+	plt.plot(spk_save,np.ones(spk_save.shape)*th_u,'.')
+	plt.plot(spk,np.ones(spk.shape)*th_u,'.')
+
+	plt.plot(time,neuron,'.')
+
+	# plt.show()
 
 	# print(len(spk))
 
@@ -81,7 +99,7 @@ for neu_name in ['SO','N1M','N2v','N3t']:
 
 	# print(len(diff))
 	#ignore too close events ?
-	diff = diff[np.where(diff > dt)]
+	# diff = diff[np.where(diff > dt)]
 
 	# print(len(diff))
 
@@ -97,7 +115,7 @@ for neu_name in ['SO','N1M','N2v','N3t']:
 	# plt.show()
 
 	# diff_sor = diff_sor[np.where(diff_sor[1:]-diff_sor[:-1] > diff_sor[:-1]*1.1)]
-	print(len(diff_sor))
+	# print(len(diff_sor))
 	intervals = []
 	for inx,(d,prev) in enumerate(zip(diff_sor[1:],diff_sor[:-1])):
 		# if(intervals != [] and abs(d-prev) > prev*2): #IBI section
@@ -156,13 +174,15 @@ for neu_name in ['SO','N1M','N2v','N3t']:
 	print(events.shape)
 
 
+	# spk = spk[np.where(diff>art)]
 	#Plot result and save events file. 
 	plt.figure(figsize=(15,10))
 	plt.plot(spk,np.ones(spk.shape)*th_u,'.')
-	plt.plot(events,np.zeros(events.shape),'.')
+	plt.plot(events,np.ones(events.shape)*mx,'.')
 	plt.plot(time,neuron)
 	plt.savefig(path[:-4]+"/"+neu_name+".png")
 	# plt.show()
 
 	save_events(events,path[:-4]+"/"+neu_name+"_burst.txt",split=True)
+	os.system("echo 'Neuron: "+neu_name+" precission: "+str(isi)+"\n' >> "+path[:-4]+"/"+"precission.txt");
 

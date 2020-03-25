@@ -47,4 +47,4 @@ for i,neu_name in enumerate(headers[1:]):
 	plt.plot(time,neuron,color=colors[i%len(colors)])
 
 plt.savefig(path[:-4]+".png")
-plt.show()
+# plt.show()

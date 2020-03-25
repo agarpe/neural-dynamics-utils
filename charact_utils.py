@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-plt.rcParams.update({'font.size': 17})
+plt.rcParams.update({'font.size': 25})
 from matplotlib import colors as mcolors
 import statistics 
 from scipy import signal
@@ -55,7 +55,7 @@ def plot_hists(charac,neuron):
 
 def plot_corr(x,y,title1,title2,ran_x,ran_y,show=True,color='b'):
 
-	r_sq,Y_pred = do_regression(x,y,False)
+	r_sq,Y_pred,slope = do_regression(x,y,title2,False)
 
 	max_ = ran_y[1]
 	plt.ylim(ran_y)
@@ -64,32 +64,37 @@ def plot_corr(x,y,title1,title2,ran_x,ran_y,show=True,color='b'):
 
 	plt.plot(x, Y_pred, color='maroon')
 	plt.plot(x,y,'.',color=color)
-	plt.text(max_-0.5*max_,max_-0.25*max_,"R² = "+str(r_sq)[:8])
+	# plt.text(max_-0.5*max_,max_-0.25*max_,"R² = "+str(r_sq)[:8])
+	plt.text(1,max_-0.25*max_,"R² = "+str(r_sq)[:8])
+	# plt.text(1,max_-0.5*max_,"slope = "+str(slope)[:8])
 	
 	plt.xlabel(title1)
 	plt.ylabel(title2)
 	if show:
 		plt.show()
 
-def do_regression(x,y,show=True):
+def do_regression(x,y,title,show=True):
 
-	model = LinearRegression()
+	slope, intercept, r_value, p_value, std_err = linregress(x,y)
+	model = LinearRegression(fit_intercept=True)
 	x = x.reshape((-1, 1))
 
 	model.fit(x,y)
 
 	r_sq = model.score(x, y)
+
 	
 	# slope, intercept, r_value, p_value, std_err = linregress([x[0],x[1]],[y[0],y[1]])
 	# print(slope,intercept)
-	print('CV:',np.std(y)/np.mean(y))
-	print('median:',statistics.median(y))
-	print('coefficient of determination:', r_sq)
-	# print('slope:', model.intercept_)
+	print(title)
+	print('\tCV:',np.std(y)/np.mean(y))
+	print('\tmedian:',statistics.median(y))
+	print('\tcoefficient of determination:', r_sq)
+	# print('\tslope:', slope)
 
 	Y_pred = model.predict(x)  # make predictions
 
-	return r_sq,Y_pred
+	return r_sq,Y_pred,slope
 
 def get_global_color_list():
 	colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
@@ -164,7 +169,7 @@ def plot_intervals_stats(stats,norm=False,pos=False):
 
 	plt.tick_params(axis='both', labelsize=40)
 	plt.xticks(rotation=45, ha='right')
-	plt.ylim(-0.95,4)
+	plt.ylim(-0.95,70)
 	plt.ylabel("Time intervals (s)",fontsize=50)
 
 	plt.legend(legends[:,0],legends[:,1],fontsize='xx-large')
@@ -546,8 +551,13 @@ def analyse(data,neuron,stats,index,plot=False):
 	print(neuron,"\t\t Duration  \t\t   IBI \t\t   Period")
 	print("\tMean: ",np.mean(n_intervals[DUR]),np.mean(n_intervals[IBI]),np.mean(n_intervals[PER]))
 	print("\tStd: ",np.std(n_intervals[DUR]),np.std(n_intervals[IBI]),np.std(n_intervals[PER]))
+	print("\tStd: ",np.var(n_intervals[DUR]),np.var(n_intervals[IBI]),np.var(n_intervals[PER]))
 	print("\tCV: ",np.std(n_intervals[DUR])/np.mean(n_intervals[DUR]),np.std(n_intervals[IBI])/np.mean(n_intervals[IBI]),np.std(n_intervals[PER])/np.mean(n_intervals[PER]))
-
+	x = n_intervals[DUR][:-1]
+	y=n_intervals[PER]
+	cov =  np.matmul(x-np.mean(x), (y-np.mean(y)).T) / len(x)
+	print("\tCovarianze BD and Period:",cov)
+	print("\tR-squared expected:",cov**2/(np.var(n_intervals[DUR])*np.var(n_intervals[PER])))
 	# if plot:
 	# 	plot_hists([dur,ibi,period],neuron)
 
@@ -569,14 +579,17 @@ def fix_length(fst,snd,thr):
 def fix_init(fst,snd,thr):
 	print(fst.shape,snd.shape,thr.shape)
 	if (len(fst) != len(snd) or len(fst) != len(thr) or len(thr) != len(snd)):
-		while(thr[0][0]<fst[0][0]):
+		print(thr[0][0],fst[0][0])
+		#thr on before fst off to solve overlaping
+		while(thr[0][0]<fst[0][1]):
 			thr = thr[1:]
 
-		# print("1",fst.shape,snd.shape,thr.shape)
+
+		print("1",fst.shape,snd.shape,thr.shape)
 		while(snd[0][0]<fst[0][0]):
 			snd = snd[1:]
 
-		# print("2",fst.shape,snd.shape,thr.shape)
+		print("2",fst.shape,snd.shape,thr.shape)
 
 	return fst,snd,thr
 
@@ -591,16 +604,21 @@ def fix_end(fst,snd,thr):
 		while(snd[-1][0] > thr[-1][0]):
 			snd = snd[:-1]
 
-		# print("4",fst.shape,snd.shape,thr.shape)
+		print("4",fst.shape,snd.shape,thr.shape)
 		while(fst[-1][0] > thr[-1][0]):
 			fst = fst[:-1]
 
-		# print("5",fst.shape,snd.shape,thr.shape)
+		print("5",fst.shape,snd.shape,thr.shape)
 
 
 	return fst,snd,thr
 
 
+# def fix_intervals(fst,snd,thr):
+# 	for i,(n1,n2,n3) in enumerate(zip(fst,snd,thr)):
+# 		if n3[0] < n1[0] or n2[0] < n1[0]:
+# 			rm.append(i)
+# 	fst = np.delete(fst,rm)
 
 
 
