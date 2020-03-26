@@ -221,14 +221,14 @@ def plot_bar(stats):
 ##############################################################################
 
 #Saves events in same file than original data. 
-def save_events(events,file_name,split=False,dataview=False):
+def save_events(events,file_name,split=False,datrange(0,events.shaaview=False):
 	if(split):
 		result = []
+		#if there is one spike "missing" at the end--> ignore it. 
 		if(events.shape[0]%2!=0):
 			events = events[:-1]
-		# for i in range(0,events.shape[0]-2,2):
-		# 	result.append([events[i,i+1]])
-		events = np.array([[events[i],events[i+1]] for i in range(0,events.shape[0]-2,2)])
+
+		events = np.array([[events[i],events[i+1]] for i in range(0,events.shape[0],2)])
 
 	print(events.shape)
 		# events = np.array(result)

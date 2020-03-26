@@ -32,14 +32,23 @@ os.system("mkdir -p "+path[:-4])
 
 # for neu_name in ['N1M','N2v']:
 # for neu_name in ['SO']:
-for neu_name in ['SO','N1M','N2v','N3t']:
+
+
+#clean headers
+to_clean = {"t","c"}
+for e in to_clean:
+	if e in headers: headers.remove(e);
+
+
+for neu_name in headers:
 # for neu_name in headers[1:]:
 # for neu_name in ['N3t']:
 	#-------------------------------------------------------
 	#Read and parse data
 	#-------------------------------------------------------
 	print("Detecting events in neuron: ",neu_name)
-	data = pd.read_csv(path, delimiter = " ", names=headers,skiprows=1)
+	#Read column by column
+	data = pd.read_csv(path, delimiter = " ", names={"t",neu_name},skiprows=1)
 	neuron = data[neu_name]
 	time = data['t']
 	time = np.array(time) 
