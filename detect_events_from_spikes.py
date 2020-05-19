@@ -39,6 +39,9 @@ def read_spikes(path,headers,indexes,no_spike_value):
 
 
 if len(sys.argv) >1:
+	if(sys.argv[1] == "info"):
+		print("Use: python3 detect_events_from_spikes.py file_path [spikes name or general]")
+if len(sys.argv) >1:
 	path = sys.argv[1]
 else:
 	print("detect_events_from_spikes.py file_path")
@@ -62,7 +65,6 @@ to_clean = {"t","c"}
 for e in to_clean:
 	if e in headers: neu_headers.remove(e);
 
-
 for index,neu_name in enumerate(neu_headers):
 
 	#-------------------------------------------------------
@@ -75,8 +77,11 @@ for index,neu_name in enumerate(neu_headers):
 	neuron = data[neu_name]
 	time = data['t']
 	time = np.array(time) 
+	# dt=(time[1]-time[0])/3
+	# print((time[1]-time[0])/3)
+	# print(time[1]-time[0])
 
-	print(neuron[:10])
+	# print(neuron[:10])
 	#-------------------------------------------------------
 	#Get spikes in form of time events
 	#-------------------------------------------------------
@@ -92,16 +97,43 @@ for index,neu_name in enumerate(neu_headers):
 	diff = spk[1:] - spk[:-1] #Intervals between events
 	diff_sor = np.sort(diff) #Intervals sorted 
 	
+	# plt.plot(spk,np.ones(spk.shape),'.')
+
+	# plt.show()
+	print(max(diff))
+	plt.hist(diff)
+	plt.show()
+
 	intervals = []
+	# print(max(diff_sor))
+	# print(min(diff_sor))
+	# print(diff_sor[(int)(0.75*len(diff_sor))])
+
+	# plt.hist(diff_sor,bins=2)
+	# plt.show()
+
+
+	# Biggest possible difference between a ISI and IBI.
+	stim_dif = 100
+
+
 	for inx,(d,prev) in enumerate(zip(diff_sor[1:],diff_sor[:-1])):
-		if(d > prev*2): #ISI to IBI
+		# if d>100:
+		# 	print(d,prev)
+		# if(d > prev*2.5): #ISI to IBI
+		# if(d >= prev*1.5): #ISI to IBI
+		if (d-prev)>stim_dif:
+			# print(d,prev)
 			isi = d
 			isi_max = diff_sor[inx-1]
 			if(intervals ==[]):
 				intervals.append(prev)
 			intervals.append(d)
 
-	isi,ibi = intervals[:2]
+	try:
+		isi,ibi = intervals[:2]
+	except:
+		print("The stimated difference might not have addecuate value, adjust it by changing stim_dif value.")
 
 	isi = isi_max
 	# isi = 222.42
@@ -110,6 +142,17 @@ for index,neu_name in enumerate(neu_headers):
 	# Get on and off events (init and end burst) 
 	# 		from spikes array and intervals ISI, IBI
 	events = []
+	# if(neu_name=="N1M"):
+	# 	events.append(spk[1])
+
+	# if(neu_name=="N2v"):
+	# 	events.append(spk[1])
+
+	# elif(neu_name=="N3t"):
+	# 	events.append(spk[1])
+	# else:
+	# 	events.append(spk[0])
+
 	events.append(spk[0])
 
 	for i,p in enumerate(spk):
@@ -123,7 +166,7 @@ for index,neu_name in enumerate(neu_headers):
 	events =np.array(events)
 
 
-	print("Events shape result:")
+	print("Number of bursts:")
 	print(events.shape)
 
 
@@ -134,6 +177,6 @@ for index,neu_name in enumerate(neu_headers):
 	plt.savefig(path[:-4]+"/"+neu_name+".png")
 	plt.show()
 
-	save_events(events,path[:-4]+"/"+neu_name+"_burst.txt",split=True)
+	# save_events(events,path[:-4]+"/"+neu_name+"_burst.txt",split=True)
 	# os.system("echo 'Neuron: "+neu_name+" precission: "+str(isi)+"\n' >> "+path[:-4]+"/"+"precission.txt");
 

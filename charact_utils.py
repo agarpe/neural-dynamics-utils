@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-plt.rcParams.update({'font.size': 25})
+#27 parece la mejor para plots. 
+plt.rcParams.update({'font.size': 27})
 from matplotlib import colors as mcolors
 import statistics 
 from scipy import signal
@@ -52,20 +53,65 @@ def plot_hists(charac,neuron):
 	plt.xlabel("Time (s)")
 	plt.show()
 
+#########################
+#			#			#
+#	  0		#	  1		#
+#			#			#
+#########################
+#			#			#
+#	  2		#	  3		#
+#			#			#
+#########################
 
-def plot_corr(x,y,title1,title2,ran_x,ran_y,show=True,color='b'):
+def get_pos(pos,ran_x,ran_y):
+
+	if(not ran_x or not ran_y): return
+	x_min,x_max = ran_x[:]
+	y_min,y_max = ran_y[:]
+
+	width = x_max-x_min
+	length = y_max-y_min
+
+	if pos==0:
+		x = x_min + width/4
+		y = y_max - length/4
+	elif pos ==1:
+		x = x_max - width/4
+		y = y_max - length/4
+	elif pos ==2:
+		x = x_min + width/4
+		y = y_min + length/4
+	elif pos ==3:
+		x = x_max - width*0.6
+		y = y_min + length/4
+	else:
+		x=0
+		y=0
+
+	return x,y
+
+
+
+
+
+#text_pos inverts 
+def plot_corr(x,y,title1,title2,ran_x,ran_y,show=True,color='b',text_pos_y=0,text_pos_x=0,text_pos=0):
 
 	r_sq,Y_pred,slope = do_regression(x,y,title2,False)
 
-	max_ = ran_y[1]
-	plt.ylim(ran_y)
-	plt.xlim(ran_x)
+	if(ran_y != False):
+		max_ = ran_y[1]
+		plt.ylim(ran_y)
+		# plt.text(max_-(0.25*max_)*text_pos_x,max_-(0.25*max_)*text_pos_y,"R² = "+"{:6f}".format(r_sq))
+		x_text,y_text = get_pos(text_pos,ran_x,ran_y)
+		plt.text(x_text-text_pos_x,y_text-text_pos_y,"R² = "+"{:.4f}".format(r_sq))
+	if(ran_x!= False):
+		plt.xlim(ran_x)
 	plt.title(title2[:-4])
-
-	plt.plot(x, Y_pred, color='maroon')
+	#maroon
+	plt.plot(x, Y_pred, color='grey')
 	plt.plot(x,y,'.',color=color)
-	# plt.text(max_-0.5*max_,max_-0.25*max_,"R² = "+str(r_sq)[:8])
-	plt.text(1,max_-0.25*max_,"R² = "+str(r_sq)[:8])
+	# plt.text(1,max_-0.25*max_,"R² = "+str(r_sq)[:8])
 	# plt.text(1,max_-0.5*max_,"slope = "+str(slope)[:8])
 	
 	plt.xlabel(title1)
@@ -112,7 +158,7 @@ def get_global_color_list():
 from sklearn.preprocessing import normalize
 
 
-def plot_intervals_stats(stats,norm=False,pos=False):
+def plot_intervals_stats(stats,box_ran,norm=False,pos=False):
 	keys = sorted(stats.keys())
 	intervals = []
 	labels = []
@@ -163,16 +209,18 @@ def plot_intervals_stats(stats,norm=False,pos=False):
 			legends.append([patch,list(colors_map.keys())[list(colors_map.values()).index(color)]])
 
 	for patch in bp['medians']:
-		plt.setp(patch, color='black')
+		plt.setp(patch, color='black',linewidth=1.5)
 
 	legends = np.array(legends)
 
 	plt.tick_params(axis='both', labelsize=40)
 	plt.xticks(rotation=45, ha='right')
-	plt.ylim(-0.95,70)
+	plt.ylim(box_ran)
 	plt.ylabel("Time intervals (s)",fontsize=50)
 
-	plt.legend(legends[:,0],legends[:,1],fontsize='xx-large')
+	plt.legend(legends[:,0],legends[:,1],fontsize='x-large',loc='upper center', bbox_to_anchor=(0.75,1))
+
+	# plt.legend(legends[:,0],legends[:,1],fontsize='x-large')
 
 	# for i,item in enumerate(reversed(sorted(colors_map.keys()))):
 	# 	plt.text(15, 35-1*i, item,
@@ -221,7 +269,7 @@ def plot_bar(stats):
 ##############################################################################
 
 #Saves events in same file than original data. 
-def save_events(events,file_name,split=False,datrange(0,events.shaaview=False):
+def save_events(events,file_name,split=False,dataview=False):
 	if(split):
 		result = []
 		#if there is one spike "missing" at the end--> ignore it. 
