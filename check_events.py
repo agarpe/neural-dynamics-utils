@@ -24,6 +24,35 @@ data = pd.read_csv(path, delimiter = " ", names=headers,skiprows=1)
 
 colors = ['maroon', 'teal', 'brown', 'blue', 'green']
 
+# figure_handle = plt.figure(figsize=(30,20))
+# for i,neu_name in enumerate(headers[1:]):
+# 	neuron = data[neu_name]
+# 	time = data['t']
+# 	time = np.array(time) 
+# 	# time*=0.01
+# 	neuron = np.array(neuron)
+
+# 	if(i==0):
+# 		ax1 = plt.subplot(len(headers)-1,1,i+1)
+# 	else :
+# 		plt.subplot(len(headers)-1,1,i+1,sharex=ax1)
+
+# 	if(neu_name in ["SO","N1M","N2v","N3t"]):
+# 		events = read_model_burst_path(path[:-4]+"/"+neu_name,scale=1)
+
+# 		print(events.shape)
+
+
+# 		plt.plot(events,np.zeros(events.shape),'.',color=colors[i%len(colors)])
+# 	plt.plot(time,neuron,color=colors[i%len(colors)])
+
+# # plt.savefig(path[:-4]+".png")
+# plt.show()
+
+
+
+colors = ['darksalmon', 'skyblue', 'darkseagreen']
+
 figure_handle = plt.figure(figsize=(30,20))
 for i,neu_name in enumerate(headers[1:]):
 	neuron = data[neu_name]
@@ -32,19 +61,16 @@ for i,neu_name in enumerate(headers[1:]):
 	# time*=0.01
 	neuron = np.array(neuron)
 
-	if(i==0):
-		ax1 = plt.subplot(len(headers)-1,1,i+1)
-	else :
-		plt.subplot(len(headers)-1,1,i+1,sharex=ax1)
 
-	if(neu_name in ["SO","N1M","N2v","N3t"]):
+	if(neu_name in ["N1M","N2v","N3t"]):
 		events = read_model_burst_path(path[:-4]+"/"+neu_name,scale=1)
 
 		print(events.shape)
 
+		for i in range(events.shape[0]):
+			plt.plot(events[i],np.zeros(events[i].shape),color=colors[i%len(colors)])
+		plt.plot(time,neuron,color=colors[i%len(colors)])
 
-		plt.plot(events,np.zeros(events.shape),'.')
-	plt.plot(time,neuron,color=colors[i%len(colors)])
-
-plt.savefig(path[:-4]+".png")
+# plt.savefig(path[:-4]+".png")
 plt.show()
+

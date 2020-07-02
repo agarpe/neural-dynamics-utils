@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 #27 parece la mejor para plots. 
-plt.rcParams.update({'font.size': 27})
+plt.rcParams.update({'font.size': 25})
 from matplotlib import colors as mcolors
 import statistics 
 from scipy import signal
@@ -358,6 +358,10 @@ def read_model_burst_path(path,dataview=True,scale= 1000):
 	print(file_name)
 	return read_bursts_events(file_name,dataview,scale)
 
+
+
+def trunc(values, decs=0):
+    return np.trunc(values*10**decs)/(10**decs)
 
 #############################################################################
 ##############	SPIKES 

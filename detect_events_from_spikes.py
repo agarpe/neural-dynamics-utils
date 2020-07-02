@@ -5,7 +5,7 @@ import pandas as pd
 
 def parse_spikes(spk_time,spk_data):
 	print(spk_time.shape,spk_data.shape)
-	return spk_time[np.where(spk_data)]
+	return spk_time[np.where(spk_data) and np.where(spk_data>-50)]
 
 def parse_path(path):
 	if "spikes" in path: 
@@ -85,10 +85,21 @@ for index,neu_name in enumerate(neu_headers):
 	#-------------------------------------------------------
 	#Get spikes in form of time events
 	#-------------------------------------------------------
+	#Fst remove artefacts, anything bellow th might not be spike. 
+	# th = -50 
+	# neuron=np.array(neuron)
+	# print(neuron[0])
+	# neuron = neuron[np.where(neuron>th)]
+	# print(neuron[0])
+
+
+
 
 	spk = parse_spikes(time, neuron);
+	print("SPK 0",spk[0])
 
-	print(spk.shape)
+	print("Number of spikes:",spk.shape)
+
 
 	#-------------------------------------------------------
 	#Compute ISI and IBI
@@ -100,9 +111,9 @@ for index,neu_name in enumerate(neu_headers):
 	# plt.plot(spk,np.ones(spk.shape),'.')
 
 	# plt.show()
-	print(max(diff))
-	plt.hist(diff)
-	plt.show()
+	# print(max(diff))
+	# plt.hist(diff)
+	# # plt.show()
 
 	intervals = []
 	# print(max(diff_sor))
@@ -114,7 +125,7 @@ for index,neu_name in enumerate(neu_headers):
 
 
 	# Biggest possible difference between a ISI and IBI.
-	stim_dif = 100
+	stim_dif = 80
 
 
 	for inx,(d,prev) in enumerate(zip(diff_sor[1:],diff_sor[:-1])):
@@ -153,7 +164,11 @@ for index,neu_name in enumerate(neu_headers):
 	# else:
 	# 	events.append(spk[0])
 
-	events.append(spk[0])
+	#If first spike is not part of first burst, ignore it. 
+	if(diff[0]>isi_max):
+		events.append(spk[1])
+	else:
+		events.append(spk[0])
 
 	for i,p in enumerate(spk):
 		if(i>1 and i<spk.shape[0]-1):
@@ -162,12 +177,14 @@ for index,neu_name in enumerate(neu_headers):
 			elif(abs(spk[i]-spk[i-1]) < ibi and abs(spk[i+1]-spk[i]) >= ibi): #On event: isi after ibi
 				events.append(p)
 
+	# Last spike is ignored since last burst might not be completed. 
+	# events.append(spk[-1])
 
 	events =np.array(events)
 
 
-	print("Number of bursts:")
-	print(events.shape)
+	print("Number of bursts:",events.shape)
+	# print()
 
 
 	#Plot result and save events file. 
@@ -177,6 +194,7 @@ for index,neu_name in enumerate(neu_headers):
 	plt.savefig(path[:-4]+"/"+neu_name+".png")
 	plt.show()
 
-	# save_events(events,path[:-4]+"/"+neu_name+"_burst.txt",split=True)
+	save_events(events,path[:-4]+"/"+neu_name+"_burst.txt",split=True)
+	
 	# os.system("echo 'Neuron: "+neu_name+" precission: "+str(isi)+"\n' >> "+path[:-4]+"/"+"precission.txt");
 

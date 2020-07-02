@@ -1,15 +1,15 @@
 
 from charact_utils import *
 
+# plt.rcParams.update({'savefig.dpi': 1000})
 
 N1m = 'N1M'
 N2v = 'N2v'
 N3t = 'N3t'
 SO = 'SO'
 
-
-def trunc(values, decs=0):
-    return np.trunc(values*10**decs)/(10**decs)
+# extension = "png"
+extension = "eps"
 
 
 
@@ -73,6 +73,15 @@ if len(sys.argv)>1 and sys.argv[1] =="i":
 	print("Use: python3 burst_charact.py path file_name (without extension) time_scale")
 	sys.exit()
 
+log=""
+driven=N1m
+
+if len(sys.argv) >4:
+	log=sys.argv[4]
+
+if len(sys.argv) >3:
+	driven=sys.argv[3]
+
 if len(sys.argv) >2:
 	path = sys.argv[1]
 	file_name = sys.argv[2]
@@ -95,7 +104,7 @@ path+= file_name + "/"
 
 
 N1m_data = read_model_burst_path(path+"N1M",scale=time_scale)
-N2v_data = read_model_burst_path(path+"N2v",scale=time_scale)
+N2v_data = read_model_burst_path(path+"N2v",scale=time_scale)[:-1]
 N3t_data = read_model_burst_path(path+"N3t",scale=time_scale)
 
 
@@ -114,7 +123,7 @@ N1m_data,N2v_data,N3t_data = fix_length(N1m_data,N2v_data,N3t_data)
 print("Number of bursts:")
 print(len(N1m_data),len(N2v_data),len(N3t_data))
 
-driven=N1m
+# driven=N1m
 
 
 if(driven==N1m):
@@ -123,7 +132,7 @@ if(driven==N1m):
 
 elif(driven==SO):
 	ran_x_dur =(1,5); ran_x_interval = (1,5); ran_x_delay = (1,5)
-	ran_y_dur =(0,5); ran_y_interval =(0.5,5); ran_y_delay =(-0.3,5) 
+	ran_y_dur =(0,4); ran_y_interval =(0.5,4); ran_y_delay =(-0.3,4) 
 
 elif(driven==N3t):
 	ran_x_dur =(2,4); ran_x_interval =(2.2,3.7); ran_x_delay = (2,4) 
@@ -136,12 +145,9 @@ else:
 
 box_ran = (-0.95,4)
 
-# log= "_no_lim"
-log= ""
-log="_pastel"
 
 save=True
-show=True
+show=False
 
 ###########################################################################
 
@@ -173,7 +179,7 @@ plot_intervals_stats(stats,box_ran)
 # 
 if save:
 	# plt.savefig("./results_invariant_tests/images/"+file_name+"_boxplot.png")
-	plt.savefig(path+file_name+log+"_boxplot.png")
+	plt.savefig(path+file_name+log+"_boxplot."+extension,format='eps')
 # 
 if show:
 	plt.show()
@@ -226,13 +232,17 @@ plt.subplot(1,3,2)
 plot_corr(period,N2v_interv[DUR][:-1],"Period (s)",N2v+" Burst Duration" +" (s)",ran_x,ran_y,False,color='royalblue')
 
 plt.subplot(1,3,3)
-plot_corr(period,N3t_interv[DUR][:-1],"Period (s)",N3t+" Burst Duration" +" (s)",ran_x,ran_y,False,color='royalblue',text_pos=3)
+if(driven==SO):
+	txt_pos=0
+else:
+	txt_pos=3
+plot_corr(period,N3t_interv[DUR][:-1],"Period (s)",N3t+" Burst Duration" +" (s)",ran_x,ran_y,False,color='royalblue',text_pos=txt_pos)
 
 
 plt.tight_layout()
 if save:
 	# plt.savefig("./results_invariant_tests/images/"+file_name+".png")
-	plt.savefig(path+file_name+log+".png")
+	plt.savefig(path+file_name+log+"."+extension,format='eps')
 # 
 if show:
 	plt.show()
@@ -273,7 +283,7 @@ plt.tight_layout()
 # 
 if save:
 	# plt.savefig("./results_invariant_tests/images/"+file_name+"_intervals.png")
-	plt.savefig(path+file_name+log+"_intervals.png")
+	plt.savefig(path+file_name+log+"_intervals."+extension,format='eps')
 # 
 if show:
 	plt.show()
@@ -305,12 +315,18 @@ plot_corr(period,N2N3[DELAY][:-1],"Period (s)","N2-N3 delay (s)",ran_x,ran_y,Fal
 plt.subplot(2,3,4)
 if(driven==N3t):
 	ran_y=(0.5,2) #N3t
-plot_corr(period,N2N1[DELAY],"Period (s)","N2-N1 delay (s)",ran_x,ran_y,False,color='brown',text_pos=3)
+
+if(driven==SO):
+	txt_pos=0
+else:
+	txt_pos=3
+
+plot_corr(period,N2N1[DELAY],"Period (s)","N2-N1 delay (s)",ran_x,ran_y,False,color='brown',text_pos=txt_pos)
 
 
 plt.subplot(2,3,5)
 if(driven==N3t):
-	ran_y=(-1,1) #N3t
+	ran_y=(-1,2) #N3t
 elif(driven==SO):
 	ran_y=(-1.5,ran_y_delay[1]) #SO
 
@@ -331,7 +347,7 @@ plt.tight_layout()
 # 
 if save:
 	# plt.savefig("./results_invariant_tests/images/"+file_name+"_delays.png")
-	plt.savefig(path+file_name+log+"_delays.png")
+	plt.savefig(path+file_name+log+"_delays."+extension,format='eps')
 
 if show:
 	plt.show()

@@ -18,11 +18,6 @@ path = file_name
 f = open(path)
 
 headers = f.readline().split()
-# f.readline()
-# f.readline()
-# f.readline()
-# f.readline()
-# f.readline()
 print(headers)
 f.close()
 
@@ -53,7 +48,11 @@ for neu_name in headers:
 	time = data['t']
 	time = np.array(time) 
 	
-	dt = time[1]-time[0]
+	try:
+		dt = time[1]-time[0]
+	except:
+		print("Error while trying to parse dt. \nDid you intend to use detect_events_from_spikes.py instead?")
+		exit()
 
 	neuron = np.array(neuron)
 	neuron = np.gradient(neuron) #Neuron gradient to ignore drift
