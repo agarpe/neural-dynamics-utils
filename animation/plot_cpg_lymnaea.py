@@ -31,7 +31,7 @@ save = args['save']
 ################
 
 #### Configuración del programa
-segundos_ventana = 5   # Tiempo que se verá en el plot, con 2 funciona otros nu se xD
+segundos_ventana = 2   # Tiempo que se verá en el plot, con 2 funciona otros nu se xD
 
 #### No se recomienda tocar, valores internos
 modo  = int(args['mode'])                 # Modo de visualización, va por parámetro, el 2 da mejor rendimiento
@@ -54,6 +54,7 @@ pts_avance = int(freq/fps)                # Puntos que se deben avanzar en cada 
 ################
 def onKey(event):
     global pts_avance
+    # v_max=600 
     v_max=1200
     if abs(pts_avance) >= v_max:
         print("Max Speed") 
@@ -87,7 +88,7 @@ events = pif.read_events_lymnaea(args["file_events"], args["start"], args["end"]
 ################
 
 ########General
-fig = plt.figure(figsize=(size_plot*3, size_plot), dpi=dpi)
+fig = plt.figure(figsize=(size_plot*4, size_plot), dpi=dpi)
 #print('fig size: {0} DPI, size in inches {1}'.format(fig.get_dpi(), fig.get_size_inches()))
 fig.canvas.mpl_connect('key_press_event', onKey)
 
@@ -101,7 +102,7 @@ if signal.c_on == True:
     #ax_v.xaxis.grid(color='gray', linestyle='dashed')
 else:
     # ax_i = plt.subplot2grid((1, 3), (0, 2))
-    ax_v = plt.subplot2grid((1, 3), (0, 0), colspan=3)
+    ax_v = plt.subplot2grid((1, 4), (0, 0), colspan=2)
     # ax_v = plt.figure()
 
 ########Voltage
@@ -113,10 +114,12 @@ else:
     ax_v_n1, = ax_v.plot([], [], label="N1 neuron" , linewidth=0.4)
     ax_v_n2, = ax_v.plot([], [], label="N2 neuron", linewidth=0.4)
     ax_v_n3, = ax_v.plot([], [], label="N3 neuron", linewidth=0.4)
-ax_v.set_title("Voltage time series")
-ax_v.legend(loc=2)
+# ax_v.set_title("Voltage time series")
+# ax_v.legend(loc=2)
+ax_v.set_xticks([])
+ax_v.set_yticks([])
 ax_v.set_yticklabels([])
-ax_v.set_ylabel("Voltage (10mV/div)")
+# ax_v.set_ylabel("Voltage (10mV/div)")
 ax_v.set_ylim(signal.v_min, signal.v_max)
 ax_v.xaxis.set_animated(True)
 
@@ -130,65 +133,22 @@ if signal.c_on == True:
     ax_c.set_ylabel("Current")
     ax_c.set_ylim(signal.c_min-0.5, signal.c_max+0.5)
     ax_c.xaxis.set_animated(True)
-else:
-    ax_v.set_xlabel("Time (s)")
+# else:
+    # ax_v.set_xlabel("Time (s)")
+    # ax_v.set_ylabel("Voltage (10mV/div)")
 
-# # ########Invariant
-
-# #Último dato se pintará resaltado en estos ax
-# ax_i_red_last,  = ax_i.plot([], [], 'go', markersize='10.0')
-# ax_i_blue_last, = ax_i.plot([], [], 'go', markersize='10.0')
-
-# if modo==1:
-#     #Los datos se añaden progresivamente, declaramos las listas a las cuales se añadira y los ax
-#     list_inv_red_x, list_inv_red_y, list_inv_blue_x, list_inv_blue_y  = [], [], [], []
-#     ax_i_blue_progress, = ax_i.plot([], [], 'bo', markersize='1.0')
-#     ax_i_red_progress,  = ax_i.plot([], [], 'ro', markersize='1.0')
-
-# if modo==2:
-#     #Todos los datos desde el principio y coloreados, no hace falta ni guardar la scatter
-#     ax_i.scatter(events.fN1_fN1, events.lN2_fN1, marker='o', c=events.firstN1, cmap='Reds',  s=1)
-#     ax_i.scatter(events.fN1_fN1, events.fN2_fN1, marker='o', c=events.firstN1, cmap='Blues', s=1)
 
 #Barras en el plot del voltage
 #Los valores y son definitivos (pos), para que no de error meto valores x dummies [0,0]
 list_barra_blue_x, list_barra_red_x, list_barra_black_x = [], [], []
 ax_v_event_blue,  = ax_v.plot( [0,0], [signal.pos1, signal.pos1], 'b', marker=6, linestyle='-')
-ax_v_event_red,   = ax_v.plot( [0,0], [signal.pos2, signal.pos2], 'r', marker=6, linestyle='-')
+ax_v_event_red,   = ax_v.plot( [0,0], [signal.pos2, signal.pos2], 'orange', marker=6, linestyle='-')
 ax_v_event_black, = ax_v.plot( [0,0], [signal.pos3, signal.pos3], 'k', marker=6, linestyle='-')
-ax_v_event_green, = ax_v.plot( [0,0], [signal.pos1, signal.pos1], 'y', marker=6, linestyle='-')
+ax_v_event_green, = ax_v.plot( [0,0], [signal.pos1, signal.pos1], 'g', marker=6, linestyle='-')
 
-# ##### Fit Blue
-# fit    = np.polyfit( events.fN1_fN1, events.fN2_fN1, 1)
-# fit_fn = np.poly1d(fit) 
-# m      = fit[0] #pendiente
-# yhat   = fit_fn( events.fN1_fN1)                         
-# ybar   = np.sum( events.fN2_fN1) / len(events.fN2_fN1)    
-# ssreg  = np.sum( (yhat-ybar)**2)   
-# sstot  = np.sum( (events.fN2_fN1 - ybar)**2)   
-# R2     = ssreg / sstot
-# #ax_i.plot(events.fN1_fN1, fit_fn(events.fN1_fN1), linewidth= 0.5, c="midnightblue", label="R2={0:.4f}\tm={1:.4f}".format(R2, m).expandtabs())
-# ax_i.plot(events.fN1_fN1, fit_fn(events.fN1_fN1), linewidth= 0.5, c="midnightblue", label="N2N1 interval\tR2={0:.4f}".format(R2).expandtabs())
-
-# ##### Fit Red
-# fit    = np.polyfit( events.fN1_fN1, events.lN2_fN1, 1)
-# fit_fn = np.poly1d(fit) 
-# m      = fit[0] #pendiente
-# yhat   = fit_fn( events.fN1_fN1)                         
-# ybar   = np.sum( events.lN2_fN1) / len(events.lN2_fN1)    
-# ssreg  = np.sum( (yhat-ybar)**2)   
-# sstot  = np.sum( (events.lN2_fN1 - ybar)**2)   
-# R2     = ssreg / sstot
-# #ax_i.plot(events.fN1_fN1, fit_fn(events.fN1_fN1), linewidth= 0.5, c="firebrick", label="R2={0:.4f}\tm={1:.4f}".format(R2, m).expandtabs())
-# ax_i.plot(events.fN1_fN1, fit_fn(events.fN1_fN1), linewidth= 0.5, c="firebrick", label="Delay\tR2={0:.4f}".format(R2).expandtabs())
-
-# ##### Estetica plot fit
-# ax_i.legend()
-# ax_i.set_title  ("Dynamical invariant")
-# ax_i.set_xlabel ("Period (s)")
-# ax_i.set_ylabel ("N2N1 interval, N2N1 Delay (s)")
 
 plt.tight_layout()
+
 
 ########
 #UN1ATE
@@ -227,37 +187,24 @@ def init():
         # ax_c_m.set_data( [], [] )
         ax_c_l.set_data( [], [] )
 
-    # ax_i_red_last.set_data ( [], [] )
-    # ax_i_blue_last.set_data( [], [] )
 
     ax_v_event_blue.set_data  ( [0,0], [signal.pos1, signal.pos1] )
     ax_v_event_red.set_data   ( [0,0], [signal.pos2, signal.pos2] )
     # ax_v_event_black.set_data ( [0,0], [signal.pos3, signal.pos3] )
     ax_v_event_green.set_data ( [0,0], [signal.pos4, signal.pos4] )
 
-    # if modo==1:
-    #     ax_i_red_progress.set_data  ( [], [] )
-    #     ax_i_blue_progress.set_data ( [], [] )
-    #     if signal.c_on == True:
-    #         return (ax_v.xaxis, ax_c.xaxis, ax_v_n1, ax_v_n2, ax_v_n3, ax_c_m, ax_c_l, ax_i_red_last, ax_i_blue_last, ax_v_event_blue, ax_v_event_red, ax_v_event_black, ax_i_red_progress, ax_i_blue_progress)
-    #     else:
-    #         return (ax_v.xaxis, ax_v_n1, ax_v_n2, ax_v_n3, ax_i_red_last, ax_i_blue_last, ax_v_event_blue, ax_v_event_red, ax_v_event_black, ax_i_red_progress, ax_i_blue_progress)
-    # else:
-    #     if signal.c_on == True:
-    #         return (ax_v.xaxis, ax_c.xaxis, ax_v_n1, ax_v_n2, ax_v_n3, ax_c_m, ax_c_l, ax_i_red_last, ax_i_blue_last, ax_v_event_blue, ax_v_event_red, ax_v_event_black)
-    #     else:
-    #         return (ax_v.xaxis, ax_v_n1, ax_v_n2, ax_v_n3, ax_i_red_last, ax_i_blue_last, ax_v_event_blue, ax_v_event_red, ax_v_event_black)
 
     if signal.c_on == True:
         return (ax_v.xaxis, ax_c.xaxis, ax_v_n1, ax_v_n2, ax_v_n3, ax_c_l, ax_v_event_blue, ax_v_event_red, ax_v_event_black, ax_v_event_green)
     else:
         return (ax_v.xaxis, ax_v_n1, ax_v_n2, ax_v_n3, ax_v_event_blue, ax_v_event_red, ax_v_event_black, ax_v_event_green)
 
+one_each=True
 
 def update(i):
     global ini_ventana, pts_avance, index_event, pts_ventana
     ini_ventana += pts_avance
-    fin =  ini_ventana+pts_ventana
+    fin = ini_ventana+pts_ventana
 
     # Limites de tiempo alcanzados o velocidad parada
     if ini_ventana<0:
@@ -269,98 +216,73 @@ def update(i):
         ini_ventana = signal.num_points - pts_ventana -1
         fin = ini_ventana + pts_ventana
     elif pts_avance == 0:
-        # if modo == 1:
-        #     if signal.c_on == True:
-        #         return (ax_v.xaxis, ax_c.xaxis, ax_v_n1, ax_v_n2, ax_v_n3, ax_c_m, ax_c_l, ax_i_red_last, ax_i_blue_last, ax_v_event_blue, ax_v_event_red, ax_v_event_black, ax_v_event_green, ax_i_red_progress, ax_i_blue_progress)
-        #     else:
-        #         return (ax_v.xaxis, ax_v_n1, ax_v_n2, ax_v_n3, ax_i_red_last, ax_i_blue_last, ax_v_event_blue, ax_v_event_red, ax_v_event_black, ax_v_event_green, ax_i_red_progress, ax_i_blue_progress)
-        # else:
-        #     if signal.c_on == True:
-        #         return (ax_v.xaxis, ax_c.xaxis, ax_v_n1, ax_v_n2, ax_v_n3, ax_c_m, ax_c_l, ax_i_red_last, ax_i_blue_last, ax_v_event_blue, ax_v_event_red, ax_v_event_black, ax_v_event_green)
-        #     else:
-        #         return (ax_v.xaxis, ax_v_n1, ax_v_n2, ax_v_n3, ax_i_red_last, ax_i_blue_last, ax_v_event_blue, ax_v_event_red, ax_v_event_black, ax_v_event_green)
         if signal.c_on == True:
             return (ax_v.xaxis, ax_c.xaxis, ax_v_n1, ax_v_n2, ax_v_n3, ax_c_l, ax_v_event_blue, ax_v_event_red, ax_v_event_black, ax_v_event_green)
         else:
             return (ax_v.xaxis, ax_v_n1, ax_v_n2, ax_v_n3, ax_v_event_blue, ax_v_event_red, ax_v_event_black, ax_v_event_green)
 
-    # Actualizamos las señales V y C a los rangos nuevos
-    ax_v_n1.set_data( signal.t[ini_ventana:fin], signal.v_n1[ini_ventana:fin] )
-    ax_v_n2.set_data( signal.t[ini_ventana:fin], signal.v_n2[ini_ventana:fin] )
-    ax_v_n3.set_data( signal.t[ini_ventana:fin], signal.v_n3[ini_ventana:fin] )
-    ax_v.set_xlim( signal.t[ini_ventana], signal.t[fin-1] )
-    if signal.c_on == True:
-        # ax_c_m.set_data( signal.t[ini_ventana:fin], signal.c_m[ini_ventana:fin] )
-        ax_c_l.set_data( signal.t[ini_ventana:fin], signal.c[ini_ventana:fin] )
-        ax_c.set_xlim( signal.t[ini_ventana], signal.t[fin-1] )
+    if not one_each:
+        # Actualizamos las señales V y C a los rangos nuevos
+        ax_v_n1.set_data( signal.t[ini_ventana:fin], signal.v_n1[ini_ventana:fin] )
+        ax_v_n2.set_data( signal.t[ini_ventana:fin], signal.v_n2[ini_ventana:fin] )
+        ax_v_n3.set_data( signal.t[ini_ventana:fin], signal.v_n3[ini_ventana:fin] )
+        if signal.c_on == True:
+            # ax_c_m.set_data( signal.t[ini_ventana:fin], signal.c_m[ini_ventana:fin] )
+            ax_c_l.set_data( signal.t[ini_ventana:fin], signal.c[ini_ventana:fin] )
+            ax_c.set_xlim( signal.t[ini_ventana], signal.t[fin-1] )
 
+    ax_v.set_xlim( signal.t[ini_ventana], signal.t[fin-1] )
     # #### EVENTOS
     ref_ini = signal.t[ini_ventana]
     ref_fin = signal.t[ini_ventana+pts_ventana-1]
-    ref_event = events.firstN1[index_event+1] #El evento de referencia
+    ref_event_n1 = events.firstN1[index_event+1] #El evento de referencia para N1
+    ref_event_n2 = events.firstN2[index_event+1] #El evento de referencia
+    ref_event_n3 = events.firstN3[index_event+1] #El evento de referencia
+
+    ref_end = ref_fin+2
+    # Avanzando hacia delante AND eventos pendientes
+    if pts_avance>0 and index_event<(events.num_events-1) and ref_event_n1 < ref_end:
+        if one_each:
+            ax_v_n1.set_data( signal.t[ini_ventana:fin], signal.v_n1[ini_ventana:fin] )
+            ax_v_n2.set_data( [], [] )
+            ax_v_n3.set_data( [], [] )
+        else:
+            ax_v_event_blue.set_xdata   ( [ events.firstN1  [index_event], events.lastN1 [index_event] ] )
+            ax_v_event_red.set_xdata   ( [0,0] )
+            ax_v_event_green.set_xdata ( [0,0] )
+
 
     # Avanzando hacia delante AND eventos pendientes
-    if pts_avance>0 and index_event<(events.num_events-1) and ref_event <= ref_fin:
-        # update_events(index_event)
-        if(events.firstN2[index_event] > events.lastN1[index_event]):
+    if pts_avance>0 and index_event<(events.num_events-1) and ref_event_n2 < ref_end:
+        if one_each:
+            ax_v_n1.set_data( signal.t[ini_ventana:fin], signal.v_n1[ini_ventana:fin] )
+            ax_v_n2.set_data( signal.t[ini_ventana:fin], signal.v_n2[ini_ventana:fin] )
+            ax_v_n3.set_data( [], [] )
+        else:
+            ax_v_event_blue.set_xdata   ( [0,0] )
             ax_v_event_red.set_xdata   ( [ events.firstN2  [index_event], events.lastN2 [index_event] ] )
+            ax_v_event_green.set_xdata ( [0,0] )
 
-        if(events.firstN3[index_event] > events.lastN2[index_event]):
+
+    # Avanzando hacia delante AND eventos pendientes
+    if pts_avance>0 and index_event<(events.num_events-1) and ref_event_n3 < ref_end-2:
+        if one_each:
+            ax_v_n1.set_data( signal.t[ini_ventana:fin], signal.v_n1[ini_ventana:fin] )
+            ax_v_n2.set_data( signal.t[ini_ventana:fin], signal.v_n2[ini_ventana:fin] )
+            ax_v_n3.set_data( signal.t[ini_ventana:fin], signal.v_n3[ini_ventana:fin] )
+        else:
+            ax_v_event_blue.set_xdata   ( [0,0] )
+            ax_v_event_red.set_xdata   ( [0,0] )
             ax_v_event_green.set_xdata ( [ events.firstN3 [index_event], events.lastN3 [index_event] ] )
-        
-        if(events.lastN3[index_event] < events.firstN1[index_event]):
-            ax_v_event_blue.set_xdata  ( [ events.firstN1 [index_event], events.lastN1 [index_event] ] )
-            
-        # ax_v_event_black.set_xdata ( [ events.firstN1 [index_event+1], events.firstN1 [index_event+2] ] )
+
         index_event+=1
             
-    # Avanzando hacia atras AND se han recorrido eventos
-    # elif pts_avance<0 and index_event!=0 and ref_event>=ref_fin:
-    #     index_event-=1
-    #     update_events(index_event)
-
-    # if modo==1:
-    #     if signal.c_on == True:
-    #         return (ax_v.xaxis, ax_c.xaxis, ax_v_n1, ax_v_n2, ax_v_n3, ax_c_m, ax_c_l, ax_i_red_last, ax_i_blue_last, ax_v_event_blue, ax_v_event_red, ax_v_event_black, ax_v_event_green, ax_i_red_progress, ax_i_blue_progress)
-    #     else: 
-    #         return (ax_v.xaxis, ax_v_n1, ax_v_n2, ax_v_n3, ax_i_red_last, ax_i_blue_last, ax_v_event_blue, ax_v_event_red, ax_v_event_black, ax_v_event_green, ax_i_red_progress, ax_i_blue_progress)
-    # else:
-    #     if signal.c_on == True:
-    #         return (ax_v.xaxis, ax_c.xaxis, ax_v_n1, ax_v_n2, ax_v_n3, ax_c_m, ax_c_l, ax_i_red_last, ax_i_blue_last, ax_v_event_blue, ax_v_event_red, ax_v_event_black, ax_v_event_green)
-    #     else:
-            # return (ax_v.xaxis, ax_v_n1, ax_v_n2, ax_v_n3, ax_i_red_last, ax_i_blue_last, ax_v_event_blue, ax_v_event_red, ax_v_event_black, ax_v_event_green)
 
     if signal.c_on == True:
         return (ax_v.xaxis, ax_c.xaxis, ax_v_n1, ax_v_n2, ax_v_n3,  ax_c_l, ax_v_event_blue, ax_v_event_red, ax_v_event_black, ax_v_event_green)
     else:
         return (ax_v.xaxis, ax_v_n1, ax_v_n2, ax_v_n3, ax_v_event_blue, ax_v_event_red, ax_v_event_black, ax_v_event_green)
  
-def update_events(index_event):
-    #### Funcion que actualiza los eventos
-    #print(events.firstN2 [index_event+1] - events.lastN1 [index_event]) 
-
-    # # #### Dato resaltado en verde en los puntos del invariante
-    # ax_i_red_last.set_data  ( events.fN1_fN1[index_event], events.lN2_fN1[index_event] )
-    # ax_i_blue_last.set_data ( events.fN1_fN1[index_event], events.fN2_fN1[index_event] )
-
-    #### Actualización de las tres barras sobre el voltaje
-    ax_v_event_blue.set_xdata  ( [ events.firstN1 [index_event], events.lastN1 [index_event] ] )
-    ax_v_event_red.set_xdata   ( [ events.firstN2  [index_event], events.lastN2 [index_event] ] )
-    # ax_v_event_black.set_xdata ( [ events.firstN1 [index_event+1], events.firstN1 [index_event+2] ] )
-    ax_v_event_green.set_xdata ( [ events.firstN3 [index_event], events.lastN3 [index_event] ] )
-    
-    # if modo==1:
-    #     # En este modo los puntos del invariante nuevos no estan
-
-    #     # Añadimos valores a las listas
-    #     list_inv_red_x.append ( events.fN1_fN1 [index_event] )
-    #     list_inv_red_y.append ( events.lN2_fN1 [index_event] )
-    #     list_inv_blue_x.append( events.fN1_fN1 [index_event] )
-    #     list_inv_blue_y.append( events.fN2_fN1 [index_event] )
-
-    #     # Las listas al objeto axe correspondiente
-    #     ax_i_red_progress.set_data  ( list_inv_red_x,  list_inv_red_y  )
-    #     ax_i_blue_progress.set_data ( list_inv_blue_x, list_inv_blue_y )
 
 ########
 #MAIN
@@ -370,8 +292,14 @@ print("DPI              = ", dpi)
 print("Resolucion       = ", dpi*size_plot*3, "x", dpi*size_plot)
 print("FPS              = ", fps)
 
+
+    # fig.patch.set_visible(False)
+
+plt.axis('off')
+
 if save == '0':
     anim = FuncAnimation(fig, update, interval=interval, repeat=False, blit=True, init_func=init)
+
     plt.show()
 
 else:
