@@ -172,24 +172,48 @@ class read_events_datarafi ():
 
 		self.num_events = len(self.fPD_fPD)
 
+def get_section(interval,start, end):
+	interval = interval[start:end]
+	return interval
 
 # Lee el fichero NX burst events de lymnaea
 # Formato de archivo: fist_spk last_spk
 class read_events_lymnaea ():
 	def __init__(self, filename, t_start, t_end, freq):
-		dataset = pd.read_csv(filename, delimiter=' ', header=None) # Si header = 0, no lee la primera linea
+		dataset = pd.read_csv(filename, delimiter=' ', header=0) # Si header = 0, no lee la primera linea
 		array = dataset.values
 		data = array[:,:]
 
 		self.firstN1  = data[:, 1] / 1000.0 #Asi lo guardo en segundos
 		self.lastN1   = data[:, 2] / 1000.0 #Asi lo guardo en segundos
-		self.firstN2  = data[:, 3] / 1000.0 #Asi lo guardo en segundos
-		self.lastN2   = data[:, 4] / 1000.0 #Asi lo guardo en segundos
-		self.burstN2 = data[:, 5]
-		self.burstN1 = data[:, 6]
+		self.firstN2  = data[:, 3] / 1000.0 
+		self.lastN2   = data[:, 4] / 1000.0 
+		self.firstN3  = data[:, 5] / 1000.0 
+		try:
+			self.lastN3   = data[:, 6] / 1000.0 
+		except:
+			print(data[:,6])
 		self.fN1_fN1 = data[:, 7]/ 1000.0
-		self.lN2_fN1 = data[:, 8]/ 1000.0##??? equivalente? anterior LD seguramente sea PD??
-		self.fN2_fN1 = data[:, 9]/ 1000.0
+		self.burstN1 = data[:, 8] / 1000.0 
+		self.burstN2 = data[:, 9] / 1000.0 
+		self.burstN3 = data[:, 10] / 1000.0
+		self.fN1_fN2 = data[:, 11]/ 1000.0
+		self.lN1_fN2 = data[:, 12]/ 1000.0 
+
+		self.fN2_fN1 = data[:, 13]/ 1000.0
+		self.lN2_fN1 = data[:, 14]/ 1000.0##??? equivalente? anterior LD seguramente sea PD??
+
+		self.fN1_fN3 = data[:, 15]/ 1000.0 #N1N3interval
+		self.lN1_fN3 = data[:, 16]/ 1000.0 #N1N3delay
+
+		self.fN3_fN1 = data[:, 17]/ 1000.0 #N3N1interval
+		self.lN3_fN1 = data[:, 18]/ 1000.0 #N3N1delay
+
+		self.fN2_fN3 = data[:, 19]/ 1000.0 #N2N3interval
+		self.lN2_fN3 = data[:, 20]/ 1000.0 #N2N3delay
+
+		self.fN3_fN2 = data[:, 21]/ 1000.0 #N3N2interval
+		self.lN3_fN2 = data[:, 22]/ 1000.0 #N3N2delay
 
 		if t_end == 'None':
 			t_end = float('inf')
@@ -209,8 +233,9 @@ class read_events_lymnaea ():
 		self.firstN2  = self.firstN2 [index_start:index_end]
 		self.lastN2   = self.lastN2  [index_start:index_end]
 		self.firstN1  = self.firstN1 [index_start:index_end]
-	
 		self.lastN1   = self.lastN1  [index_start:index_end]
+		self.firstN3  = self.firstN3 [index_start:index_end]
+		self.lastN3   = self.lastN3  [index_start:index_end]
 
 		##########
 		for i in range(len(self.firstN2)):
@@ -221,12 +246,32 @@ class read_events_lymnaea ():
 			self.firstN1[i] = self.firstN1[i] - float(t_start)
 		for i in range(len(self.lastN1)):
 			self.lastN1[i] = self.lastN1[i] - float(t_start)
+		for i in range(len(self.firstN3)):
+			self.firstN3[i] = self.firstN3[i] - float(t_start)
+		for i in range(len(self.lastN3)):
+			self.lastN3[i] = self.lastN3[i] - float(t_start)
 
 		##########
 
 		self.fN1_fN1  = self.fN1_fN1 [index_start:index_end]
-		self.lN2_fN1  = self.lN2_fN1 [index_start:index_end]
-		self.fN2_fN1  = self.fN2_fN1 [index_start:index_end]
+		self.fN1_fN2 = self.fN1_fN2 [index_start:index_end]
+		self.lN1_fN2 = self.lN1_fN2 [index_start:index_end]
+
+		self.fN2_fN1 = self.fN2_fN1 [index_start:index_end]
+		self.lN2_fN1 = self.lN2_fN1 [index_start:index_end]
+
+		self.fN1_fN3 = self.fN1_fN3 [index_start:index_end]
+		self.lN1_fN3 = self.lN1_fN3 [index_start:index_end]
+
+		self.fN3_fN1 = self.fN3_fN1 [index_start:index_end]
+		self.lN3_fN1 = self.lN3_fN1 [index_start:index_end]
+
+		self.fN2_fN3 = self.fN2_fN3 [index_start:index_end]
+		self.lN2_fN3 = self.lN2_fN3 [index_start:index_end]
+
+		self.fN3_fN2 = self.fN3_fN2 [index_start:index_end]
+		self.lN3_fN2 = self.lN3_fN2 [index_start:index_end]
+
 
 		self.num_events = len(self.fN1_fN1)
 
@@ -273,4 +318,5 @@ class read_data_lymnaea ():
 		self.pos1  = self.v_min + (self.range*0.6)
 		self.pos2  = self.v_min + (self.range*0.8)
 		self.pos3  = self.v_min + (self.range*0.1)
+		self.pos4  = self.v_min + (self.range*0.4)
 
