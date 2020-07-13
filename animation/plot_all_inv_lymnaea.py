@@ -72,30 +72,6 @@ def onKey(event):
     elif event.key == 'left' and pts_avance>-v_max:
         pts_avance = pts_avance-50 
        
-
-################
-#Fit plot
-################
-
-def plot_fit_inv(ax,int1,int2,color, label):
-    fit    = np.polyfit( int1, int2, 1)
-    fit_fn = np.poly1d(fit) 
-    m      = fit[0] #pendiente
-    yhat   = fit_fn( int1)                         
-    ybar   = np.sum( int2) / len(int2)    
-    ssreg  = np.sum( (yhat-ybar)**2)   
-    sstot  = np.sum( (int2 - ybar)**2)   
-    R2     = ssreg / sstot
-    ax.plot(int1, fit_fn(int1), linewidth= 0.5, c=color, label=label+"\tR2={0:.4f}".format(R2).expandtabs())
-
-
-
-def plot_fit_design(ax,title,intervals):
-    ax.legend()
-    ax.set_title  (title)
-    ax.set_xlabel ("Period (s)")
-    ax.set_ylabel (intervals)
-
 ################
 #ARCHIVOS
 ################
