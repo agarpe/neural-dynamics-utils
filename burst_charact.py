@@ -14,116 +14,117 @@ extension = "eps"
 
 
 #####################
-# # Loads file from record
+# Loads file from record
+date = '08-Jul-2019'
+file = 'burst_ph1.txt'
+file_name = '08-Jul-2019'
+
+path = '../data/'+date+'/'
+
+N1m_data = read_bursts_events(path+file)
+
 # date = '08-Jul-2019'
-# file = 'burst_ph1.txt'
-# file_name = '08-Jul-2019'
+file = 'burst_ph2.txt'
 
-# path = '../data/'+date+'/'
+N2v_data = read_bursts_events(path+file)
 
-# N1m_data = read_bursts_events(path+file)
+# date = '08-Jul-2019'
+file = 'burst_ph3.txt'
 
-# # date = '08-Jul-2019'
-# file = 'burst_ph2.txt'
-
-# N2v_data = read_bursts_events(path+file)
-
-# # date = '08-Jul-2019'
-# file = 'burst_ph3.txt'
-
-# N3t_data = read_bursts_events(path+file)
-
-
-# print(len(N1m_data),len(N2v_data),len(N3t_data))
-# #Adjust burst to periods
-# #Input: Ref, Snd, Thrd.
-
-# N1m_data,N2v_data,N3t_data = fix_length(N1m_data,N2v_data,N3t_data)
-
-# print(len(N1m_data),len(N2v_data),len(N3t_data))
-
-
-# ran_x = (0,90)
-# ran_y = (0,90)
-# box_ran = (-0.95,70)
-# #####################
-
-# ####################
-## Loads file from model neuron
-
-### test2: n3t [1:] on load
-##			n1m, n2v [:-1] on plot
-
-##  test3: n3t [1:] on load
-##			n1m, n2v, n3t [:-1] on plot
-
-# path = ""
-
-
-# # path = "../model/slow-fast/" + file_name + "/"
-# # path = "../lymnaea-model/test_intervals_long/"
-# # path = file_name +"/"
-path = "../model/no_variability/"
-
-# path = "../model/SO/"
-path = "../model/N1m/"
-# path = "../model/N3t/test17/"
-
-if len(sys.argv)>1 and sys.argv[1] =="i":
-	print("Use: python3 burst_charact.py path file_name (without extension) time_scale")
-	sys.exit()
-
-log=""
-driven=N1m
-
-if len(sys.argv) >4:
-	log=sys.argv[4]
-
-if len(sys.argv) >3:
-	driven=sys.argv[3]
-
-if len(sys.argv) >2:
-	path = sys.argv[1]
-	file_name = sys.argv[2]
-	time_scale=1000
-	# time_scale= int(sys.argv[3])
-else:
-	file_name = "so_test19"
-	# file_name = "test1"
-	# file_name = "n3t_test17"
-	# time_scale = 10000
-	time_scale = 1000
-	# time_scale = 1000
-
-
-# python3 burst_charact.py ../model/N3t/test17/ n3t_test17 1000; python3 burst_charact.py ../model/SO/ so_test19 10000;python3 burst_charact.py ../model/N1m/ test1 1000
-
-
-
-path+= file_name + "/"
-
-
-N1m_data = read_model_burst_path(path+"N1M",scale=time_scale)
-N2v_data = read_model_burst_path(path+"N2v",scale=time_scale)[:-1]
-N3t_data = read_model_burst_path(path+"N3t",scale=time_scale)
-
-
-print("-------",len(N1m_data),len(N2v_data),len(N3t_data))
-# N1m_data = N1m_data[:len(N1m_data)//2]
-# N2v_data = N2v_data[:len(N2v_data)//2]
-# N3t_data = N3t_data[:len(N3t_data)//2]
+N3t_data = read_bursts_events(path+file)
 
 
 print(len(N1m_data),len(N2v_data),len(N3t_data))
-# #Adjust burst to periods
-# #Input: Ref, Snd, Thrd.
+#Adjust burst to periods
+#Input: Ref, Snd, Thrd.
 
 N1m_data,N2v_data,N3t_data = fix_length(N1m_data,N2v_data,N3t_data)
 
-print("Number of bursts:")
 print(len(N1m_data),len(N2v_data),len(N3t_data))
 
+
+ran_x = (0,90)
+ran_y = (0,90)
+box_ran = (-0.95,70)
+
+driven=8
+#####################
+
+# ####################
+# ## Loads file from model neuron
+
+# ### test2: n3t [1:] on load
+# ##			n1m, n2v [:-1] on plot
+
+# ##  test3: n3t [1:] on load
+# ##			n1m, n2v, n3t [:-1] on plot
+
+# # path = ""
+
+
+# # # path = "../model/slow-fast/" + file_name + "/"
+# # # path = "../lymnaea-model/test_intervals_long/"
+# # # path = file_name +"/"
+# path = "../model/no_variability/"
+
+# # path = "../model/SO/"
+# path = "../model/N1m/"
+# # path = "../model/N3t/test17/"
+
+# if len(sys.argv)>1 and sys.argv[1] =="i":
+# 	print("Use: python3 burst_charact.py path file_name (without extension) time_scale")
+# 	sys.exit()
+
+# log=""
 # driven=N1m
+
+# if len(sys.argv) >4:
+# 	log=sys.argv[4]
+
+# if len(sys.argv) >3:
+# 	driven=sys.argv[3]
+
+# if len(sys.argv) >2:
+# 	path = sys.argv[1]
+# 	file_name = sys.argv[2]
+# 	time_scale=1000
+# 	# time_scale= int(sys.argv[3])
+# else:
+# 	file_name = "so_test19"
+# 	# file_name = "test1"
+# 	# file_name = "n3t_test17"
+# 	# time_scale = 10000
+# 	time_scale = 1000
+# 	# time_scale = 1000
+
+
+# # python3 burst_charact.py ../model/N3t/test17/ n3t_test17 1000; python3 burst_charact.py ../model/SO/ so_test19 10000;python3 burst_charact.py ../model/N1m/ test1 1000
+
+
+
+# path+= file_name + "/"
+
+
+# N1m_data = read_model_burst_path(path+"N1M",scale=time_scale)
+# N2v_data = read_model_burst_path(path+"N2v",scale=time_scale)[:-1]
+# N3t_data = read_model_burst_path(path+"N3t",scale=time_scale)
+
+
+# print("-------",len(N1m_data),len(N2v_data),len(N3t_data))
+# # N1m_data = N1m_data[:len(N1m_data)//2]
+# # N2v_data = N2v_data[:len(N2v_data)//2]
+# # N3t_data = N3t_data[:len(N3t_data)//2]
+
+
+# print(len(N1m_data),len(N2v_data),len(N3t_data))
+# # #Adjust burst to periods
+# # #Input: Ref, Snd, Thrd.
+
+# N1m_data,N2v_data,N3t_data = fix_length(N1m_data,N2v_data,N3t_data)
+
+# print("Number of bursts:")
+# print(len(N1m_data),len(N2v_data),len(N3t_data))
+
 
 
 if(driven==N1m):
@@ -137,17 +138,21 @@ elif(driven==SO):
 elif(driven==N3t):
 	ran_x_dur =(2,4); ran_x_interval =(2.2,3.7); ran_x_delay = (2,4) 
 	ran_y_dur =(0,2.8); ran_y_interval = (0,3.3); ran_y_delay = (-0.3,2.0)
+
+elif(driven==8): #recording
+	ran_x_dur = (0,90); ran_x_interval = (0,90); ran_x_delay = (0,90); 
+	ran_y_dur =(-5,80); ran_y_interval = (-5,80); ran_y_delay = (-5,80)
 else:
 	ran_x_dur = False; ran_x_interval = False; ran_x_delay = False; 
 	ran_y_dur = False; ran_y_interval = False; ran_y_delay = False
 	
+# box_ran = (-0.95,4)
 
 
-box_ran = (-0.95,4)
 
-
-save=True
-show=False
+####################################################
+save=False
+show=True
 
 ###########################################################################
 

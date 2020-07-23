@@ -148,7 +148,8 @@ if modo==1:
 if modo==2:
     #Todos los datos desde el principio y coloreados, no hace falta ni guardar la scatter
     ax_i.scatter(events.fN1_fN1, events.burstN3, marker='o', c=events.firstN1, cmap='Blues',  s=1)
-    ax_i.scatter(events.fN1_fN1, events.lN2_fN1, marker='o', c=events.firstN1, cmap='Reds', s=1)
+    ax_i.scatter(events.fN1_fN1, events.lN3_fN2, marker='o', c=events.firstN1, cmap='Reds', s=1)
+    # ax_i.scatter(events.fN1_fN1, events.lN2_fN1, marker='o', c=events.firstN1, cmap='Reds', s=1)
     ax_i.scatter(events.fN1_fN1, events.fN3_fN2, marker='o', c=events.firstN1, cmap='Greens', s=1)
 
 #Barras en el plot del voltage
@@ -165,7 +166,8 @@ ax_v_event_green, = ax_v.plot( [0,0], [signal.pos1, signal.pos1], 'g', marker=6,
 pif.plot_fit_inv(ax_i,events.fN1_fN1,events.burstN3,"midnightblue","N3 burst")
 
 ##### Fit Red
-pif.plot_fit_inv(ax_i,events.fN1_fN1,events.lN2_fN1,"firebrick","N2N1 delay")
+# pif.plot_fit_inv(ax_i,events.fN1_fN1,events.lN2_fN1,"firebrick","N2N1 delay")
+pif.plot_fit_inv(ax_i,events.fN1_fN1,events.lN3_fN2,"firebrick","N3N2 delay")
 
 ##### Fit Green
 pif.plot_fit_inv(ax_i,events.fN1_fN1,events.fN3_fN2,"green","N3N2 interval")
@@ -301,13 +303,15 @@ def update_events(index_event):
     #print(events.firstN2 [index_event+1] - events.lastN1 [index_event]) 
 
     # #### Dato resaltado en verde en los puntos del invariante
-    ax_i_red_last.set_data  ( events.fN1_fN1[index_event], events.lN2_fN1[index_event] )
+    # ax_i_red_last.set_data  ( events.fN1_fN1[index_event], events.lN2_fN1[index_event] )
+    ax_i_red_last.set_data  ( events.fN1_fN1[index_event], events.lN3_fN2[index_event] )
     ax_i_blue_last.set_data ( events.fN1_fN1[index_event], events.burstN3[index_event] )
     ax_i_green_last.set_data ( events.fN1_fN1[index_event], events.fN3_fN2[index_event] )
 
     #### Actualización de las tres barras sobre el voltaje
     ax_v_event_blue.set_xdata  ( [ events.firstN3 [index_event], events.lastN3 [index_event] ] )
-    ax_v_event_red.set_xdata   ( [ events.lastN2  [index_event], events.firstN1 [index_event+1] ] )
+    ax_v_event_red.set_xdata   ( [ events.lastN3  [index_event], events.firstN2 [index_event+1] ] )
+    # ax_v_event_red.set_xdata   ( [ events.lastN2  [index_event], events.firstN1 [index_event+1] ] )
     ax_v_event_black.set_xdata ( [ events.firstN1 [index_event], events.firstN1 [index_event+1] ] )
     ax_v_event_green.set_xdata ( [ events.firstN3 [index_event], events.firstN2 [index_event+1] ] )
     
@@ -316,7 +320,8 @@ def update_events(index_event):
 
         # Añadimos valores a las listas
         list_inv_red_x.append ( events.fN1_fN1 [index_event] )
-        list_inv_red_y.append ( events.lN2_fN1 [index_event] )
+        # list_inv_red_y.append ( events.lN2_fN1 [index_event] )
+        list_inv_red_y.append ( events.lN3_fN2 [index_event] )
         list_inv_blue_x.append( events.fN1_fN1 [index_event] )
         list_inv_blue_y.append( events.fN2_fN1 [index_event] )
 

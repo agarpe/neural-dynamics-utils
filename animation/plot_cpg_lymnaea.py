@@ -199,7 +199,7 @@ def init():
     else:
         return (ax_v.xaxis, ax_v_n1, ax_v_n2, ax_v_n3, ax_v_event_blue, ax_v_event_red, ax_v_event_black, ax_v_event_green)
 
-one_each=True
+one_each=False
 
 def update(i):
     global ini_ventana, pts_avance, index_event, pts_ventana
@@ -295,7 +295,7 @@ print("FPS              = ", fps)
 
     # fig.patch.set_visible(False)
 
-plt.axis('off')
+# plt.axis('off')
 
 if save == '0':
     anim = FuncAnimation(fig, update, interval=interval, repeat=False, blit=True, init_func=init)

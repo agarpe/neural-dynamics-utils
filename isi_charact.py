@@ -14,6 +14,7 @@ if len(sys.argv) > 1:
 		file_name = '../model/'+neuron+'_spikes.txt'
 	else: #from file not model
 		file_name = sys.argv[1]
+		neuron = file_name
 
 else:
 	#Posible neuron name
@@ -38,8 +39,8 @@ ISI_n = np.array(get_ISI(mean_evt_n))
 spikes = get_spikes(mean_evt_n,0.01)
 print(len(spikes))
 
-plt.plot(spikes,'.')
-plt.show()
+# plt.plot(spikes,'.')
+# plt.show()
 
 print("Firing rate",len(mean_evt_n)/len(spikes))
 
@@ -57,6 +58,12 @@ sdf_ISI = sdf(ISI_n)
 
 
 sdf_spike = sdf(spikes)
+
+
+print(np.std(sdf_ISI))
+print(np.average(sdf_ISI))
+
+
 
 
 ########################
@@ -96,7 +103,7 @@ sdf_spike = sdf(spikes)
 # plt.show()
 
 
-plt.hist(ISI_n,rwidth=0.4)
+plt.hist(ISI_n,rwidth=1)
 plt.xlabel("ISI")
 plt.ylabel("Freq")
 plt.title("ISI histogram for "+neuron)
@@ -109,3 +116,5 @@ plt.title("ISI histogram for "+neuron)
 plt.show()
 
 plot_return_map(ISI_n[:],neuron ,xlim=(-0.05,0.3),ylim=(-0.05,0.3))
+
+
