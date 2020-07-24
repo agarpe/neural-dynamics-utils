@@ -3,53 +3,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 import sys
+from superpos_functions import *
 
 plt.rcParams.update({'font.size': 17})
-
-def plot_events(events,col,tit,ms=50):
-	ax=0
-	if(col=='b'):
-		fst_color = 'cyan'
-		last_color = 'darkblue'
-	elif(col=='r'): 
-		fst_color = 'coral'
-		last_color = 'maroon'
-	elif(col=='g'):
-		fst_color = 'lime'
-		last_color = 'darkgreen'
-
-	for row_i in range(events.shape[0]):
-		row = center(events[row_i,:],ms) #center spike from max
-		row = no_drift(row) #adjust drift
-		if(row_i==0):
-			ax_fst,=plt.plot(row,color=fst_color,linewidth=2)
-		elif(row_i==events.shape[0]-1):
-			ax_last,=plt.plot(row,color=last_color,linewidth=2)
-		else:
-			ax,=plt.plot(row,color=col,linewidth=0.1)	
-		# ax,=plt.plot(row,color=col,linewidth=0.1)
-			ax,=plt.plot(row,linewidth=0.1)
-	plt.title(tit)
-	return ax,ax_fst,ax_last
-
-
-#Center spike from max
-def center(events,ms):
-	mx_index = np.argmax(events) #index of maximum V value (spike)
-	ms_points = ms /0.1 #Number of points corresponding to the iteration
-	
-	ini = int(mx_index-ms_points) #init as max point - number of points. 
-	end = int(mx_index+ms_points) #end as max point + number of points. 
-
-	return events[ini:end]
-
-def no_drift(events):
-	if(events.shape[0]!=0):
-		mn = np.min(events)
-		if mn != 0:
-			events = events-mn
-	
-	return events
 
 
 
