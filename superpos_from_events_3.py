@@ -15,13 +15,8 @@ if len(sys.argv) ==3:
 	path_control_pos = path+"_control_pos_events.txt"
 	width = int(sys.argv[2])
 
-# elif len(sys.argv) ==4:
-# 	path_control = sys.argv[1]
-# 	path_laser = sys.argv[2]
-# 	path = path_control[:path_control.find("control")] 
 else:
-	print("Use1: python3 superpos_from_events_3.py control_pre_events_path.txt laser_events_path.txt")
-	print("Use2: python3 superpos_from_events_3.py path ")
+	print("Use: python3 superpos_from_events_3.py path width ")
 	exit()
 
 
@@ -141,7 +136,7 @@ plt.subplot(rows,columns,4)
 ax1,ax_fst,ax_last= plot_events(control_pre_events,'b',tit="ControlPre-Laser",ms=width)
 ax2,ax_fst,ax_last=plot_events(laser_events,'r',tit="ControlPre-Laser",ms=width)
 
-plt.legend([ax1,ax2],[label1,label2])
+plt.legend([ax1,ax2],[label1,label2],loc="lower left")
 # plt.savefig(path +"pre_laser.png")
 # plt.show()
 
@@ -152,7 +147,7 @@ plt.subplot(rows,columns,5)
 ax1,ax_fst,ax_last= plot_events(control_pos_events,'g',tit="ControlPos-Laser",ms=width)
 ax2,ax_fst,ax_last=plot_events(laser_events,'r',tit="ControlPos-Laser",ms=width)
 
-plt.legend([ax1,ax2],[label1,label2])
+plt.legend([ax1,ax2],[label1,label2],loc="lower left")
 # plt.savefig(path +"pos_laser.png")
 # plt.show()
 
@@ -165,7 +160,7 @@ plt.subplot(rows,columns,6)
 ax1,ax_fst,ax_last= plot_events(control_pre_events,'b',tit="ControlPre-ControlPos",ms=width)
 ax3,ax_fst,ax_last=plot_events(control_pos_events,'g',tit="ControlPre-ControlPos",ms=width)
 
-plt.legend([ax1,ax3],[label1,label3])
+plt.legend([ax1,ax3],[label1,label3],loc="lower left")
 # plt.savefig(path +"_controls.png")
 # plt.show()
 

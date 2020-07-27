@@ -1,4 +1,9 @@
 from superpos_functions import *
+from colour import Color
+import glob
+
+# rcParams["legend.markerscale"]=10
+plt.rcParams.update({'legend.markerscale': 2000})
 
 
 if len(sys.argv) >1:
@@ -49,14 +54,20 @@ def get_events(f_data,f_events,ms):
 	return waveforms
 
 
-files = os.listdir(path)
+# files = sorted(os.listdir(path))
+files = glob.glob(path+"*")
+files.sort(key=os.path.getmtime)
+# files = files[:6]
 
 axs = []
 labels = []
 
-for f in files:
+red = Color("red")
+colors = list(red.range_to(Color("green"),len(files)//2))
+
+for i,f in enumerate(files):
 	print(f)
-	f = path+f
+	# f = path+f
 	if(f.find("spikes")==-1):
 
 		print(f)
@@ -75,11 +86,14 @@ for f in files:
 
 		trial = get_events(f,f_events,10)
 
-		ax,ax1,ax2=plot_events(trial,'#%06X' % randint(0, 0xFFFFFF),tit='Model',ms=10,dt=0.001)
+		color=colors[i%(len(files)//2)].hex_l
+		# color='#%06X' % randint(0, 0xFFFFFF)
+		ax,ax1,ax2=plot_events(trial,color,tit='Model',ms=10,dt=0.001)
 		axs.append(ax)
 
-
-plt.legend(axs,labels)
+lgnd = plt.legend(axs,labels)
+# for handle in lgnd.legendHandles:
+#     handle._legmarker.set_markersize(1000)
 plt.show()
 
 
