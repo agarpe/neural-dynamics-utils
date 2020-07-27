@@ -64,6 +64,8 @@ labels = []
 
 red = Color("red")
 colors = list(red.range_to(Color("green"),len(files)//2))
+luminances = np.arange(0,1,1/len(files))
+
 
 for i,f in enumerate(files):
 	print(f)
@@ -86,7 +88,11 @@ for i,f in enumerate(files):
 
 		trial = get_events(f,f_events,10)
 
-		color=colors[i%(len(files)//2)].hex_l
+		# color=colors[i%(len(files)//2)].hex_l
+		color = red
+		color.luminance = luminances[i%(len(files)//2)]
+		color = color.hex_l
+
 		# color='#%06X' % randint(0, 0xFFFFFF)
 		ax,ax1,ax2=plot_events(trial,color,tit='Model',ms=10,dt=0.001)
 		axs.append(ax)
