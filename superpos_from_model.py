@@ -6,8 +6,12 @@ import glob
 plt.rcParams.update({'legend.markerscale': 2000})
 
 
-if len(sys.argv) >1:
+if len(sys.argv) >2:
 	path = sys.argv[1]
+	title = sys.argv[2]
+elif len(sys.argv) >1:
+	path = sys.argv[1]
+	title = ""
 	# path_spk = sys.argv[2]
 else:
 	exit()
@@ -15,7 +19,7 @@ else:
 
 def get_events(f_data,f_events,ms):
 	#read data
-	data = pd.read_csv(f_data, delimiter = " ",skiprows=1,header=None)
+	data = pd.read_csv(f_data, delimiter = " ",skiprows=2,header=None)
 	data = data.values
 
 	#read events
@@ -23,7 +27,7 @@ def get_events(f_data,f_events,ms):
 	events = events.values
 	points = int(ms /0.001)
 
-	waveforms = np.empty((events.shape[0],points*2),float)
+	waveforms = np.empty((events.shape[0],(points*2)),float)
 	print(waveforms.shape)
 	print(events.shape)
 
@@ -31,23 +35,15 @@ def get_events(f_data,f_events,ms):
 
 	time = data[:,0]
 
-	# waveforms = np.array([[]])
-	#for each event get data+- ms
-	# print(events)
 	count =0
 	for i,event in enumerate(events[:,0]):
-		# print(data[:,0])
-		# print(event)
 		indx = np.where(time == event)[0][0] #finds spike time reference
 
-		# print(data[indx-points:indx+points,1].shape)
-		# print(indx)
-		# waveforms = np.append(waveforms,data[indx-points:indx+points,1],axis=1) #read waveform form that spike. 
 		try:
 			waveforms[i] =data[indx-points:indx+points,1]
 		except:
 			count +=1
-		# waveforms.append(data[indx-points:indx+points,1]) #read waveform form that spike. 
+			print(i)
 
 	print(count, "events ignored")
 	# print(waveforms)
@@ -57,49 +53,55 @@ def get_events(f_data,f_events,ms):
 # files = sorted(os.listdir(path))
 files = glob.glob(path+"*")
 files.sort(key=os.path.getmtime)
-# files = files[:6]
+# files = files[:4]
 
 axs = []
 labels = []
 
-red = Color("red")
-colors = list(red.range_to(Color("green"),len(files)//2))
-luminances = np.arange(0,1,1/len(files))
-
-
+blue = Color("blue")
+# colors = list(red.range_to(Color("green"),len(files)//2))
+luminances = np.arange(0.8,0.2,-0.6/len(files))
+colors=[]
+plt.figure(figsize=(15,20))
 for i,f in enumerate(files):
-	print(f)
+	# print(f)
 	# f = path+f
-	if(f.find("spikes")==-1):
+	if(f.find("spikes")==-1 and f.find(".asc")!=-1):
 
 		print(f)
 		ref = f.find("Euler")
 		f_events = f[:ref]+"spikes_"+f[ref:]
-		print(f_events)
+		# print(f_events)
 
+		fs=open(f)
+		first_line = fs.readline()
+		# index =fs.find(".asc")
+		# ini = fs.rfind("_")
+		fs.close()
 
-		index =f.find(".asc")
-		ini = f.rfind("_")
-
-		label = "tau="+f[ini+1:index]
-		print(label)
+		label = "tau="+first_line
+		# print(label)
 		labels.append(label)
 
 
 		trial = get_events(f,f_events,10)
 
 		# color=colors[i%(len(files)//2)].hex_l
-		color = red
-		color.luminance = luminances[i%(len(files)//2)]
+		color = blue
+		color.luminance = luminances[i%(len(files))]
 		color = color.hex_l
 
-		# color='#%06X' % randint(0, 0xFFFFFF)
-		ax,ax1,ax2=plot_events(trial,color,tit='Model',ms=10,dt=0.001)
+		trial =trial[:-1]
+		ax,ax1,ax2=plot_events(trial,color,tit=title,ms=10,dt=0.001)
 		axs.append(ax)
+		colors.append(color)
 
 lgnd = plt.legend(axs,labels)
-# for handle in lgnd.legendHandles:
-#     handle._legmarker.set_markersize(1000)
+for i,line in enumerate(lgnd.get_lines()):
+    line.set_linewidth(2)
+    line.set_color(colors[i])
+
+plt.savefig(path+title+".png")
 plt.show()
 
 

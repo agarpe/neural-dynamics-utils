@@ -120,14 +120,20 @@ plt.subplot(rows,columns,1)
 
 ax1,ax_fst,ax_last =plot_events(control_pre_events,col='b',tit=label1,ms=width)
 plt.legend([ax_fst,ax_last],["First spike","Last spike"])
+plt.xlabel("Time (ms)")
+plt.ylabel("voltage (mV)")
 
 plt.subplot(rows,columns,2)
 ax1,ax_fst,ax_last =plot_events(laser_events,col='r',tit=label2,ms=width)
 plt.legend([ax_fst,ax_last],["First spike","Last spike"])
+plt.xlabel("Time (ms)")
+plt.ylabel("voltage (mV)")
 
 plt.subplot(rows,columns,3)
 ax1,ax_fst,ax_last =plot_events(control_pos_events,col='g',tit=label3,ms=width)
 plt.legend([ax_fst,ax_last],["First spike","Last spike"])
+plt.xlabel("Time (ms)")
+plt.ylabel("voltage (mV)")
 
 #ControlPre-Laser
 plt.tight_layout()
@@ -137,6 +143,8 @@ ax1,ax_fst,ax_last= plot_events(control_pre_events,'b',tit="ControlPre-Laser",ms
 ax2,ax_fst,ax_last=plot_events(laser_events,'r',tit="ControlPre-Laser",ms=width)
 
 plt.legend([ax1,ax2],[label1,label2],loc="lower left")
+plt.xlabel("Time (ms)")
+plt.ylabel("voltage (mV)")
 # plt.savefig(path +"pre_laser.png")
 # plt.show()
 
@@ -147,7 +155,9 @@ plt.subplot(rows,columns,5)
 ax1,ax_fst,ax_last= plot_events(control_pos_events,'g',tit="ControlPos-Laser",ms=width)
 ax2,ax_fst,ax_last=plot_events(laser_events,'r',tit="ControlPos-Laser",ms=width)
 
-plt.legend([ax1,ax2],[label1,label2],loc="lower left")
+plt.legend([ax1,ax2],[label3,label2],loc="lower left")
+plt.xlabel("Time (ms)")
+plt.ylabel("voltage (mV)")
 # plt.savefig(path +"pos_laser.png")
 # plt.show()
 
@@ -161,6 +171,8 @@ ax1,ax_fst,ax_last= plot_events(control_pre_events,'b',tit="ControlPre-ControlPo
 ax3,ax_fst,ax_last=plot_events(control_pos_events,'g',tit="ControlPre-ControlPos",ms=width)
 
 plt.legend([ax1,ax3],[label1,label3],loc="lower left")
+plt.xlabel("Time (ms)")
+plt.ylabel("voltage (mV)")
 # plt.savefig(path +"_controls.png")
 # plt.show()
 
@@ -172,6 +184,8 @@ ax1,ax_fst,ax_last= plot_events(control_pre_events,'b',tit="Pre-Laser-Pos",ms=wi
 ax2,ax_fst,ax_last=plot_events(laser_events,'r',tit="Pre-Laser-Pos",ms=width)
 ax3,ax_fst,ax_last= plot_events(control_pos_events,'g',tit="Pre-Laser-Pos",ms=width)
 plt.legend([ax1,ax2,ax3],[label1,label2,label3],loc="lower left")
+plt.xlabel("Time (ms)")
+plt.ylabel("voltage (mV)")
 
 
 plt.suptitle(path)

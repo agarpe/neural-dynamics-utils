@@ -8,21 +8,13 @@ from superpos_functions import *
 plt.rcParams.update({'font.size': 17})
 
 
-
-if len(sys.argv) ==3:
-	path = sys.argv[1]
-	path_control = path+"_control_pre_events.txt"
-	path_laser = path+"_laser_events.txt"
-	width = 10
-
-elif len(sys.argv) ==4:
+if len(sys.argv) ==4:
 	path_control = sys.argv[1]
 	path_laser = sys.argv[2]
 	path = path_control[:path_control.find("control")] 
-	width = 10
+	width = int(sys.argv[3])
 else:
-	print("Use1: python3 superpos_from_events.py control_events_path.txt laser_events_path.txt")
-	print("Use2: python3 superpos_from_events.py path ")
+	print("Use1: python3 superpos_from_events.py events_1_path.txt events_2_path.txt")
 	exit()
 
 
@@ -46,22 +38,24 @@ control_events=control_events.values
 laser_events=laser_events.values
 
 
-#Labels for Control-Laser
-label1 = "Control. N. spikes: %d"%(n_control)
-label2 = "Laser. N. spikes: %d"%(n_laser)
+# #Labels for Control-Laser
+# label1 = "Control. N. spikes: %d"%(n_control)
+# label2 = "Laser. N. spikes: %d"%(n_laser)
 #------------------------------------------------
 
-#Labels for Control-Laser
+#Labels for Control-Control
 
-# label1 = "First control. N. spikes: %d"%(n_control)
-# label2 = "Last control. N. spikes: %d"%(n_laser)
-# path = path[:path.find("exp")] +"first_last_control"
+label1 = "First control. N. spikes: %d"%(n_control)
+label2 = "Last control. N. spikes: %d"%(n_laser)
+path = path[:path.find("exp")] +"first_second_control"
+color2 = 'g'
 #------------------------------------------------
 
-#Labels for Control-Laser
+# Labels for Laser-Laser
 # label1 = "First laser. N. spikes: %d"%(n_control)
 # label2 = "Last laser. N. spikes: %d"%(n_laser)
 # path = path[:path.find("exp")] +"first_last_laser"
+# color2 = 'r'
 #------------------------------------------------
 
 
@@ -88,7 +82,7 @@ plt.legend([ax_fst,ax_last],["First spike","Last spike"])
 
 
 plt.subplot(2,2,2)
-ax1,ax_fst,ax_last=plot_events(laser_events,col='r',tit=label2,ms=width)
+ax1,ax_fst,ax_last=plot_events(laser_events,col=color2,tit=label2,ms=width)
 plt.legend([ax_fst,ax_last],["First spike","Last spike"])
 
 
@@ -97,14 +91,14 @@ plt.tight_layout()
 
 plt.subplot(2,2,3)
 ax1,ax_fst,ax_last= plot_events(control_events,'b',tit="ControlPre-Laser",ms=width)
-ax2,ax_fst,ax_last=plot_events(laser_events,'r',tit="ControlPre-Laser",ms=width)
+ax2,ax_fst,ax_last=plot_events(laser_events,color2,tit="ControlPre-Laser",ms=width)
 
 plt.legend([ax1,ax2,ax_fst,ax_last],[label1,label2,"First spike","Last spike"])
 plt.tight_layout()
 
-plt.subplot(2,2,4)
-ax1,ax_fst,ax_last= plot_events(control_events,'b',tit="ControlPre-Laser",ms=width)
-ax2,ax_fst,ax_last=plot_events(laser_events,'r',tit="ControlPre-Laser",ms=width)
+# plt.subplot(2,2,4)
+# ax1,ax_fst,ax_last= plot_events(control_events,'b',tit="ControlPre-Laser",ms=width)
+# ax2,ax_fst,ax_last=plot_events(laser_events,color2,tit="ControlPre-Laser",ms=width)
 
 plt.suptitle(path)
 plt.tight_layout()

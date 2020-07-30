@@ -39,15 +39,26 @@ def plot_events(events,col,tit,ms=50,dt=0.1):
 
 #Center spike from max
 def center(events,ms,dt=0.1):
-	# mx_index = np.argmax(events) #index of maximum V value (spike)
-	# print(np.max(events))
-	# ms_points = ms /dt #Number of points corresponding to the iteration
+	mx_index = np.argmax(events) #index of maximum V value (spike)
+	ms_points = ms /dt #Number of points corresponding to the iteration
 	
-	# ini = int(mx_index-ms_points) #init as max point - number of points. 
-	# end = int(mx_index+ms_points) #end as max point + number of points. 
+	ini = int(mx_index-ms_points) #init as max point - number of points. 
+	end = int(mx_index+ms_points) #end as max point + number of points. 
 
-	# return events[ini:end]
-	return events
+	# print(ini,end,events.shape)
+	#Adjust window when there are not enough points 
+	if(ini < 0):
+		app = np.full(abs(ini),events[0]) 
+		events =np.insert(events,0,app) #Add events at the begining
+		return center(events,ms,dt) #re-center
+	if(end > events.shape[0]):
+		app = np.full(end-events.shape[0],events[-1]) #Add events at the end
+		events = np.insert(events,events.shape[0],app) #re-center
+		return center(events,ms,dt)
+
+
+	return events[ini:end]
+	# return events
 
 
 
