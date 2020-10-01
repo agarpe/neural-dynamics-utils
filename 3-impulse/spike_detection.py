@@ -41,23 +41,23 @@ f.close()
 
 data = pd.read_csv(filename, delimiter = " ", names=headers,skiprows=1)
 
-#init = 2000
-#end = 2000
-init = 0
-end = 0
+init = 1
+# end = 5000000
+# init = 2000000
+end = -1
 
-act =  np.array(data['v'])[init:-end]
-pulses =  np.array(data['pre'])[init:-end]
+act =  np.array(data['v'])[init:end]
+pulses =  np.array(data['pre'])[init:end]
 
 if('t' not in data.keys()):
-	dt = 0.0001
+	dt = 0.1
 	max_ = act.shape[0] * dt
 	time = np.array(np.arange(0,max_,dt))
 else:
 	time = np.array(data['t'])[init:-end]
 # print(time)
 
-th=-40
+th=0.15
 
 events_spikes = time[np.where(act > th)]
 
