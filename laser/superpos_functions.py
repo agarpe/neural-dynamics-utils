@@ -6,7 +6,12 @@ import sys
 import os
 from random import randint
 
-def plot_events(events,col,tit,ms=50,dt=0.1):
+#TODO: 
+# - amplitude_log as reference
+# - new function for amplitude log? less efficient for center and drift... 
+#	¿? new function analyse with center and drift, call plot_events for each row in that function?¿
+# - "ignore artefacts, random value 5..."
+def plot_events(events,col,tit,ms=50,dt=0.1,amplitude_log={}):
 	ax=0
 	if(col=='b'):
 		fst_color = 'cyan'
@@ -25,6 +30,16 @@ def plot_events(events,col,tit,ms=50,dt=0.1):
 		row = center(events[row_i,:],ms,dt) #center spike from max
 		row = no_drift(row) #adjust drift
 
+		#Measure amplitudes:
+		amplitudes = get_spike_amplitude(row,dt,tol=0.2)
+		amp =  amplitudes[1]-amplitudes[0]
+		if(amp > 5): #Ignore artefacts
+			amplitude_log[row_i] = amplitudes[1]-amplitudes[0]
+		else:
+			print("ignored value")
+		# plt.plot(amplitudes,(4,4),'.',color='k') 
+
+
 		# print(row.shape)
 		time = np.arange(0,row.shape[0],1.0) #points to ms. 
 		time *= dt
@@ -39,13 +54,18 @@ def plot_events(events,col,tit,ms=50,dt=0.1):
 		# ax,=plt.plot(row,color=col,linewidth=0.1)
 			ax,=plt.plot(time,row,linewidth=0.1)
 	plt.title(tit)
+
+	df = pd.DataFrame.from_dict(amplitude_log, orient='index')
+
+	print(tit)
+	print(df.describe())
 	return ax,ax_fst,ax_last
 
 
 
 #Center spike from max
-def center(events,ms,dt=0.1):
-	mx_index = np.argmax(events) #index of maximum V value (spike)
+def center(spike,ms,dt=0.1):
+	mx_index = np.argmax(spike) #index of maximum V value (spike)
 	ms_points = ms /dt #Number of points corresponding to the iteration
 	# ms_points = ms
 	
@@ -58,24 +78,47 @@ def center(events,ms,dt=0.1):
 	if mx_index!=0: #ignore artefacts
 		#Adjust window when there are not enough points 
 		if(ini < 0):
-			app = np.full(abs(ini),events[0]) 
-			events =np.insert(events,0,app) #Add events at the begining
-			return center(events,ms,dt) #re-center
-		if(end > events.shape[0]):
-			app = np.full(end-events.shape[0],events[-1]) #Add events at the end
-			events = np.insert(events,events.shape[0],app) #re-center
-			return center(events,ms,dt)
+			app = np.full(abs(ini),spike[0]) 
+			spike =np.insert(spike,0,app) #Add events at the begining
+			return center(spike,ms,dt) #re-center
+		if(end > spike.shape[0]):
+			app = np.full(end-spike.shape[0],spike[-1]) #Add events at the end
+			spike = np.insert(spike,spike.shape[0],app) #re-center
+			return center(spike,ms,dt)
 
 	####
 
-	return events[ini:end]
+	return spike[ini:end]
 
 
 
-def no_drift(events):
-	if(events.shape[0]!=0):
-		mn = np.min(events)
+def no_drift(spike):
+	if(spike.shape[0]!=0):
+		mn = np.min(spike)
 		if mn != 0:
-			events = events-mn
+			spike = spike-mn
 	
-	return events
+	return spike
+
+
+# Description: 
+# 	Recives spikes values and return the amplitude as a tuple of the time
+# 	references of two of the values matching a threshold in "the middle" of the spike
+# Parameters:
+# 	spike voltage values
+# 	dt time rate
+# 	tol difference tolerance (lower than 0.2 fails)
+def get_spike_amplitude(spike,dt,tol=0.2): 
+	mx_value = np.max(spike) #maximum V value (spike)
+	mn_value = np.min(spike) #minimum V value (spike)
+
+	th = (mx_value-mn_value)/2 #threshold in the "middle" of the spike.
+
+	#Warning with a lower tolerance value the threshold detection might fail
+	amplitude_vals = np.where(np.isclose(spike, th,atol=tol))[0]
+
+	# print(th)
+	# print(amplitude_vals)
+	return amplitude_vals[0]*dt,amplitude_vals[-1]*dt
+
+
