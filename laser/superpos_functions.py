@@ -6,12 +6,11 @@ import sys
 import os
 from random import randint
 
+
+
 #TODO: 
-# - amplitude_log as reference
-# - new function for amplitude log? less efficient for center and drift... 
-#	¿? new function analyse with center and drift, call plot_events for each row in that function?¿
 # - "ignore artefacts, random value 5..."
-def plot_events(events,col,tit,ms=50,dt=0.1,amplitude_log={}):
+def plot_events(events,col,tit,ms=50,dt=0.1,amplitude_log=0,show_amplitudes=False):
 	ax=0
 	if(col=='b'):
 		fst_color = 'cyan'
@@ -30,15 +29,17 @@ def plot_events(events,col,tit,ms=50,dt=0.1,amplitude_log={}):
 		row = center(events[row_i,:],ms,dt) #center spike from max
 		row = no_drift(row) #adjust drift
 
-		#Measure amplitudes:
-		amplitudes = get_spike_amplitude(row,dt,tol=0.2)
-		amp =  amplitudes[1]-amplitudes[0]
-		if(amp > 5): #Ignore artefacts
-			amplitude_log[row_i] = amplitudes[1]-amplitudes[0]
-		else:
-			print("ignored value")
-		# plt.plot(amplitudes,(4,4),'.',color='k') 
+		if amplitude_log!=0:
+			#Measure amplitudes:
+			amplitudes,th = get_spike_amplitude(row,dt,tol=0.2)
+			amp =  amplitudes[1]-amplitudes[0]
+			if(amp > 5): #Ignore artefacts
+				amplitude_log.append(amplitudes[1]-amplitudes[0])
+			else:
+				print("ignored value")
 
+			if show_amplitudes:
+				plt.plot(amplitudes,(th,th),'.',color='k') 
 
 		# print(row.shape)
 		time = np.arange(0,row.shape[0],1.0) #points to ms. 
@@ -51,14 +52,9 @@ def plot_events(events,col,tit,ms=50,dt=0.1,amplitude_log={}):
 			ax_last,=plt.plot(time,row,color=last_color,linewidth=1.5)
 		else:
 			ax,=plt.plot(time,row,color=col,linewidth=0.1)	
-		# ax,=plt.plot(row,color=col,linewidth=0.1)
-			ax,=plt.plot(time,row,linewidth=0.1)
+			# ax,=plt.plot(time,row,linewidth=0.1) #darker effect ?
 	plt.title(tit)
 
-	df = pd.DataFrame.from_dict(amplitude_log, orient='index')
-
-	print(tit)
-	print(df.describe())
 	return ax,ax_fst,ax_last
 
 
@@ -92,6 +88,11 @@ def center(spike,ms,dt=0.1):
 
 
 
+# Description: 
+# 	Recives spike voltage values and normalizes drift based on its minimum
+# Parameters:
+# 	spike voltage values
+
 def no_drift(spike):
 	if(spike.shape[0]!=0):
 		mn = np.min(spike)
@@ -102,12 +103,14 @@ def no_drift(spike):
 
 
 # Description: 
-# 	Recives spikes values and return the amplitude as a tuple of the time
+# 	Recives spike values and return the amplitude as a tuple of the time
 # 	references of two of the values matching a threshold in "the middle" of the spike
 # Parameters:
 # 	spike voltage values
 # 	dt time rate
 # 	tol difference tolerance (lower than 0.2 fails)
+# Return:
+#	(min_thres,max_thres)
 def get_spike_amplitude(spike,dt,tol=0.2): 
 	mx_value = np.max(spike) #maximum V value (spike)
 	mn_value = np.min(spike) #minimum V value (spike)
@@ -119,6 +122,6 @@ def get_spike_amplitude(spike,dt,tol=0.2):
 
 	# print(th)
 	# print(amplitude_vals)
-	return amplitude_vals[0]*dt,amplitude_vals[-1]*dt
+	return (amplitude_vals[0]*dt,amplitude_vals[-1]*dt),th
 
 

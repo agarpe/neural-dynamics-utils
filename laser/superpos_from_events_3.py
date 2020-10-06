@@ -4,6 +4,7 @@ import pandas as pd
 import os
 import sys
 from superpos_functions import *
+import itertools
 # plt.rcParams['figure.constrained_layout.use'] = True
 
 plt.rcParams.update({'font.size': 19})
@@ -50,6 +51,12 @@ label1 = "Control pre. N. spikes: %d"%(n_control_pre)
 label2 = "Laser. N. spikes: %d"%(n_laser)
 label3 = "Control pos. N. spikes: %d"%(n_control_pos)
 
+#Dafaframes and logs
+control_pre_log = []
+laser_log = []
+control_pos_log = []
+
+
 #------------------------------------------------
 
 #########################################################
@@ -63,22 +70,23 @@ columns= 3
 #Individual plots
 plt.subplot(rows,columns,1)
 
-ax1,ax_fst,ax_last =plot_events(control_pre_events,col='b',tit=label1,ms=width)
+ax1,ax_fst,ax_last =plot_events(control_pre_events,col='b',tit=label1,ms=width,amplitude_log=control_pre_log,show_amplitudes=False)
 plt.legend([ax_fst,ax_last],["First spike","Last spike"])
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
 
 plt.subplot(rows,columns,2)
-ax1,ax_fst,ax_last =plot_events(laser_events,col='r',tit=label2,ms=width)
+ax1,ax_fst,ax_last =plot_events(laser_events,col='r',tit=label2,ms=width,amplitude_log=laser_log)
 plt.legend([ax_fst,ax_last],["First spike","Last spike"])
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
 
 plt.subplot(rows,columns,3)
-ax1,ax_fst,ax_last =plot_events(control_pos_events,col='g',tit=label3,ms=width)
+ax1,ax_fst,ax_last =plot_events(control_pos_events,col='g',tit=label3,ms=width,amplitude_log=control_pos_log)
 plt.legend([ax_fst,ax_last],["First spike","Last spike"])
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
+
 
 #ControlPre-Laser
 
@@ -130,3 +138,17 @@ if(show):
 	plt.show()
 
 
+
+# Saving logs into dataframe
+
+
+#zip amplitude logs saving None values
+data_tuples=list(itertools.zip_longest(control_pre_log,laser_log,control_pos_log))
+# print(data_tuples)
+df = pd.DataFrame(data_tuples, columns=['control_pre','laser','control_pos'])
+
+print(df.describe())
+
+#Saving amplitude dataframes
+
+df.to_pickle(path+"_info.pkl")
