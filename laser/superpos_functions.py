@@ -1,4 +1,3 @@
-
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -8,9 +7,20 @@ from random import randint
 
 
 
-#TODO: 
-# - "ignore artefacts, random value 5..."
-def plot_events(events,col,tit,ms=50,dt=0.1,amplitude_log=0,show_amplitudes=False):
+# Description: 
+#	Plots several spike events superpossed. When amplitude_log is a list, returns info 
+# 	of the spikes amplitude.
+# 	Before ploting the spike is centered from its maximum and width_ms to left and right.
+# 	Drift is fixed normalizing to each spike minimum
+# Parameters:
+#	events array with spikes voltage values. Each row has all the voltage values from a spike. 
+#	col plot color
+#	tit plot title
+#	width_ms milliseconds to save at each side. 
+# 	dt Data adquisition time
+#	amplitude_log List where info from spikes amplitude is saved. Ignored when =0. 
+#	show_amplitudes when True detected amplitudes are ploted. 
+def plot_events(events,col,tit,width_ms=50,dt=0.1,amplitude_log=0,show_amplitudes=False):
 	ax=0
 	if(col=='b'):
 		fst_color = 'cyan'
@@ -25,50 +35,56 @@ def plot_events(events,col,tit,ms=50,dt=0.1,amplitude_log=0,show_amplitudes=Fals
 		fst_color = col
 		last_color = col
 
-	for row_i in range(events.shape[0]):
-		row = center(events[row_i,:],ms,dt) #center spike from max
-		row = no_drift(row) #adjust drift
+	for spike_i in range(events.shape[0]):
+		spike = center(events[spike_i,:],width_ms,dt) #center spike from max
+		spike = no_drift(spike) #adjust drift
 
 		if amplitude_log!=0:
 			#Measure amplitudes:
-			amplitudes,th = get_spike_amplitude(row,dt,tol=0.2)
+			amplitudes,th = get_spike_amplitude(spike,dt,tol=0.2)
 			amp =  amplitudes[1]-amplitudes[0]
-			if(amp > 5): #Ignore artefacts
-				amplitude_log.append(amplitudes[1]-amplitudes[0])
+			if(amp > 1): #Ignore artefacts
+				amplitude_log.append(amp)
 			else:
+				print(amp)
 				print("ignored value")
 
 			if show_amplitudes:
 				plt.plot(amplitudes,(th,th),'.',color='k') 
 
-		# print(row.shape)
-		time = np.arange(0,row.shape[0],1.0) #points to ms. 
+		# print(spike.shape)
+		#Calculate time
+		time = np.arange(0,spike.shape[0],1.0) #points to width_ms. 
 		time *= dt
 
 		# print(time.shape)
-		if(row_i==0):
-			ax_fst,=plt.plot(time,row,color=fst_color,linewidth=1.5)
-		elif(row_i==events.shape[0]-1):
-			ax_last,=plt.plot(time,row,color=last_color,linewidth=1.5)
+		#Plot first, last or general spike.
+		if(spike_i==0):
+			ax_fst,=plt.plot(time,spike,color=fst_color,linewidth=1.5)
+		elif(spike_i==events.shape[0]-1):
+			ax_last,=plt.plot(time,spike,color=last_color,linewidth=1.5)
 		else:
-			ax,=plt.plot(time,row,color=col,linewidth=0.1)	
-			# ax,=plt.plot(time,row,linewidth=0.1) #darker effect ?
+			ax,=plt.plot(time,spike,color=col,linewidth=0.1)	
+			# ax,=plt.plot(time,spike,linewidth=0.1) #darker effect ?
 	plt.title(tit)
 
 	return ax,ax_fst,ax_last
 
 
 
-#Center spike from max
-def center(spike,ms,dt=0.1):
+# Description: 
+#	Detects the maximum value of the spike and takes width milliseconds to the left and
+# 	width ms to the right, using dt to calculate the number of points necessaries. 
+# Parameters:
+#	spike voltage values
+#	width_ms milliseconds to save at each side. 
+# 	dt Data adquisition time
+def center(spike,width_ms,dt=0.1):
 	mx_index = np.argmax(spike) #index of maximum V value (spike)
-	ms_points = ms /dt #Number of points corresponding to the iteration
-	# ms_points = ms
+	width_points = width_ms /dt #Number of points corresponding to the iteration
 	
-
-	# print(mx_index)
-	ini = int(mx_index-ms_points) #init as max point - number of points. 
-	end = int(mx_index+ms_points) #end as max point + number of points. 
+	ini = int(mx_index-width_points) #init as max point - number of points. 
+	end = int(mx_index+width_points) #end as max point + number of points. 
 
 	###Beta func: Beware in models
 	if mx_index!=0: #ignore artefacts
@@ -76,11 +92,11 @@ def center(spike,ms,dt=0.1):
 		if(ini < 0):
 			app = np.full(abs(ini),spike[0]) 
 			spike =np.insert(spike,0,app) #Add events at the begining
-			return center(spike,ms,dt) #re-center
+			return center(spike,width_ms,dt) #re-center
 		if(end > spike.shape[0]):
 			app = np.full(end-spike.shape[0],spike[-1]) #Add events at the end
 			spike = np.insert(spike,spike.shape[0],app) #re-center
-			return center(spike,ms,dt)
+			return center(spike,width_ms,dt)
 
 	####
 

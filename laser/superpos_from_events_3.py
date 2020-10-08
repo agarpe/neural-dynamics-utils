@@ -70,19 +70,19 @@ columns= 3
 #Individual plots
 plt.subplot(rows,columns,1)
 
-ax1,ax_fst,ax_last =plot_events(control_pre_events,col='b',tit=label1,ms=width,amplitude_log=control_pre_log,show_amplitudes=False)
+ax1,ax_fst,ax_last =plot_events(control_pre_events,col='b',tit=label1,width_ms=width,amplitude_log=control_pre_log,show_amplitudes=False)
 plt.legend([ax_fst,ax_last],["First spike","Last spike"])
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
 
 plt.subplot(rows,columns,2)
-ax1,ax_fst,ax_last =plot_events(laser_events,col='r',tit=label2,ms=width,amplitude_log=laser_log)
+ax1,ax_fst,ax_last =plot_events(laser_events,col='r',tit=label2,width_ms=width,amplitude_log=laser_log)
 plt.legend([ax_fst,ax_last],["First spike","Last spike"])
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
 
 plt.subplot(rows,columns,3)
-ax1,ax_fst,ax_last =plot_events(control_pos_events,col='g',tit=label3,ms=width,amplitude_log=control_pos_log)
+ax1,ax_fst,ax_last =plot_events(control_pos_events,col='g',tit=label3,width_ms=width,amplitude_log=control_pos_log)
 plt.legend([ax_fst,ax_last],["First spike","Last spike"])
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
@@ -91,8 +91,8 @@ plt.ylabel("Voltage (mV)")
 #ControlPre-Laser
 
 plt.subplot(rows,columns,4)
-ax1,ax_fst,ax_last= plot_events(control_pre_events,'b',tit="ControlPre-Laser",ms=width)
-ax2,ax_fst,ax_last=plot_events(laser_events,'r',tit="ControlPre-Laser",ms=width)
+ax1,ax_fst,ax_last= plot_events(control_pre_events,'b',tit="ControlPre-Laser",width_ms=width)
+ax2,ax_fst,ax_last=plot_events(laser_events,'r',tit="ControlPre-Laser",width_ms=width)
 
 plt.legend([ax1,ax2],[label1,label2],loc="lower left")
 plt.xlabel("Time (ms)")
@@ -102,8 +102,8 @@ plt.ylabel("Voltage (mV)")
 #ControlPos-Laser
 
 plt.subplot(rows,columns,5)
-ax1,ax_fst,ax_last= plot_events(control_pos_events,'g',tit="ControlPos-Laser",ms=width)
-ax2,ax_fst,ax_last=plot_events(laser_events,'r',tit="ControlPos-Laser",ms=width)
+ax1,ax_fst,ax_last= plot_events(control_pos_events,'g',tit="ControlPos-Laser",width_ms=width)
+ax2,ax_fst,ax_last=plot_events(laser_events,'r',tit="ControlPos-Laser",width_ms=width)
 
 plt.legend([ax1,ax2],[label3,label2],loc="lower left")
 plt.xlabel("Time (ms)")
@@ -112,8 +112,8 @@ plt.ylabel("Voltage (mV)")
 #ControlPre-ControlPos
 
 plt.subplot(rows,columns,6)
-ax1,ax_fst,ax_last= plot_events(control_pre_events,'b',tit="ControlPre-ControlPos",ms=width)
-ax3,ax_fst,ax_last=plot_events(control_pos_events,'g',tit="ControlPre-ControlPos",ms=width)
+ax1,ax_fst,ax_last= plot_events(control_pre_events,'b',tit="ControlPre-ControlPos",width_ms=width)
+ax3,ax_fst,ax_last=plot_events(control_pos_events,'g',tit="ControlPre-ControlPos",width_ms=width)
 
 plt.legend([ax1,ax3],[label1,label3],loc="lower left")
 plt.xlabel("Time (ms)")
@@ -122,9 +122,9 @@ plt.ylabel("Voltage (mV)")
 #Pre-Laser-Pos
 
 plt.subplot(rows,columns,8)
-ax1,ax_fst,ax_last= plot_events(control_pre_events,'b',tit="Pre-Laser-Pos",ms=width)
-ax2,ax_fst,ax_last=plot_events(laser_events,'r',tit="Pre-Laser-Pos",ms=width)
-ax3,ax_fst,ax_last= plot_events(control_pos_events,'g',tit="Pre-Laser-Pos",ms=width)
+ax1,ax_fst,ax_last= plot_events(control_pre_events,'b',tit="Pre-Laser-Pos",width_ms=width)
+ax2,ax_fst,ax_last=plot_events(laser_events,'r',tit="Pre-Laser-Pos",width_ms=width)
+ax3,ax_fst,ax_last= plot_events(control_pos_events,'g',tit="Pre-Laser-Pos",width_ms=width)
 plt.legend([ax1,ax2,ax3],[label1,label2,label3],loc="lower left")
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")

@@ -44,8 +44,8 @@ laser_events=laser_events.values
 
 
 # #Labels for Control-Laser
-label1 = label1+str(n_control)
-label2 = label2+str(n_laser)
+label1 = label1+" "+str(n_control)
+label2 = label2+" "+str(n_laser)
 
 #------------------------------------------------
 # Plot 
@@ -56,14 +56,14 @@ plt.tight_layout()
 #Individual plots
 plt.subplot(2,2,1)
 
-ax1,ax_fst,ax_last=plot_events(control_events,col='b',tit=label1,ms=width)
+ax1,ax_fst,ax_last=plot_events(control_events,col='b',tit=label1,width_ms=width)
 plt.legend([ax_fst,ax_last],["First spike","Last spike"])
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
 
 
 plt.subplot(2,2,2)
-ax1,ax_fst,ax_last=plot_events(laser_events,col=color2,tit=label2,ms=width)
+ax1,ax_fst,ax_last=plot_events(laser_events,col=color2,tit=label2,width_ms=width)
 plt.legend([ax_fst,ax_last],["First spike","Last spike"])
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
@@ -73,8 +73,8 @@ plt.ylabel("Voltage (mV)")
 plt.tight_layout()
 
 plt.subplot(2,2,3)
-ax1,ax_fst,ax_last= plot_events(control_events,'b',tit="ControlPre-Laser",ms=width)
-ax2,ax_fst,ax_last=plot_events(laser_events,color2,tit="ControlPre-Laser",ms=width)
+ax1,ax_fst,ax_last= plot_events(control_events,'b',tit="ControlPre-Laser",width_ms=width)
+ax2,ax_fst,ax_last=plot_events(laser_events,color2,tit="ControlPre-Laser",width_ms=width)
 
 plt.legend([ax1,ax2,ax_fst,ax_last],[label1,label2,"First spike","Last spike"])
 plt.tight_layout()

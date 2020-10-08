@@ -99,7 +99,7 @@ for i,f in enumerate(files):
 
 		trial =trial[:-1]
 		
-		ax,ax1,ax2=plot_events(trial,color,tit=title,ms=t,dt=0.001)
+		ax,ax1,ax2=plot_events(trial,color,tit=title,width_ms=t,dt=0.001)
 		axs.append(ax)
 		colors.append(color)
 
