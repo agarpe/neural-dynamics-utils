@@ -44,3 +44,6 @@ print("first-last laser")
 os.system("python3 superpos_from_events.py %s/events/exp%d_%s_laser_events.txt %s/events/exp%d_%s_laser_events.txt %d '%s' '%s' '%s' '%s'"%(path,e_min,sufix,path,e_max,sufix,wind,label1,label2,color2,title))
 
 #------------------------------------------------
+
+#Analyze general plot files 
+os.system("python3 analyze_amplitudes.py %s/events/ > 'amplitudes_log.log'"%(path)) 

@@ -7,16 +7,32 @@ plt.rcParams.update({'legend.markerscale': 2000})
 # plt.rcParams.update({'font.size': 14})
 
 
+if len(sys.argv) >6:
+	path = sys.argv[1]
+	ref_param = sys.argv[2] #name of the parameter varied during simulations
+	title = sys.argv[3]
+	dt=float(sys.argv[4])
+	t=float(sys.argv[5])
+	lim=int(sys.argv[6]) #number of files limit
 
-if len(sys.argv) >2:
+elif len(sys.argv) >3:
 	path = sys.argv[1]
-	title = sys.argv[2]
-elif len(sys.argv) >1:
+	ref_param = sys.argv[2] #name of the parameter varied during simulations
+	title = sys.argv[3]
+	dt=float(sys.argv[4])
+	t=float(sys.argv[5])
+	lim=-1
+elif len(sys.argv) >2:
 	path = sys.argv[1]
+	ref_param = sys.argv[2]
 	title = ""
+	t=10 #hh 10ms #vav 10ms
+	dt=0.001
+	lim=-1
 	# path_spk = sys.argv[2]
 else:
-	print("Use: python3 superpos_from_model.py path [title]")
+	print("Use: python3 superpos_from_model.py path ref_param title [dt] [win_t]")
+	print("Example: python3 superpos_from_model.py ../../laser_model/HH/data/gna/ gna \"Gna simulation\" 0.001 8 20")
 	exit()
 
 
@@ -31,8 +47,8 @@ def get_events(f_data,f_events,ms,dt=0.001):
 	points = int(ms /dt)
 
 	waveforms = np.empty((events.shape[0],(points*2)),float)
-	print(waveforms.shape)
-	print(events.shape)
+	print("Waveform shape:",waveforms.shape)
+	print("Events shape:",events.shape)
 
 	# print(points)
 
@@ -46,20 +62,20 @@ def get_events(f_data,f_events,ms,dt=0.001):
 			waveforms[i] =data[indx-points:indx+points,1]
 		except:
 			count +=1
-			print(i)
+			# print(i)
 
 	print(count, "events ignored")
 	# print(waveforms)
-	return waveforms
+	return waveforms[2:] #Ignore 2 first events, usally artefacts
 
 
 # files = sorted(os.listdir(path))
 files = glob.glob(path+"*")
 files.sort(key=os.path.getmtime)
-# files = files[:6]
+files = files[:lim]
 
-dt = 0.001
-t = 10 #hh 10ms #vav 10ms
+# dt = 0.001
+# t = 10 #hh 10ms #vav 10ms
 
 axs = []
 labels = []
@@ -68,6 +84,8 @@ blue = Color("blue")
 # colors = list(red.range_to(Color("green"),len(files)//2))
 luminances = np.arange(0.8,0.2,-0.6/len(files))
 colors=[]
+logs = {}
+ampl_log = []
 plt.figure(figsize=(15,20))
 for i,f in enumerate(files):
 	# print(f)
@@ -85,7 +103,8 @@ for i,f in enumerate(files):
 		# ini = fs.rfind("_")
 		fs.close()
 
-		label = "tau="+first_line
+
+		label = ref_param+"="+first_line
 		# print(label)
 		labels.append(label)
 
@@ -99,7 +118,10 @@ for i,f in enumerate(files):
 
 		trial =trial[:-1]
 		
-		ax,ax1,ax2=plot_events(trial,color,tit=title,width_ms=t,dt=0.001)
+		ax,ax1,ax2=plot_events(trial,color,tit=title,width_ms=t,dt=0.001,amplitude_log=ampl_log,show_amplitudes=False)
+		# ax,ax1,ax2=plot_events(trial,color,tit=title,width_ms=t,dt=0.001)
+		logs[first_line]=ampl_log[:]
+		
 		axs.append(ax)
 		colors.append(color)
 
@@ -114,10 +136,23 @@ plt.ylabel("Voltage (mV)")
 
 print( path+title+".png")
 plt.savefig(path+title+".png")
-# plt.show()
+plt.show()
+plt.clf()
+
+# print(logs)
+
+# df = pd.DataFrame(logs)
+df =pd.DataFrame(dict([ (k,pd.Series(v)) for k,v in logs.items() ]))
+print(df.describe())
+
+#Saving amplitude dataframes
+
+df.to_pickle(path+title+"_info.pkl")
 
 
-
-
-
-
+#boxplot
+df.boxplot(grid=False,figsize=(10,30),fontsize=20)
+plt.xlabel(ref_param)
+plt.ylabel("Spike width (ms)")
+plt.savefig(path +title+"boxplots.png")
+plt.show()
