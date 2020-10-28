@@ -37,7 +37,10 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,amplitude_log=0,show_amplitude
 
 	count =0
 	for spike_i in range(events.shape[0]):
-		spike = center(events[spike_i,:],width_ms,dt) #center spike from max
+		#remove possible nan values:
+		spike = events[spike_i,:][~np.isnan(events[spike_i,:])]
+
+		spike = center(spike,width_ms,dt) #center spike from max
 		spike = no_drift(spike) #adjust drift
 
 		if amplitude_log!=0 and spike.shape[0]!=0:
@@ -51,7 +54,7 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,amplitude_log=0,show_amplitude
 			if(amp > 1): #Ignore artefacts
 				amplitude_log.append(amp)
 			else:
-				# print("ignored value",amp)
+				print("ignored value",spike_i)
 				count+=1
 
 			if show_amplitudes:
@@ -86,6 +89,7 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,amplitude_log=0,show_amplitude
 #	width_ms milliseconds to save at each side. 
 # 	dt Data adquisition time
 def center(spike,width_ms,dt=0.1):
+
 	mx_index = np.argmax(spike) #index of maximum V value (spike)
 
 	width_points = width_ms /dt #Number of points corresponding to the iteration
@@ -139,14 +143,10 @@ def get_spike_amplitude(spike,dt,tol=0.2):
 
 	th = (mx_value-mn_value)/2 #threshold in the "middle" of the spike.
 
-	#Warning with a lower tolerance value the threshold detection might fail
+	#Warning: with a lower tolerance value the threshold detection might fail
 	amplitude_vals = np.where(np.isclose(spike, th,atol=tol))[0]
 
-	# print(amplitude_vals)
-	# print("Amplitudes",amplitude_vals[0]*dt,amplitude_vals[-1]*dt)
-	if amplitude_vals.size ==0:
-		# print(spike)
-		# print(th)
+	if amplitude_vals.size ==0: #Safety comprobation
 		return [],th
 	else:
 		return (amplitude_vals[0]*dt,amplitude_vals[-1]*dt),th

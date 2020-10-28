@@ -20,20 +20,6 @@ def set_plot_info(axes,labels,loc="best",xlabel="Time (ms)",ylabel="Voltage (mV)
 	plt.xlabel(xlabel)
 	plt.ylabel(ylabel)
 
-def get_cols_names(path):
-	with open(path_control_pre, 'r') as temp_f:
-	    # get No of columns in each line
-	    col_count = [ len(l.split("\t")) for l in temp_f.readlines() ]
-
-	### Generate column names  (names will be 0, 1, 2, ..., maximum columns - 1)
-	column_names = [i for i in range(0, min(col_count))]
-
-	return column_names
-
-# print(col_count)
-# print(max(col_count[:-1]))
-
-
 if len(sys.argv) ==3:
 	path = sys.argv[1]
 	path_control_pre = path+"_control_pre_events.txt"
@@ -41,7 +27,7 @@ if len(sys.argv) ==3:
 	path_control_pos = path+"_control_pos_events.txt"
 	width = int(sys.argv[2])
 	show = True
-
+	save = False
 else:
 	print("Use: python3 superpos_from_events_3.py path width ")
 	exit()
@@ -51,11 +37,16 @@ os.system("sed -i 's/\,/./g' "+path_control_pre) #changing , to . to read floats
 os.system("sed -i 's/\,/./g' "+path_laser) #changing , to . to read floats not strings
 os.system("sed -i 's/\,/./g' "+path_control_pos) #changing , to . to read floats not strings
 
+#Column names list generation to read files with distinct number of columns in each row. 
+#Indispensable when events obtained by threshold detection in DataView
+dt =0.1
+max_cols = 300
+col_names = [i for i in range(0, int(max_cols/dt))]
 
 #Each row contains Voltage values of the corresponding event.
-control_pre_events =  pd.read_csv(path_control_pre, delimiter = "\t",skiprows=0,header=None,names=get_cols_names(path_control_pre))
-laser_events =  pd.read_csv(path_laser, delimiter = "\t",skiprows=0,header=None,names=get_cols_names(path_laser))
-control_pos_events =  pd.read_csv(path_control_pos, delimiter = "\t",skiprows=0,header=None,names=get_cols_names(path_control_pos))
+control_pre_events =  pd.read_csv(path_control_pre, delimiter = "\t",skiprows=0,header=None,names=col_names)
+laser_events =  pd.read_csv(path_laser, delimiter = "\t",skiprows=0,header=None,names=col_names)
+control_pos_events =  pd.read_csv(path_control_pos, delimiter = "\t",skiprows=0,header=None,names=col_names)
 
 
 n_control_pre = len(control_pre_events.index)
@@ -72,10 +63,6 @@ control_pre_events=control_pre_events.values
 laser_events=laser_events.values
 control_pos_events=control_pos_events.values
 
-# for e in control_pre_events:
-# 	plt.plot(e)
-# 	plt.show()
-# print(control_pre_events[1])
 
 #Labels for Control-Laser
 label1 = "Control pre. N. spikes: %d"%(n_control_pre)
@@ -149,7 +136,8 @@ set_plot_info([ax1,ax2,ax3],[label1,label2,label3],loc="lower left")
 
 plt.suptitle(path) #general title
 plt.tight_layout(rect=[0, 0, 1, 0.95]) #tight with upper title
-plt.savefig(path +".png")
+if(save):
+	plt.savefig(path +".png")
 if(show):
 	plt.show()
 
@@ -164,7 +152,9 @@ data_tuples=list(itertools.zip_longest(control_pre_log,laser_log,control_pos_log
 df = pd.DataFrame(data_tuples, columns=['control_pre','laser','control_pos'])
 
 print(df.describe())
+print("Mean difference form control to control:",df['control_pre'].mean()-df['control_pos'].mean())
+print("Mean difference form control pre to laser:",df['control_pre'].mean()-df['laser'].mean())
+print("Mean difference form control pos to laser:",df['control_pos'].mean()-df['laser'].mean())
 
 #Saving amplitude dataframes
-
 df.to_pickle(path+"_info.pkl")
