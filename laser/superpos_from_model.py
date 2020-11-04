@@ -31,7 +31,7 @@ elif len(sys.argv) >2:
 	lim=-1
 	# path_spk = sys.argv[2]
 else:
-	print("Use: python3 superpos_from_model.py path ref_param title [dt] [win_t]")
+	print("Use: python3 superpos_from_model.py path ref_param title [dt] [win_t] [max_files]")
 	print("Example: python3 superpos_from_model.py ../../laser_model/HH/data/gna/ gna \"Gna simulation\" 0.001 8 20")
 	exit()
 
@@ -64,7 +64,7 @@ def get_events(f_data,f_events,ms,dt=0.001):
 			count +=1
 			# print(i)
 
-	print(count, "events ignored")
+	# print(count, "events ignored")
 	# print(waveforms)
 	return waveforms[2:] #Ignore 2 first events, usally artefacts
 
@@ -86,6 +86,7 @@ luminances = np.arange(0.8,0.2,-0.6/len(files))
 colors=[]
 logs = {}
 ampl_log = []
+
 plt.figure(figsize=(15,20))
 for i,f in enumerate(files):
 	# print(f)
@@ -110,6 +111,11 @@ for i,f in enumerate(files):
 
 
 		trial = get_events(f,f_events,ms=t)
+		print(trial.shape)
+		if(trial.shape[0] <=3):
+			print("skiping and removing corrupt file")
+			os.system("rm "+f+" "+f_events)
+			continue
 
 		# color=colors[i%(len(files)//2)].hex_l
 		color = blue
@@ -120,8 +126,16 @@ for i,f in enumerate(files):
 		
 		ax,ax1,ax2=plot_events(trial,color,tit=title,width_ms=t,dt=0.001,amplitude_log=ampl_log,show_amplitudes=False)
 		# ax,ax1,ax2=plot_events(trial,color,tit=title,width_ms=t,dt=0.001)
-		logs[first_line]=ampl_log[:]
-		
+		# try:
+		# 	logs['spike'].append(ampl_log[:],axis=0)
+		# 	# print("success")
+		# except:
+			# logs['spike']=ampl_log[:]
+
+		logs['']=ampl_log[:]
+
+		# logs = logs.append(ampl_log[:])
+		# print(logs)
 		axs.append(ax)
 		colors.append(color)
 
@@ -136,23 +150,25 @@ plt.ylabel("Voltage (mV)")
 
 print( path+title+".png")
 plt.savefig(path+title+".png")
-plt.show()
-plt.clf()
+# plt.show()
+# plt.clf()
 
 # print(logs)
 
 # df = pd.DataFrame(logs)
 df =pd.DataFrame(dict([ (k,pd.Series(v)) for k,v in logs.items() ]))
+# df = pd.DataFrame(logs)
+# print(df)
 print(df.describe())
-
+print(df.mean())
 #Saving amplitude dataframes
 
 df.to_pickle(path+title+"_info.pkl")
 
 
 #boxplot
-df.boxplot(grid=False,figsize=(10,30),fontsize=20)
-plt.xlabel(ref_param)
-plt.ylabel("Spike width (ms)")
-plt.savefig(path +title+"boxplots.png")
-plt.show()
+# df.boxplot(grid=False,figsize=(10,30),fontsize=20)
+# plt.xlabel(ref_param)
+# plt.ylabel("Spike width (ms)")
+# plt.savefig(path +title+"boxplots.png")
+# plt.show()

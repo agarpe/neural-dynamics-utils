@@ -14,20 +14,32 @@ import itertools
 
 plt.rcParams.update({'font.size': 19})
 
+# import argparse
 
-def set_plot_info(axes,labels,loc="best",xlabel="Time (ms)",ylabel="Voltage (mV)"):
-	plt.legend(axes,labels,loc=loc)
-	plt.xlabel(xlabel)
-	plt.ylabel(ylabel)
+# ap = argparse.ArgumentParser()
+# ap.add_argument("-p", "--path", required=True, help="Path to the file to plot")
+# ap.add_argument("-fcp", "--file_events", required=True, help="Events file name")
+# ap.add_argument("-sa", "--save", required=False, default='0', help="Save to file and the name")
+# ap.add_argument("-st", "--start", required=False, default=0, help="Start second")
+# ap.add_argument("-en", "--end", required=False, default='None', help="End second")
+# ap.add_argument("-fr", "--frecuency", required=False, default=10000, help="Sampling freq of -fs")
+# ap.add_argument("-mo", "--mode", required=False, default=2, help="Mode '1' points appear with the signal. Mode '2' points always on display")
+# ap.add_argument("-cu", "--current", required=False, default=0, help="'1' Display current injected. '0' ignores current")
+# ap.add_argument("-fps", "--fps", required=False, default=24, help="Frames per second")
+# ap.add_argument("-dpi", "--dpi", required=False, default=100, help="Dots per inch")
+# args = vars(ap.parse_args())
+# save = args['save']
+
+
 
 if len(sys.argv) ==3:
 	path = sys.argv[1]
-	path_control_pre = path+"_control_pre_events.txt"
-	path_laser = path+"_laser_events.txt"
-	path_control_pos = path+"_control_pos_events.txt"
+	path_control_pre = path+"_control_pre_waveform.txt"
+	path_laser = path+"_laser_waveform.txt"
+	path_control_pos = path+"_control_pos_waveform.txt"
 	width = int(sys.argv[2])
-	show = True
-	save = False
+	show = False
+	save = True
 else:
 	print("Use: python3 superpos_from_events_3.py path width ")
 	exit()
@@ -37,16 +49,14 @@ os.system("sed -i 's/\,/./g' "+path_control_pre) #changing , to . to read floats
 os.system("sed -i 's/\,/./g' "+path_laser) #changing , to . to read floats not strings
 os.system("sed -i 's/\,/./g' "+path_control_pos) #changing , to . to read floats not strings
 
-#Column names list generation to read files with distinct number of columns in each row. 
-#Indispensable when events obtained by threshold detection in DataView
-dt =0.1
-max_cols = 300
-col_names = [i for i in range(0, int(max_cols/dt))]
-
-#Each row contains Voltage values of the corresponding event.
-control_pre_events =  pd.read_csv(path_control_pre, delimiter = "\t",skiprows=0,header=None,names=col_names)
-laser_events =  pd.read_csv(path_laser, delimiter = "\t",skiprows=0,header=None,names=col_names)
-control_pos_events =  pd.read_csv(path_control_pos, delimiter = "\t",skiprows=0,header=None,names=col_names)
+try:
+	#Each row contains Voltage values of the corresponding event.
+	control_pre_events = read_from_events(path_control_pre,max_cols=300,dt=0.1)
+	laser_events =  read_from_events(path_laser,max_cols=300,dt=0.1)
+	control_pos_events =  read_from_events(path_control_pos,max_cols=300,dt=0.1)
+except:
+	print("Error: file not found")
+	exit()
 
 
 n_control_pre = len(control_pre_events.index)
@@ -59,7 +69,7 @@ laser_events=laser_events.iloc[:-1, :-1]
 control_pos_events=control_pos_events.iloc[:-1, :-1] 
 
 #Parse to array
-control_pre_events=control_pre_events.values
+control_pre_events=control_pre_events.values[:-1]
 laser_events=laser_events.values
 control_pos_events=control_pos_events.values
 

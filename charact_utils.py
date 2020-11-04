@@ -268,15 +268,19 @@ def plot_bar(stats):
 ##############	READ, WRITE PLOT 
 ##############################################################################
 
+def to_on_off_events(events):
+	###TODO: iterate until off-on > ISI
+	#if there is one spike "missing" at the end--> ignore it. 
+	if(events.shape[0]%2!=0):
+		events = events[:-1]
+
+	events = np.array([[events[i],events[i+1]] for i in range(0,events.shape[0],2)])
+	return events
+
 #Saves events in same file than original data. 
 def save_events(events,file_name,split=False,dataview=False):
 	if(split):
-		result = []
-		#if there is one spike "missing" at the end--> ignore it. 
-		if(events.shape[0]%2!=0):
-			events = events[:-1]
-
-		events = np.array([[events[i],events[i+1]] for i in range(0,events.shape[0],2)])
+		events = to_on_off_events(events)
 
 	print(events.shape)
 		# events = np.array(result)
@@ -286,6 +290,35 @@ def save_events(events,file_name,split=False,dataview=False):
 	if(dataview):
 		#changes . by , as separator (for dataview)
 		os.system("sed -i 's/\./,/g' "+file_name)
+
+def save_waveforms(data,events,path,width_ms,dt=0.1):
+	events = to_on_off_events(events)
+	mean_evt_n = to_mean(events)
+	
+	points = int(width_ms /dt)
+
+	waveforms = np.empty((events.shape[0],(points*2)),float)
+
+	time = np.arange(0,data.shape[0],1.0)
+	time *=dt
+
+	count =0
+	for i,event in enumerate(events[:,0]):
+		indx = np.where(time == event)[0][0] #finds spike time reference
+
+		try:
+			waveforms[i] =data[indx-points:indx+points]
+		except:
+			count +=1
+
+	print(waveforms.shape)
+
+	f1 = open(path,'w')
+	np.savetxt(f1,waveforms,delimiter='\t')
+	f1.close()
+
+	return waveforms
+
 
 
 #Read spike events from file as on/off events and returns single value from each event as mean(on/off). 
@@ -301,7 +334,7 @@ def read_spike_events(file_name,dataview=True,dt=0.1):
 
 	#Change to secs
 
-	data_n *= dt
+	# data_n *= dt
 
 	#get half
 
@@ -332,9 +365,9 @@ def read_bursts_events(file_name,dataview=True,scale= 1000):
 
 	print(data_n.shape)
 
-	#Change to secs
+	# #Change to secs
 
-	data_n /= scale
+	# data_n /= scale
 
 
 	return data_n
@@ -366,6 +399,25 @@ def trunc(values, decs=0):
 #############################################################################
 ##############	SPIKES 
 ##############################################################################
+
+def detect_spikes(data,dt=0.1,tol=0.2):
+
+	#define threshold
+	mx_value = np.max(data) #maximum V value (spike)
+	mn_value = np.min(data) #minimum V value (spike)
+
+	th = (mx_value-mn_value)/2 #threshold in the "middle" of the spike.
+
+	time = np.arange(0,data.shape[0],1.0) #time array 
+	time *= dt
+	# print(time.shape)
+	# print(mx_value,mn_value,th)
+
+	event_indices = np.where(np.isclose(data+abs(mn_value), th,atol=tol))
+	
+	return time[event_indices]
+
+
 
 
 ##spike condition --> mean point init-end event

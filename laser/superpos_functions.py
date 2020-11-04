@@ -5,6 +5,23 @@ import sys
 import os
 from random import randint
 
+def read_from_events(path,dt =0.1, max_cols = 300, delim="\t"):
+	#Column names list generation to read files with distinct number of columns in each row. 
+	#Indispensable when events obtained by threshold detection in DataView
+	# dt =0.1
+	# max_cols = 300 ##counting rows from file requires reading the whole file too long. 
+	col_names = [i for i in range(0, int(max_cols/dt))]
+
+	#Each row contains Voltage values of the corresponding event.
+	events =  pd.read_csv(path, delimiter = delim,skiprows=0,header=None,names=col_names)
+
+	return events
+
+
+def set_plot_info(axes,labels,loc="best",xlabel="Time (ms)",ylabel="Voltage (mV)"):
+	plt.legend(axes,labels,loc=loc)
+	plt.xlabel(xlabel)
+	plt.ylabel(ylabel)
 
 
 # Description: 
