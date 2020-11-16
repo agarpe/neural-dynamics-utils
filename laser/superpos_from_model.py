@@ -124,7 +124,7 @@ for i,f in enumerate(files):
 
 		trial =trial[:-1]
 		
-		ax,ax1,ax2=plot_events(trial,color,tit=title,width_ms=t,dt=0.001,amplitude_log=ampl_log,show_amplitudes=False)
+		ax,ax1,ax2=plot_events(trial,color,tit=title,width_ms=t,dt=0.001,duration_log=ampl_log,show_durations=False)
 		# ax,ax1,ax2=plot_events(trial,color,tit=title,width_ms=t,dt=0.001)
 		# try:
 		# 	logs['spike'].append(ampl_log[:],axis=0)
@@ -161,7 +161,7 @@ df =pd.DataFrame(dict([ (k,pd.Series(v)) for k,v in logs.items() ]))
 # print(df)
 print(df.describe())
 print(df.mean())
-#Saving amplitude dataframes
+#Saving duration dataframes
 
 df.to_pickle(path+title+"_info.pkl")
 

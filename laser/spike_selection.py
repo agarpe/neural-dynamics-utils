@@ -29,7 +29,7 @@ else:
 
 print(path)
 print(mx_z)
-spikes = utils.read_spike_events(path,dt=0.1)
+spikes = utils.read_spike_events(path)
 
 
 print(spikes.shape)
@@ -39,15 +39,21 @@ print(isis.shape)
 
 zscores = stats.zscore(isis, axis=0, ddof=0)
 
+plt.hist(isis,width=1)
+# plt.hist(zscores,width=0.1,bins=10)
+plt.show()
+# plt.hist(zscores[np.where(zscores<0)],width=0.1,bins=6)
+
 to_rm = []
 for i,z in enumerate(zscores):
 	if(z < mx_z):
 		to_rm.append(i)
-		# to_rm.append(i+1)
+
 
 print("Spikes to remove: ",len(list(set(to_rm))))
 try:
-	spikes_select = np.delete(spikes,to_rm) 
+	# spikes_select = np.delete(spikes,to_rm) 
+	spikes_select = spikes[to_rm]
 except:
 	print("index failed: ",i)
 
@@ -81,6 +87,6 @@ ax1,ax_fst,ax_last =plot_events(spikes_wf,col='g',tit='spikes',width_ms=50)
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 
-plt.savefig(path[:-3]+"png")
+# plt.savefig(path[:-3]+"png")
 if show:
 	plt.show()

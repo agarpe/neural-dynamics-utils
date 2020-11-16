@@ -18,7 +18,7 @@ for i in range(e_min,e_max+1):
 	print("Exp ",i)
 	os.system("python3 superpos_from_events_3.py %s/events/exp%d_%s %d"%(path,i,sufix,wind))
 
-#------------------------------------------------
+# ------------------------------------------------
 
 #Plot single case of first-last control
 #Labels for Control-Control
@@ -29,7 +29,7 @@ color2 = 'g'
 title = "First Last control"
 
 print("first-last control")
-os.system("python3 superpos_from_events.py %s/events/exp%d_%s_control_pre_events.txt %s/events/exp%d_%s_control_pre_events.txt %d '%s' '%s' '%s' '%s'"%(path,e_min,sufix,path,e_max,sufix,wind,label1,label2,color2,title))
+os.system("python3 superpos_from_events.py %s/events/exp%d_%s_control_pre_waveform.txt %s/events/exp%d_%s_control_pre_waveform.txt %d '%s' '%s' '%s' '%s'"%(path,e_min,sufix,path,e_max,sufix,wind,label1,label2,color2,title))
 
 #------------------------------------------------
 
@@ -41,7 +41,7 @@ color2 = 'r'
 title = "First Last laser"
 
 print("first-last laser")
-os.system("python3 superpos_from_events.py %s/events/exp%d_%s_laser_events.txt %s/events/exp%d_%s_laser_events.txt %d '%s' '%s' '%s' '%s'"%(path,e_min,sufix,path,e_max,sufix,wind,label1,label2,color2,title))
+os.system("python3 superpos_from_events.py %s/events/exp%d_%s_laser_waveform.txt %s/events/exp%d_%s_laser_waveform.txt %d '%s' '%s' '%s' '%s'"%(path,e_min,sufix,path,e_max,sufix,wind,label1,label2,color2,title))
 
 #------------------------------------------------
 

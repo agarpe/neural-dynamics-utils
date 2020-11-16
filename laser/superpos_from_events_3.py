@@ -1,6 +1,6 @@
 #Superpos plots from different spikes events using functions in superpos_functions.py
 #Script prepared for 3 different trials (e.g. control pre, laser, control pos)
-#Generates a plot of suplots and save the spike amplitude dataset as path_info.plk
+#Generates a plot of suplots and save the spike duration dataset as path_info.plk
 #Example of use:
 #	python3 superpos_from_events_3.py pruebas/exp4_5400_50f 50
 
@@ -45,9 +45,13 @@ else:
 	exit()
 
 
-os.system("sed -i 's/\,/./g' "+path_control_pre) #changing , to . to read floats not strings
-os.system("sed -i 's/\,/./g' "+path_laser) #changing , to . to read floats not strings
-os.system("sed -i 's/\,/./g' "+path_control_pos) #changing , to . to read floats not strings
+print("\nSuperposing from ",path)
+
+print("Reading events files...")
+#TODO: check size before sed
+# os.system("sed -i 's/\,/./g' "+path_control_pre) #changing , to . to read floats not strings
+# os.system("sed -i 's/\,/./g' "+path_laser) #changing , to . to read floats not strings
+# os.system("sed -i 's/\,/./g' "+path_control_pos) #changing , to . to read floats not strings
 
 try:
 	#Each row contains Voltage values of the corresponding event.
@@ -80,9 +84,9 @@ label2 = "Laser. N. spikes: %d"%(n_laser)
 label3 = "Control pos. N. spikes: %d"%(n_control_pos)
 
 #Dafaframes and logs
-control_pre_log = []
-laser_log = []
-control_pos_log = []
+control_pre_dur_log = []; control_pre_amp_log = []
+laser_dur_log = []; laser_amp_log = []
+control_pos_dur_log = []; control_pos_amp_log = []
 
 
 #------------------------------------------------
@@ -97,15 +101,15 @@ columns= 3
 
 #Individual plots
 plt.subplot(rows,columns,1)
-ax1,ax_fst,ax_last =plot_events(control_pre_events,col='b',tit=label1,width_ms=width,amplitude_log=control_pre_log,show_amplitudes=False)
+ax1,ax_fst,ax_last =plot_events(control_pre_events,col='b',tit=label1,width_ms=width,duration_log=control_pre_dur_log,amplitude_log=control_pre_amp_log,show_durations=False)
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 plt.subplot(rows,columns,2)
-ax1,ax_fst,ax_last =plot_events(laser_events,col='r',tit=label2,width_ms=width,amplitude_log=laser_log,show_amplitudes=False)
+ax1,ax_fst,ax_last =plot_events(laser_events,col='r',tit=label2,width_ms=width,duration_log=laser_dur_log,amplitude_log=laser_amp_log,show_durations=False)
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 plt.subplot(rows,columns,3)
-ax1,ax_fst,ax_last =plot_events(control_pos_events,col='g',tit=label3,width_ms=width,amplitude_log=control_pos_log,show_amplitudes=False)
+ax1,ax_fst,ax_last =plot_events(control_pos_events,col='g',tit=label3,width_ms=width,duration_log=control_pos_dur_log,amplitude_log=control_pos_amp_log,show_durations=False)
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 
@@ -156,15 +160,33 @@ if(show):
 # Saving logs into dataframe
 
 
-#zip amplitude logs saving None values
-data_tuples=list(itertools.zip_longest(control_pre_log,laser_log,control_pos_log))
+#zip duration logs saving None values
+data_tuples=list(itertools.zip_longest(control_pre_dur_log,laser_dur_log,control_pos_dur_log))
 # print(data_tuples)
 df = pd.DataFrame(data_tuples, columns=['control_pre','laser','control_pos'])
 
 print(df.describe())
+print("Duration differences")
 print("Mean difference form control to control:",df['control_pre'].mean()-df['control_pos'].mean())
 print("Mean difference form control pre to laser:",df['control_pre'].mean()-df['laser'].mean())
 print("Mean difference form control pos to laser:",df['control_pos'].mean()-df['laser'].mean())
 
-#Saving amplitude dataframes
+
+
+#zip duration logs saving None values
+data_tuples=list(itertools.zip_longest(control_pre_amp_log,laser_amp_log,control_pos_amp_log))
+# print(data_tuples)
+df2 = pd.DataFrame(data_tuples, columns=['control_pre_amplitude','laser_amplitude','control_pos_amplitude'])
+
+print(df2.describe())
+print("Amplitude differences")
+print("Mean difference form control to control:",df2['control_pre_amplitude'].mean()-df2['control_pos_amplitude'].mean())
+print("Mean difference form control pre to laser:",df2['control_pre_amplitude'].mean()-df2['laser_amplitude'].mean())
+print("Mean difference form control pos to laser:",df2['control_pos_amplitude'].mean()-df2['laser_amplitude'].mean())
+
+
+# print(df.describe())
+#Saving dataframes
+print("saving dataframes")
+df= pd.concat([df,df2],axis=1)
 df.to_pickle(path+"_info.pkl")

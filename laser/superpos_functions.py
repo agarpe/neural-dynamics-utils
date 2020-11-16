@@ -15,6 +15,9 @@ def read_from_events(path,dt =0.1, max_cols = 300, delim="\t"):
 	#Each row contains Voltage values of the corresponding event.
 	events =  pd.read_csv(path, delimiter = delim,skiprows=0,header=None,names=col_names)
 
+	if events.shape[0]>10000:
+		print(events.shape)
+		return []
 	return events
 
 
@@ -25,8 +28,8 @@ def set_plot_info(axes,labels,loc="best",xlabel="Time (ms)",ylabel="Voltage (mV)
 
 
 # Description: 
-#	Plots several spike events superpossed. When amplitude_log is a list, returns info 
-# 	of the spikes amplitude.
+#	Plots several spike events superpossed. When duration_log is a list, returns info 
+# 	of the spikes duration.
 # 	Before ploting the spike is centered from its maximum and width_ms to left and right.
 # 	Drift is fixed normalizing to each spike minimum
 # Parameters:
@@ -35,9 +38,9 @@ def set_plot_info(axes,labels,loc="best",xlabel="Time (ms)",ylabel="Voltage (mV)
 #	tit plot title
 #	width_ms milliseconds to save at each side. 
 # 	dt Data adquisition time
-#	amplitude_log List where info from spikes amplitude is saved. Ignored when =0. 
-#	show_amplitudes when True detected amplitudes are ploted. 
-def plot_events(events,col,tit,width_ms=50,dt=0.1,amplitude_log=0,show_amplitudes=False):
+#	duration_log List where info from spikes duration is saved. Ignored when =0. 
+#	show_durations when True detected durations are ploted. 
+def plot_events(events,col,tit,width_ms=50,dt=0.1,duration_log=0,amplitude_log=0,show_durations=False):
 	ax=0
 	if(col=='b'):
 		fst_color = 'cyan'
@@ -60,22 +63,32 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,amplitude_log=0,show_amplitude
 		spike = center(spike,width_ms,dt) #center spike from max
 		spike = no_drift(spike) #adjust drift
 
-		if amplitude_log!=0 and spike.shape[0]!=0:
-			#Measure amplitudes:
-			amplitudes,th = get_spike_amplitude(spike,dt,tol=0.2)
-			if amplitudes==[]:
-			# 	continue
-				amp = 0
-			else:
-				amp =  amplitudes[1]-amplitudes[0]
-			if(amp > 1): #Ignore artefacts
-				amplitude_log.append(amp)
-			else:
-				print("ignored value",spike_i)
-				count+=1
+		if duration_log!=0 and spike.shape[0]!=0:
+			#Measure durations:
+			durations,th = get_spike_duration(spike,dt,tol=0.2)
 
-			if show_amplitudes:
-				plt.plot(amplitudes,(th,th),'.',color='k') 
+			dur =  durations[1]-durations[0]
+
+			if(dur > 1): #Ignore artefacts
+				duration_log.append(dur)
+			else:
+				print("ignored duration value",spike_i)
+				count+=1
+				if(count >100):
+					break
+
+			if show_durations:
+				plt.plot(durations,(th,th),'.',color='k') 
+
+		if amplitude_log!=0 and spike.shape[0]!=0:
+			#Measure durations:
+			amplitude = get_spike_amplitude(spike,dt)
+
+			if(amplitude > 1): #Ignore artefacts
+				amplitude_log.append(amplitude)
+			else:
+				print("ignored amplitude value",spike_i)
+				count+=1
 
 		# print(spike.shape)
 		#Calculate time
@@ -146,7 +159,7 @@ def no_drift(spike):
 
 
 # Description: 
-# 	Recives spike values and return the amplitude as a tuple of the time
+# 	Recives spike values and return the spike duration as a tuple of the time
 # 	references of two of the values matching a threshold in "the middle" of the spike
 # Parameters:
 # 	spike voltage values
@@ -154,18 +167,35 @@ def no_drift(spike):
 # 	tol difference tolerance (lower than 0.2 fails)
 # Return:
 #	(min_thres,max_thres)
-def get_spike_amplitude(spike,dt,tol=0.2): 
+def get_spike_duration(spike,dt,tol=0.2): 
 	mx_value = np.max(spike) #maximum V value (spike)
 	mn_value = np.min(spike) #minimum V value (spike)
 
 	th = (mx_value-mn_value)/2 #threshold in the "middle" of the spike.
 
 	#Warning: with a lower tolerance value the threshold detection might fail
-	amplitude_vals = np.where(np.isclose(spike, th,atol=tol))[0]
+	duration_vals = np.where(np.isclose(spike, th,atol=tol))[0]
 
-	if amplitude_vals.size ==0: #Safety comprobation
-		return [],th
+	if duration_vals.size ==0: #Safety comprobation
+		return (0,0),th
 	else:
-		return (amplitude_vals[0]*dt,amplitude_vals[-1]*dt),th
+		return (duration_vals[0]*dt,duration_vals[-1]*dt),th
+
+
+
+
+# Description: 
+# 	Recives spike values and return the amplitude value measured as the distance between
+#	maximum and minimum voltage value.
+# Parameters:
+# 	spike voltage values
+# 	dt time rate
+# Return:
+#	amplitude
+def get_spike_amplitude(spike,dt): 
+	mx_value = np.max(spike) #maximum V value (spike)
+	mn_value = np.min(spike) #minimum V value (spike)
+
+	return mx_value-mn_value
 
 
