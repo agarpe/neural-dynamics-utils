@@ -12,7 +12,7 @@ elif len(sys.argv) ==2:
 	path = sys.argv[1]
 	extension = ""
 else:
-	print("Use: python3 analyze_amplitudes.py path")
+	print("Use: python3 stats_plot.py path")
 	exit()
 
 files = glob.glob(path+"*%s*.pkl"%extension)

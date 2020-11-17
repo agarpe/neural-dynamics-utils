@@ -8,8 +8,8 @@ if len(sys.argv)==6:
 	path = sys.argv[1]
 
 else:
-	print("Use: python3 autom.py path sufix window(ms) min_exp max_exp\n")
-	print("Example: python3 autom.py ../../data/laser/27-Jul-2020 5400_50f 50 1 5")
+	print("Use: python3 autom_superpos.py path sufix window(ms) min_exp max_exp\n")
+	print("Example: python3 autom_superpos.py ../../data/laser/27-Jul-2020 5400_50f 50 1 5")
 	exit()
 
 
@@ -46,4 +46,4 @@ os.system("python3 superpos_from_events.py %s/events/exp%d_%s_laser_waveform.txt
 #------------------------------------------------
 
 #Analyze general plot files 
-os.system("python3 analyze_amplitudes.py %s/events/ > 'amplitudes_log.log'"%(path)) 
+os.system("python3 stats_plot.py %s/events/ > 'amplitudes_log.log'"%(path)) 

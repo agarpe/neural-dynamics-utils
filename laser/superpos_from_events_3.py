@@ -49,9 +49,9 @@ print("\nSuperposing from ",path)
 
 print("Reading events files...")
 #TODO: check size before sed
-# os.system("sed -i 's/\,/./g' "+path_control_pre) #changing , to . to read floats not strings
-# os.system("sed -i 's/\,/./g' "+path_laser) #changing , to . to read floats not strings
-# os.system("sed -i 's/\,/./g' "+path_control_pos) #changing , to . to read floats not strings
+os.system("sed -i 's/\,/./g' "+path_control_pre) #changing , to . to read floats not strings
+os.system("sed -i 's/\,/./g' "+path_laser) #changing , to . to read floats not strings
+os.system("sed -i 's/\,/./g' "+path_control_pos) #changing , to . to read floats not strings
 
 try:
 	#Each row contains Voltage values of the corresponding event.
@@ -84,9 +84,9 @@ label2 = "Laser. N. spikes: %d"%(n_laser)
 label3 = "Control pos. N. spikes: %d"%(n_control_pos)
 
 #Dafaframes and logs
-control_pre_dur_log = []; control_pre_amp_log = []
-laser_dur_log = []; laser_amp_log = []
-control_pos_dur_log = []; control_pos_amp_log = []
+control_pre_dur_log = []; control_pre_amp_log = []; control_pre_slo_log = []
+laser_dur_log = []; laser_amp_log = []; laser_slo_log = []
+control_pos_dur_log = []; control_pos_amp_log = []; control_pos_slo_log = []
 
 
 #------------------------------------------------
@@ -101,7 +101,7 @@ columns= 3
 
 #Individual plots
 plt.subplot(rows,columns,1)
-ax1,ax_fst,ax_last =plot_events(control_pre_events,col='b',tit=label1,width_ms=width,duration_log=control_pre_dur_log,amplitude_log=control_pre_amp_log,show_durations=False)
+ax1,ax_fst,ax_last =plot_events(control_pre_events,col='b',tit=label1,width_ms=width,duration_log=control_pre_dur_log,amplitude_log=control_pre_amp_log,slope_log=control_pre_slo_log,show_durations=False)
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 plt.subplot(rows,columns,2)

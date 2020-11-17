@@ -40,7 +40,7 @@ except:
 print("Getting spikes from ",path)
 
 data = df[col]
-spikes = utils.detect_spikes(data,tol=0.1)
+spikes,th = utils.detect_spikes(data,tol=0.1)
 time = np.arange(0,data.shape[0],1)*0.1
 
 # print(data.shape)
@@ -55,15 +55,15 @@ isis2 = utils.get_ISI(spikes_select)
 # print(min(isis))
 # print(min(isis2))
 
-
 # plt.figure(figsize=(20,15))
-# plt.plot(spikes,np.ones(spikes.shape[0]),'.')
-# plt.plot(spikes_select,np.ones(spikes_select.shape[0]),'.','r')
+# plt.plot(time,data)
+# plt.plot(spikes,np.ones(spikes.shape)*th,'.')
 # plt.show()
+
 
 plt.figure(figsize=(20,15))
 plt.plot(time,data)
-plt.plot(spikes_select,np.ones(spikes_select.shape)*-4,'.')
+plt.plot(spikes_select,np.ones(spikes_select.shape)*th,'.')
 if show:
 	plt.show()
 else:
@@ -71,7 +71,7 @@ else:
 
 print("Number of spikes detected: ",spikes_select.shape[0])
 if spikes_select.shape[0] > 10000:
-	print("Error: number of spikes over the allowed threshold. Events files won't be saved.")
+	print("Error: number of spikes over the safety threshold. Possible failure detecting spikes. Events files won't be saved.")
 	exit()
 
 

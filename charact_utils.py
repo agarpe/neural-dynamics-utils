@@ -407,6 +407,7 @@ def detect_spikes(data,dt=0.1,tol=0.2):
 	mn_value = np.min(data) #minimum V value (spike)
 
 	th = (mx_value+mn_value)/2 #threshold in the "middle" of the spike.
+	#TODO: check spike by spike or threshold at 1/4 spike
 
 	time = np.arange(0,data.shape[0],1.0) #time array 
 	time *= dt
@@ -416,7 +417,7 @@ def detect_spikes(data,dt=0.1,tol=0.2):
 	event_indices = np.where(np.isclose(data, th,atol=tol))
 	# event_indices = np.where(np.isclose(data+abs(mn_value), th,atol=tol))
 	
-	return time[event_indices]
+	return time[event_indices],th
 
 
 

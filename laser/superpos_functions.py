@@ -199,3 +199,14 @@ def get_spike_amplitude(spike,dt):
 	return mx_value-mn_value
 
 
+
+def get_slope(spike,dt):
+	mid_ps = get_spike_duration(spike,dt)
+	indx1 = mid_ps[0]/dt
+	indx2 = mid_ps[1]/dt 
+
+	slope1 = (spike[indx1]-spike[indx1-1])/dt
+	slope2 = (spike[indx2]-spike[indx2-1])/dt
+
+	return slope1,slope2
+
