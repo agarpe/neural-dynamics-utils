@@ -40,7 +40,7 @@ def set_plot_info(axes,labels,loc="best",xlabel="Time (ms)",ylabel="Voltage (mV)
 # 	dt Data adquisition time
 #	duration_log List where info from spikes duration is saved. Ignored when =0. 
 #	show_durations when True detected durations are ploted. 
-def plot_events(events,col,tit,width_ms=50,dt=0.1,duration_log=0,amplitude_log=0,show_durations=False):
+def plot_events(events,col,tit,width_ms=50,dt=0.1,duration_log=0,amplitude_log=0,slope_log=0,show_durations=False):
 	ax=0
 	if(col=='b'):
 		fst_color = 'cyan'
@@ -72,7 +72,7 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,duration_log=0,amplitude_log=0
 			if(dur > 1): #Ignore artefacts
 				duration_log.append(dur)
 			else:
-				print("ignored duration value",spike_i)
+				print("ignored with index %d and duration value %f"%(spike_i,dur))
 				count+=1
 				if(count >100):
 					break
@@ -87,8 +87,13 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,duration_log=0,amplitude_log=0
 			if(amplitude > 1): #Ignore artefacts
 				amplitude_log.append(amplitude)
 			else:
-				print("ignored amplitude value",spike_i)
+				print("ignored with index %d and amplitude value %f"%(spike_i,dur))
 				count+=1
+
+		if slope_log != 0:
+			slopes = get_slope(spike,dt)
+			slope_log.append(slopes)
+
 
 		# print(spike.shape)
 		#Calculate time
@@ -160,7 +165,7 @@ def no_drift(spike):
 
 # Description: 
 # 	Recives spike values and return the spike duration as a tuple of the time
-# 	references of two of the values matching a threshold in "the middle" of the spike
+# 	references of two of the values (in ms) matching a threshold in "the middle" of the spike
 # Parameters:
 # 	spike voltage values
 # 	dt time rate
@@ -171,7 +176,7 @@ def get_spike_duration(spike,dt,tol=0.2):
 	mx_value = np.max(spike) #maximum V value (spike)
 	mn_value = np.min(spike) #minimum V value (spike)
 
-	th = (mx_value-mn_value)/2 #threshold in the "middle" of the spike.
+	th = (mx_value+mn_value)/2 #threshold in the "middle" of the spike.
 
 	#Warning: with a lower tolerance value the threshold detection might fail
 	duration_vals = np.where(np.isclose(spike, th,atol=tol))[0]
@@ -200,13 +205,22 @@ def get_spike_amplitude(spike,dt):
 
 
 
-# def get_slope(spike,dt):
-# 	mid_ps = get_spike_duration(spike,dt)
-# 	indx1 = mid_ps[0]/dt
-# 	indx2 = mid_ps[1]/dt 
+# Description: 
+# 	Recives spike values and return the increasing and decreasing slope values at the 
+#	two points matching a threshold in "the middle" of the spike
+#	maximum and minimum voltage value.
+# Parameters:
+# 	spike voltage values
+# 	dt time rate
+# Return:
+#	amplitude
 
-# 	slope1 = (spike[indx1]-spike[indx1-1])/dt
-# 	slope2 = (spike[indx2]-spike[indx2-1])/dt
+def get_slope(spike,dt):
+	mid_ps,th = get_spike_duration(spike,dt)
+	indx1 = int(mid_ps[0]/dt) #From ms to point ref
+	indx2 = int(mid_ps[1]/dt) #From ms to point ref
 
-# 	return slope1,slope2
+	slope1 = (spike[indx1]-spike[indx1-1])/dt 
+	slope2 = (spike[indx2]-spike[indx2-1])/dt
 
+	return (slope1,slope2)

@@ -11,7 +11,6 @@ plt.rcParams.update({'font.size': 17})
 if len(sys.argv) ==8:
 	path_control = sys.argv[1]
 	path_laser = sys.argv[2]
-	path = path_control[:path_control.find("control")] 
 	width = int(sys.argv[3])
 	label1= sys.argv[4]
 	label2= sys.argv[5]
