@@ -45,5 +45,5 @@ os.system("python3 superpos_from_events.py %s/events/exp%d_%s_laser_waveform.txt
 
 #------------------------------------------------
 
-#Analyze general plot files 
-os.system("python3 stats_plot.py %s/events/ > 'amplitudes_log.log'"%(path)) 
+# #Analyze general plot files 
+# os.system("python3 stats_plot.py %s/events/ > 'amplitudes_log.log'"%(path)) 

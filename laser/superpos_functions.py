@@ -27,6 +27,47 @@ def set_plot_info(axes,labels,loc="best",xlabel="Time (ms)",ylabel="Voltage (mV)
 	plt.ylabel(ylabel)
 
 
+
+def get_spike_info(df_log,spike,dt,show_durations,spike_i,error_count):
+	if(df_log == {}): #if first spike
+		df_log['duration']=[];df_log['amplitude']=[];df_log['slope_inc']=[];df_log['slope_dec']=[]
+
+	if spike.shape[0]==0:
+		return df_log
+
+
+	#Measure durations:
+	durations,th = get_spike_duration(spike,dt,tol=0.2)
+	dur =  durations[1]-durations[0]
+
+	if(dur > 1): #Ignore artefacts
+		df_log['duration'].append(dur)
+	else:
+		print("ignored with index %d and duration value %f"%(spike_i,dur))
+		error_count[0]+=1
+
+	if show_durations:
+		plt.plot(durations,(th,th),'.',color='k') 
+
+	#Measure durations:
+	amplitude = get_spike_amplitude(spike,dt)
+
+	if(amplitude > 1): #Ignore artefacts
+		df_log['amplitude'].append(amplitude)
+	else:
+		print("ignored with index %d and amplitude value %f"%(spike_i,dur))
+		error_count[0]+=1
+
+	slope_inc,slope_dec = get_slope(spike,dt)
+	df_log['slope_inc'].append(slope_inc)
+	df_log['slope_dec'].append(slope_dec)	
+
+	return df_log	
+
+
+
+colors = {'b':['cyan','darkblue'],'r':['coral','maroon'],'g':['lime','darkgreen']}
+
 # Description: 
 #	Plots several spike events superpossed. When duration_log is a list, returns info 
 # 	of the spikes duration.
@@ -40,67 +81,32 @@ def set_plot_info(axes,labels,loc="best",xlabel="Time (ms)",ylabel="Voltage (mV)
 # 	dt Data adquisition time
 #	duration_log List where info from spikes duration is saved. Ignored when =0. 
 #	show_durations when True detected durations are ploted. 
-def plot_events(events,col,tit,width_ms=50,dt=0.1,duration_log=0,amplitude_log=0,slope_log=0,show_durations=False):
+def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False):
 	ax=0
-	if(col=='b'):
-		fst_color = 'cyan'
-		last_color = 'darkblue'
-	elif(col=='r'): 
-		fst_color = 'coral'
-		last_color = 'maroon'
-	elif(col=='g'):
-		fst_color = 'lime'
-		last_color = 'darkgreen'
-	else:
-		fst_color = col
-		last_color = col
 
-	count =0
+	#set first and last spike colors
+	try:
+		fst_color,last_color = colors[col]
+	except:
+		fst_color = col;last_color = col
+
+	count =[0]
 	for spike_i in range(events.shape[0]):
 		#remove possible nan values:
 		spike = events[spike_i,:][~np.isnan(events[spike_i,:])]
 
+		#prepare spike
 		spike = center(spike,width_ms,dt) #center spike from max
 		spike = no_drift(spike) #adjust drift
 
-		if duration_log!=0 and spike.shape[0]!=0:
-			#Measure durations:
-			durations,th = get_spike_duration(spike,dt,tol=0.2)
-
-			dur =  durations[1]-durations[0]
-
-			if(dur > 1): #Ignore artefacts
-				duration_log.append(dur)
-			else:
-				print("ignored with index %d and duration value %f"%(spike_i,dur))
-				count+=1
-				if(count >100):
-					break
-
-			if show_durations:
-				plt.plot(durations,(th,th),'.',color='k') 
-
-		if amplitude_log!=0 and spike.shape[0]!=0:
-			#Measure durations:
-			amplitude = get_spike_amplitude(spike,dt)
-
-			if(amplitude > 1): #Ignore artefacts
-				amplitude_log.append(amplitude)
-			else:
-				print("ignored with index %d and amplitude value %f"%(spike_i,dur))
-				count+=1
-
-		if slope_log != 0:
-			slopes = get_slope(spike,dt)
-			slope_log.append(slopes)
-
-
-		# print(spike.shape)
+		# get stat info
+		df_log = get_spike_info(df_log,spike,dt,show_durations,spike_i,count)
+		if(count[0] >20):
+			break
 		#Calculate time
 		time = np.arange(0,spike.shape[0],1.0) #points to width_ms. 
 		time *= dt
 
-		# print(time.shape)
 		#Plot first, last or general spike.
 		if(spike_i==0):
 			ax_fst,=plt.plot(time,spike,color=fst_color,linewidth=1.5)
@@ -110,8 +116,9 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,duration_log=0,amplitude_log=0
 			ax,=plt.plot(time,spike,color=col,linewidth=0.1)	
 			# ax,=plt.plot(time,spike,linewidth=0.1) #darker effect ?
 	plt.title(tit)
-	if count >0:
+	if count[0] >0:
 		print(count,"\"spikes\" ignored")
+
 	return ax,ax_fst,ax_last
 
 

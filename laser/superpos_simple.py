@@ -46,22 +46,32 @@ plt.tight_layout()
 
 #Individual plots
 
-dur_log = []
-slo_log = []
-
-ax1,ax_fst,ax_last=plot_events(events,col='b',tit=label,width_ms=width,duration_log=dur_log,slope_log=slo_log,show_durations=True)
+df = {}
+ax1,ax_fst,ax_last=plot_events(events,col='b',tit=label,width_ms=width,df_log=df,show_durations=True)
 plt.legend([ax_fst,ax_last],["First spike","Last spike"])
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
 
-list1, list2 = zip(*slo_log)
-list1=np.array(list1)
-list2=np.array(list2)
 
-
-data_tuples=list(itertools.zip_longest(list1,list2))
-df = pd.DataFrame(data_tuples,columns=["Increasing","Decreasing"])
+print(df)
+df=pd.DataFrame(df)
+# df = df.add_suffix('_control_pre')
 print(df.describe())
+
+print("saving dataframes")
+df= pd.concat([df.add_prefix('control_pre_'),df.add_suffix('laser_')],axis=1)
+print(df.describe())
+
+# df.to_pickle(path+"_info.pkl")
+
+# inc_slo, dec_slo = zip(*slo_log)
+# inc_slo=np.array(inc_slo)
+# dec_slo=np.array(dec_slo)
+
+
+# data_tuples=list(itertools.zip_longest(inc_slo,dec_slo))
+# df = pd.DataFrame(data_tuples,columns=["Increasing","Decreasing"])
+# print(df.describe())
 
 path = path[:path.find("exp")] +title
 

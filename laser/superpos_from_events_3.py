@@ -14,6 +14,22 @@ import itertools
 
 plt.rcParams.update({'font.size': 19})
 
+
+def create_dataframe(dicts,prefixes):
+	if len(dicts) != len(prefixes):
+		print("Error creating dataframe, dicts and prefixes with diffrent shapes")
+		return {}
+
+	dfs = []
+
+	for d,p in zip(dicts,prefixes):
+		df = pd.DataFrame(d)
+		dfs.append(df.add_prefix(p))
+
+	df = pd.concat(dfs,axis=1)
+
+	return df
+
 # import argparse
 
 # ap = argparse.ArgumentParser()
@@ -39,7 +55,7 @@ if len(sys.argv) ==3:
 	path_control_pos = path+"_control_pos_waveform.txt"
 	width = int(sys.argv[2])
 	show = False
-	save = True
+	save = False
 else:
 	print("Use: python3 superpos_from_events_3.py path width ")
 	exit()
@@ -84,9 +100,12 @@ label2 = "Laser. N. spikes: %d"%(n_laser)
 label3 = "Control pos. N. spikes: %d"%(n_control_pos)
 
 #Dafaframes and logs
-control_pre_dur_log = []; control_pre_amp_log = []; control_pre_slo_log = []
-laser_dur_log = []; laser_amp_log = []; laser_slo_log = []
-control_pos_dur_log = []; control_pos_amp_log = []; control_pos_slo_log = []
+# control_pre_dur_log = []; control_pre_amp_log = []; control_pre_slo_log = []
+# laser_dur_log = []; laser_amp_log = []; laser_slo_log = []
+# control_pos_dur_log = []; control_pos_amp_log = []; control_pos_slo_log = []
+control_pre_log ={}
+laser_log ={}
+control_pos_log ={}
 
 
 #------------------------------------------------
@@ -101,15 +120,15 @@ columns= 3
 
 #Individual plots
 plt.subplot(rows,columns,1)
-ax1,ax_fst,ax_last =plot_events(control_pre_events,col='b',tit=label1,width_ms=width,duration_log=control_pre_dur_log,amplitude_log=control_pre_amp_log,slope_log=control_pre_slo_log,show_durations=False)
+ax1,ax_fst,ax_last =plot_events(control_pre_events,col='b',tit=label1,width_ms=width,df_log=control_pre_log,show_durations=False)
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 plt.subplot(rows,columns,2)
-ax1,ax_fst,ax_last =plot_events(laser_events,col='r',tit=label2,width_ms=width,duration_log=laser_dur_log,amplitude_log=laser_amp_log,show_durations=False)
+ax1,ax_fst,ax_last =plot_events(laser_events,col='r',tit=label2,width_ms=width,df_log=laser_log,show_durations=False)
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 plt.subplot(rows,columns,3)
-ax1,ax_fst,ax_last =plot_events(control_pos_events,col='g',tit=label3,width_ms=width,duration_log=control_pos_dur_log,amplitude_log=control_pos_amp_log,show_durations=False)
+ax1,ax_fst,ax_last =plot_events(control_pos_events,col='g',tit=label3,width_ms=width,df_log=control_pos_log,show_durations=False)
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 
@@ -160,33 +179,32 @@ if(show):
 # Saving logs into dataframe
 
 
-#zip duration logs saving None values
-data_tuples=list(itertools.zip_longest(control_pre_dur_log,laser_dur_log,control_pos_dur_log))
-# print(data_tuples)
-df = pd.DataFrame(data_tuples, columns=['control_pre','laser','control_pos'])
-
+df = create_dataframe([control_pre_log,laser_log,control_pos_log],['control_pre_','laser_','control_pos_'])
 print(df.describe())
-print("Duration differences")
-print("Mean difference form control to control:",df['control_pre'].mean()-df['control_pos'].mean())
-print("Mean difference form control pre to laser:",df['control_pre'].mean()-df['laser'].mean())
-print("Mean difference form control pos to laser:",df['control_pos'].mean()-df['laser'].mean())
 
-
-
-#zip duration logs saving None values
-data_tuples=list(itertools.zip_longest(control_pre_amp_log,laser_amp_log,control_pos_amp_log))
-# print(data_tuples)
-df2 = pd.DataFrame(data_tuples, columns=['control_pre_amplitude','laser_amplitude','control_pos_amplitude'])
-
-print(df2.describe())
-print("Amplitude differences")
-print("Mean difference form control to control:",df2['control_pre_amplitude'].mean()-df2['control_pos_amplitude'].mean())
-print("Mean difference form control pre to laser:",df2['control_pre_amplitude'].mean()-df2['laser_amplitude'].mean())
-print("Mean difference form control pos to laser:",df2['control_pos_amplitude'].mean()-df2['laser_amplitude'].mean())
-
-
-# print(df.describe())
 #Saving dataframes
 print("saving dataframes")
-df= pd.concat([df,df2],axis=1)
+# df= pd.concat([df,df],axis=1)
 df.to_pickle(path+"_info.pkl")
+
+
+print("Duration differences")
+print("control to control:",df['control_pre_duration'].mean()-df['control_pos_duration'].mean())
+print("control pre to laser:",df['control_pre_duration'].mean()-df['laser_duration'].mean())
+print("control pos to laser:",df['control_pos_duration'].mean()-df['laser_duration'].mean())
+
+print("Amplitude differences")
+print("control to control:",df['control_pre_amplitude'].mean()-df['control_pos_amplitude'].mean())
+print("control pre to laser:",df['control_pre_amplitude'].mean()-df['laser_amplitude'].mean())
+print("control pos to laser:",df['control_pos_amplitude'].mean()-df['laser_amplitude'].mean())
+
+
+print("Slope inc differences")
+print("control to control:",df['control_pre_slope_inc'].mean()-df['control_pos_slope_inc'].mean())
+print("control pre to laser:",df['control_pre_slope_inc'].mean()-df['laser_slope_inc'].mean())
+print("control pos to laser:",df['control_pos_slope_inc'].mean()-df['laser_slope_inc'].mean())
+
+print("Slope dec differences")
+print("control to control:",df['control_pre_slope_dec'].mean()-df['control_pos_slope_dec'].mean())
+print("control pre to laser:",df['control_pre_slope_dec'].mean()-df['laser_slope_dec'].mean())
+print("control pos to laser:",df['control_pos_slope_dec'].mean()-df['laser_slope_dec'].mean())

@@ -9,6 +9,9 @@ def set_titles(axes,title,path):
 		ax.set_ylabel(title)
 	plt.suptitle(path)
 
+def plot_boxplot(columns,title,path,fliers=True):
+	axes=all_trials.boxplot(column=columns,by='Trial',grid=False,layout=(3,1),return_type='axes',figsize=(10,15),fontsize=20,showmeans=True,showfliers=fliers)
+	set_titles(axes,title,path)
 
 
 if len(sys.argv) ==3:
@@ -21,7 +24,7 @@ else:
 	print("Use: python3 stats_plot.py path")
 	exit()
 
-show = False
+show = True
 
 files = glob.glob(path+"*%s*.pkl"%extension)
 files.sort(key=os.path.getmtime)
@@ -45,13 +48,15 @@ for i,f in enumerate(files):
 
 all_trials=pd.concat(all_trials)
 
-duration_labels = ['control_pre','laser','control_pos']
+duration_labels = ['control_pre_duration','laser_duration','control_pos_duration']
 amplitude_labels = ['control_pre_amplitude','laser_amplitude','control_pos_amplitude']
 
 
-axes=all_trials.boxplot(column=duration_labels,by='Trial',grid=False,layout=(3,1),return_type='axes',figsize=(10,15),fontsize=20,showmeans=True)
-set_titles(axes,"Spike width (ms)",path)
+duration_title = 'Spike width (ms)'
+amplitude_title = 'Spike amplitude (mV)'
 
+
+plot_boxplot(duration_labels,duration_title,path)
 plt.savefig(path +"duration_boxplots"+ extension+".png")
 
 if show:	
@@ -59,9 +64,7 @@ if show:
 else:
 	plt.clf()
 
-axes=all_trials.boxplot(column=duration_labels,by='Trial',grid=False,layout=(3,1),return_type='axes',figsize=(10,15),fontsize=20,showmeans=True,showfliers=False)
-set_titles(axes,"Spike width (ms)",path)
-
+plot_boxplot(duration_labels,duration_title,path,fliers=False)
 plt.savefig(path +"duration_boxplots_no_fliers"+ extension+".png")
 
 # 
@@ -71,10 +74,7 @@ else:
 	plt.clf()
 
 
-axes=all_trials.boxplot(column=amplitude_labels,by='Trial',grid=False,layout=(3,1),return_type='axes',figsize=(10,15),fontsize=20,showmeans=True)
-# plt.ylabel("Spike amplitude (mV)")
-set_titles(axes,"Spike amplitude (mV)",path)
-
+plot_boxplot(amplitude_labels,amplitude_title,path)
 plt.savefig(path +"amplitude_boxplots"+ extension+".png")
 
 # 
@@ -83,9 +83,7 @@ if show:
 else:
 	plt.clf()
 
-axes=all_trials.boxplot(column=amplitude_labels,by='Trial',grid=False,layout=(3,1),return_type='axes',figsize=(10,15),fontsize=20,showmeans=True,showfliers=False)
-set_titles(axes,"Spike amplitude (mV)",path)
-
+plot_boxplot(amplitude_labels,amplitude_title,path,fliers=False)
 plt.savefig(path +"amplitude_boxplots_no_fliers"+ extension+".png")
 
 if show:	
