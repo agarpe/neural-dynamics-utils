@@ -40,7 +40,7 @@ def set_plot_info(axes,labels,loc="best",xlabel="Time (ms)",ylabel="Voltage (mV)
 # 	dt Data adquisition time
 #	duration_log List where info from spikes duration is saved. Ignored when =0. 
 #	show_durations when True detected durations are ploted. 
-def plot_events(events,col,tit,width_ms=50,dt=0.1,duration_log=0,amplitude_log=0,slope_log=0,show_durations=False):
+def plot_events(events,col,tit,width_ms=50,dt=0.1,duration_log=0,amplitude_log=0,slope_log=0,df_log={},show_durations=False):
 	ax=0
 	if(col=='b'):
 		fst_color = 'cyan'
@@ -56,6 +56,9 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,duration_log=0,amplitude_log=0
 		last_color = col
 
 	count =0
+
+	df_log['duration']=[];df_log['amplitude']=[];df_log['slope_inc']=[];df_log['slope_dec']=[]
+
 	for spike_i in range(events.shape[0]):
 		#remove possible nan values:
 		spike = events[spike_i,:][~np.isnan(events[spike_i,:])]
@@ -70,7 +73,8 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,duration_log=0,amplitude_log=0
 			dur =  durations[1]-durations[0]
 
 			if(dur > 1): #Ignore artefacts
-				duration_log.append(dur)
+				# duration_log.append(dur)
+				df_log['duration'].append(dur)
 			else:
 				print("ignored with index %d and duration value %f"%(spike_i,dur))
 				count+=1
@@ -85,14 +89,18 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,duration_log=0,amplitude_log=0
 			amplitude = get_spike_amplitude(spike,dt)
 
 			if(amplitude > 1): #Ignore artefacts
-				amplitude_log.append(amplitude)
+				# amplitude_log.append(amplitude)
+				df_log['amplitude'].append(amplitude)
 			else:
 				print("ignored with index %d and amplitude value %f"%(spike_i,dur))
 				count+=1
 
 		if slope_log != 0:
-			slopes = get_slope(spike,dt)
-			slope_log.append(slopes)
+			slope_inc,slope_dec = get_slope(spike,dt)
+			# slope_log.append(slopes)
+			df_log['slope_inc'].append(slope_inc)
+			df_log['slope_dec'].append(slope_dec)
+
 
 
 		# print(spike.shape)

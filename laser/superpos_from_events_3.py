@@ -105,11 +105,11 @@ ax1,ax_fst,ax_last =plot_events(control_pre_events,col='b',tit=label1,width_ms=w
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 plt.subplot(rows,columns,2)
-ax1,ax_fst,ax_last =plot_events(laser_events,col='r',tit=label2,width_ms=width,duration_log=laser_dur_log,amplitude_log=laser_amp_log,show_durations=False)
+ax1,ax_fst,ax_last =plot_events(laser_events,col='r',tit=label2,width_ms=width,duration_log=laser_dur_log,amplitude_log=laser_amp_log,slope_log=laser_slo_log,show_durations=False)
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 plt.subplot(rows,columns,3)
-ax1,ax_fst,ax_last =plot_events(control_pos_events,col='g',tit=label3,width_ms=width,duration_log=control_pos_dur_log,amplitude_log=control_pos_amp_log,show_durations=False)
+ax1,ax_fst,ax_last =plot_events(control_pos_events,col='g',tit=label3,width_ms=width,duration_log=control_pos_dur_log,amplitude_log=control_pos_amp_log,slope_log=control_pos_slo_log,show_durations=False)
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 
@@ -184,6 +184,7 @@ print("Mean difference form control to control:",df2['control_pre_amplitude'].me
 print("Mean difference form control pre to laser:",df2['control_pre_amplitude'].mean()-df2['laser_amplitude'].mean())
 print("Mean difference form control pos to laser:",df2['control_pos_amplitude'].mean()-df2['laser_amplitude'].mean())
 
+######TODO: slope, parse two columns in each contol,laser,pos and join into dataframe.
 
 # print(df.describe())
 #Saving dataframes
