@@ -5,6 +5,23 @@ import sys
 import os
 from random import randint
 
+
+def create_dataframe(dicts,prefixes):
+	if len(dicts) != len(prefixes):
+		print("Error creating dataframe, dicts and prefixes with diffrent shapes")
+		return {}
+
+	dfs = []
+
+	for d,p in zip(dicts,prefixes):
+		df = pd.DataFrame.from_dict(d, orient='index')
+		df = df.transpose()
+		dfs.append(df.add_prefix(p))
+
+	df = pd.concat(dfs,axis=1)
+
+	return df
+	
 def read_from_events(path,dt =0.1, max_cols = 300, delim="\t"):
 	#Column names list generation to read files with distinct number of columns in each row. 
 	#Indispensable when events obtained by threshold detection in DataView
@@ -30,7 +47,7 @@ def set_plot_info(axes,labels,loc="best",xlabel="Time (ms)",ylabel="Voltage (mV)
 
 def get_spike_info(df_log,spike,dt,show_durations,spike_i,error_count):
 	if(df_log == {}): #if first spike
-		df_log['duration']=[];df_log['amplitude']=[];df_log['slope_inc']=[];df_log['slope_dec']=[]
+		df_log['duration']=[];df_log['amplitude']=[];df_log['slope_dep']=[];df_log['slope_rep']=[]
 
 	if spike.shape[0]==0:
 		return df_log
@@ -55,12 +72,12 @@ def get_spike_info(df_log,spike,dt,show_durations,spike_i,error_count):
 	if(amplitude > 1): #Ignore artefacts
 		df_log['amplitude'].append(amplitude)
 	else:
-		print("ignored with index %d and amplitude value %f"%(spike_i,dur))
+		print("ignored with index %d and amplitude value %f"%(spike_i,amplitude))
 		error_count[0]+=1
 
 	slope_inc,slope_dec = get_slope(spike,dt)
-	df_log['slope_inc'].append(slope_inc)
-	df_log['slope_dec'].append(slope_dec)	
+	df_log['slope_dep'].append(slope_inc)
+	df_log['slope_rep'].append(slope_dec)	
 
 	return df_log	
 
@@ -107,6 +124,7 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 		time = np.arange(0,spike.shape[0],1.0) #points to width_ms. 
 		time *= dt
 
+		#TODO: fail when fst or last spikes are ignored
 		#Plot first, last or general spike.
 		if(spike_i==0):
 			ax_fst,=plt.plot(time,spike,color=fst_color,linewidth=1.5)

@@ -432,11 +432,14 @@ def get_ISI(events):
 	return isi
 
 #Computes Spike Density convoluting frequencies with gaussian 
-def sdf(spikes,window_size=3,sigma=2):
+def sdf(spikes,spike_window=200,window_size=3,sigma=2):
 	filt = signal.gaussian(window_size, sigma)
-	# plt.plot(filt)
-	# plt.show()
-	return signal.convolve(spikes,filt,mode='full') #full: discrete linear convolution
+	plt.plot(filt)
+	plt.show()
+
+	# for 
+
+	return signal.fftconvolve(spikes,filt,mode='same') #full: discrete linear convolution
 											 #same: same size as in1, centered with respect to the full
 
 #Generates an array [0,1] where 0 := no event; 1 := event

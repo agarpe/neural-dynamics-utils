@@ -23,21 +23,17 @@ else:
 
 
 
-os.system("sed -i 's/\,/./g' "+path_control) #changing , to . to read floats not strings
-os.system("sed -i 's/\,/./g' "+path_laser) #changing , to . to read floats not strings
-
 # #Each row contains voltage values of the corresponding event.
-# control_events =  pd.read_csv(path_control, delimiter = "\t",skiprows=0,header=None)
-# laser_events =  pd.read_csv(path_laser, delimiter = "\t",skiprows=0,header=None)
-control_events = read_from_events(path_control,max_cols=300,dt=0.1)
-laser_events = read_from_events(path_laser,max_cols=300,dt=0.1)
+try:
+	control_events = read_from_events(path_control,max_cols=300,dt=0.1)
+	laser_events = read_from_events(path_laser,max_cols=300,dt=0.1)
+except:
+	print("Error: file not found")
+	exit()
 
 n_control = len(control_events.index)
 n_laser = len(laser_events.index)
 
-#Remove last column NaN values
-control_events=control_events.iloc[:, :-1] 
-laser_events=laser_events.iloc[:, :-1]
 
 #Parse to array
 control_events=control_events.values
@@ -85,7 +81,7 @@ plt.tight_layout()
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
 
-
+path = path_control
 
 path = path[:path.find("exp")] +title
 

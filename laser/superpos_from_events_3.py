@@ -15,20 +15,21 @@ import itertools
 plt.rcParams.update({'font.size': 19})
 
 
-def create_dataframe(dicts,prefixes):
-	if len(dicts) != len(prefixes):
-		print("Error creating dataframe, dicts and prefixes with diffrent shapes")
-		return {}
+# def create_dataframe(dicts,prefixes):
+# 	if len(dicts) != len(prefixes):
+# 		print("Error creating dataframe, dicts and prefixes with diffrent shapes")
+# 		return {}
 
-	dfs = []
+# 	dfs = []
 
-	for d,p in zip(dicts,prefixes):
-		df = pd.DataFrame(d)
-		dfs.append(df.add_prefix(p))
+# 	for d,p in zip(dicts,prefixes):
+# 		df = pd.DataFrame.from_dict(d, orient='index')
+# 		df = df.transpose()
+# 		dfs.append(df.add_prefix(p))
 
-	df = pd.concat(dfs,axis=1)
+# 	df = pd.concat(dfs,axis=1)
 
-	return df
+# 	return df
 
 # import argparse
 
@@ -64,10 +65,6 @@ else:
 print("\nSuperposing from ",path)
 
 print("Reading events files...")
-#TODO: check size before sed
-os.system("sed -i 's/\,/./g' "+path_control_pre) #changing , to . to read floats not strings
-os.system("sed -i 's/\,/./g' "+path_laser) #changing , to . to read floats not strings
-os.system("sed -i 's/\,/./g' "+path_control_pos) #changing , to . to read floats not strings
 
 try:
 	#Each row contains Voltage values of the corresponding event.
@@ -83,13 +80,9 @@ n_control_pre = len(control_pre_events.index)
 n_laser = len(laser_events.index)
 n_control_pos = len(control_pos_events.index)
 
-#Remove last column NaN values
-control_pre_events=control_pre_events.iloc[:-1, :-1] 
-laser_events=laser_events.iloc[:-1, :-1]
-control_pos_events=control_pos_events.iloc[:-1, :-1] 
 
 #Parse to array
-control_pre_events=control_pre_events.values[:-1]
+control_pre_events=control_pre_events.values
 laser_events=laser_events.values
 control_pos_events=control_pos_events.values
 
@@ -100,9 +93,6 @@ label2 = "Laser. N. spikes: %d"%(n_laser)
 label3 = "Control pos. N. spikes: %d"%(n_control_pos)
 
 #Dafaframes and logs
-# control_pre_dur_log = []; control_pre_amp_log = []; control_pre_slo_log = []
-# laser_dur_log = []; laser_amp_log = []; laser_slo_log = []
-# control_pos_dur_log = []; control_pos_amp_log = []; control_pos_slo_log = []
 control_pre_log ={}
 laser_log ={}
 control_pos_log ={}
@@ -124,19 +114,11 @@ ax1,ax_fst,ax_last =plot_events(control_pre_events,col='b',tit=label1,width_ms=w
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 plt.subplot(rows,columns,2)
-<<<<<<< HEAD
 ax1,ax_fst,ax_last =plot_events(laser_events,col='r',tit=label2,width_ms=width,df_log=laser_log,show_durations=False)
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 plt.subplot(rows,columns,3)
 ax1,ax_fst,ax_last =plot_events(control_pos_events,col='g',tit=label3,width_ms=width,df_log=control_pos_log,show_durations=False)
-=======
-ax1,ax_fst,ax_last =plot_events(laser_events,col='r',tit=label2,width_ms=width,duration_log=laser_dur_log,amplitude_log=laser_amp_log,slope_log=laser_slo_log,show_durations=False)
-set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
-
-plt.subplot(rows,columns,3)
-ax1,ax_fst,ax_last =plot_events(control_pos_events,col='g',tit=label3,width_ms=width,duration_log=control_pos_dur_log,amplitude_log=control_pos_amp_log,slope_log=control_pos_slo_log,show_durations=False)
->>>>>>> bcc4c6d3f8293f6403b4c771de8d5c552b1a8cf2
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 
@@ -184,36 +166,31 @@ if(show):
 
 
 
-# Saving logs into dataframe
-
+#Saving dataframes
+print("saving dataframes")
 
 df = create_dataframe([control_pre_log,laser_log,control_pos_log],['control_pre_','laser_','control_pos_'])
 print(df.describe())
-
-#Saving dataframes
-print("saving dataframes")
-# df= pd.concat([df,df],axis=1)
 df.to_pickle(path+"_info.pkl")
 
 
-print("Duration differences")
-print("control to control:",df['control_pre_duration'].mean()-df['control_pos_duration'].mean())
-print("control pre to laser:",df['control_pre_duration'].mean()-df['laser_duration'].mean())
-print("control pos to laser:",df['control_pos_duration'].mean()-df['laser_duration'].mean())
+# print("Duration differences")
+# print("control to control:",df['control_pre_duration'].mean()-df['control_pos_duration'].mean())
+# print("control pre to laser:",df['control_pre_duration'].mean()-df['laser_duration'].mean())
+# print("control pos to laser:",df['control_pos_duration'].mean()-df['laser_duration'].mean())
 
-print("Amplitude differences")
-print("control to control:",df['control_pre_amplitude'].mean()-df['control_pos_amplitude'].mean())
-print("control pre to laser:",df['control_pre_amplitude'].mean()-df['laser_amplitude'].mean())
-print("control pos to laser:",df['control_pos_amplitude'].mean()-df['laser_amplitude'].mean())
+# print("Amplitude differences")
+# print("control to control:",df['control_pre_amplitude'].mean()-df['control_pos_amplitude'].mean())
+# print("control pre to laser:",df['control_pre_amplitude'].mean()-df['laser_amplitude'].mean())
+# print("control pos to laser:",df['control_pos_amplitude'].mean()-df['laser_amplitude'].mean())
 
-######TODO: slope, parse two columns in each contol,laser,pos and join into dataframe.
 
-print("Slope inc differences")
-print("control to control:",df['control_pre_slope_inc'].mean()-df['control_pos_slope_inc'].mean())
-print("control pre to laser:",df['control_pre_slope_inc'].mean()-df['laser_slope_inc'].mean())
-print("control pos to laser:",df['control_pos_slope_inc'].mean()-df['laser_slope_inc'].mean())
+# print("Slope inc differences")
+# print("control to control:",df['control_pre_slope_dep'].mean()-df['control_pos_slope_dep'].mean())
+# print("control pre to laser:",df['control_pre_slope_dep'].mean()-df['laser_slope_dep'].mean())
+# print("control pos to laser:",df['control_pos_slope_dep'].mean()-df['laser_slope_dep'].mean())
 
-print("Slope dec differences")
-print("control to control:",df['control_pre_slope_dec'].mean()-df['control_pos_slope_dec'].mean())
-print("control pre to laser:",df['control_pre_slope_dec'].mean()-df['laser_slope_dec'].mean())
-print("control pos to laser:",df['control_pos_slope_dec'].mean()-df['laser_slope_dec'].mean())
+# print("Slope dec differences")
+# print("control to control:",df['control_pre_slope_rep'].mean()-df['control_pos_slope_rep'].mean())
+# print("control pre to laser:",df['control_pre_slope_rep'].mean()-df['laser_slope_rep'].mean())
+# print("control pos to laser:",df['control_pos_slope_rep'].mean()-df['laser_slope_rep'].mean())

@@ -30,8 +30,8 @@ Loads corresponding events files to path/exp_name adding the sufixes:
 	exp_name_control_pos_events.txt (only for superpos_from_events_3)
 
 Example:
-	python3 superpos_from_events_3.py ../data/laser/15-Jul-2020/exp4_60mW_50f 10
-	python3 superpos_from_events_2.py ../data/laser/15-Jul-2020/exp4_60mW_50f 10
+	python3 superpos_from_events_3.py ../data/laser/single_neuron/15-Jul-2020/exp4_60mW_50f 10
+	python3 superpos_from_events_2.py ../data/laser/single_neuron/15-Jul-2020/exp4_60mW_50f 10
 
 ### Pre-processing data
 This script receives the events from dataview where each row in the file contains all the voltage values corresponding to one same event. 

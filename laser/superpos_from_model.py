@@ -6,34 +6,67 @@ import glob
 plt.rcParams.update({'legend.markerscale': 2000})
 # plt.rcParams.update({'font.size': 14})
 
+show='n'
+stats='y'
 
-if len(sys.argv) >6:
-	path = sys.argv[1]
-	ref_param = sys.argv[2] #name of the parameter varied during simulations
-	title = sys.argv[3]
-	dt=float(sys.argv[4])
-	t=float(sys.argv[5])
-	lim=int(sys.argv[6]) #number of files limit
 
-elif len(sys.argv) >3:
-	path = sys.argv[1]
-	ref_param = sys.argv[2] #name of the parameter varied during simulations
-	title = sys.argv[3]
-	dt=float(sys.argv[4])
-	t=float(sys.argv[5])
-	lim=-1
-elif len(sys.argv) >2:
-	path = sys.argv[1]
-	ref_param = sys.argv[2]
-	title = ""
-	t=10 #hh 10ms #vav 10ms
-	dt=0.001
-	lim=-1
-	# path_spk = sys.argv[2]
-else:
-	print("Use: python3 superpos_from_model.py path ref_param title [dt] [win_t] [max_files]")
-	print("Example: python3 superpos_from_model.py ../../laser_model/HH/data/gna/ gna \"Gna simulation\" 0.001 8 20")
-	exit()
+
+import argparse
+
+ap = argparse.ArgumentParser()
+ap.add_argument("-p", "--path", required=True, help="Path to the file to plot")
+ap.add_argument("-rp", "--ref_param", required=True, help="Parameter varied during simulations")
+ap.add_argument("-ti", "--title", required=False,default="", help="Title of the resulting plot")
+ap.add_argument("-dt", "--time_step", required=False, default=0.001, help="Sampling freq of -fs")
+ap.add_argument("-wt", "--wind_t", required=False, default=10, help="Half window size in ms")
+ap.add_argument("-fl", "--file_limit", required=False, default=-1, help="Limit of files to load")
+ap.add_argument("-sa", "--save", required=False, default='y', help="Option to save plot file")
+ap.add_argument("-sh", "--show", required=False, default='y', help="Option to show plot file")
+ap.add_argument("-st", "--stats", required=False, default='y', help="Option to save stats pkl file")
+ap.add_argument("-v", "--verbrose", required=False, default='y', help="Option to verbrose process")
+args = vars(ap.parse_args())
+
+
+path = args['path']
+ref_param = args['ref_param'] #name of the parameter varied during simulations
+title = args['title']
+dt=float(args['time_step'])
+t=float(args['wind_t'])
+lim=int(args['file_limit']) #number of files limit
+show=args['show']
+stats=args['stats']
+save=args['save']
+verb=args['verbrose']
+# if len(sys.argv) >6:
+# 	path = sys.argv[1]
+# 	ref_param = sys.argv[2] #name of the parameter varied during simulations
+# 	title = sys.argv[3]
+# 	dt=float(sys.argv[4])
+# 	t=float(sys.argv[5])
+# 	show=sys.argv[6]
+# 	stats=sys.argv[7]
+# 	# lim=int(sys.argv[8]) #number of files limit
+# 	lim=-1
+
+# elif len(sys.argv) >3:
+# 	path = sys.argv[1]
+# 	ref_param = sys.argv[2] #name of the parameter varied during simulations
+# 	title = sys.argv[3]
+# 	dt=float(sys.argv[4])
+# 	t=float(sys.argv[5])
+# 	lim=-1
+# elif len(sys.argv) >2:
+# 	path = sys.argv[1]
+# 	ref_param = sys.argv[2]
+# 	title = ""
+# 	t=10 #hh 10ms #vav 10ms
+# 	dt=0.001
+# 	lim=-1
+# 	# path_spk = sys.argv[2]
+# else:
+# 	print("Use: python3 superpos_from_model.py path ref_param title [dt] [win_t] [max_files]")
+# 	print("Example: python3 superpos_from_model.py ../../laser_model/HH/data/gna/ gna \"Gna simulation\" 0.001 8 20")
+# 	exit()
 
 
 def get_events(f_data,f_events,ms,dt=0.001):
@@ -47,8 +80,9 @@ def get_events(f_data,f_events,ms,dt=0.001):
 	points = int(ms /dt)
 
 	waveforms = np.empty((events.shape[0],(points*2)),float)
-	print("Waveform shape:",waveforms.shape)
-	print("Events shape:",events.shape)
+	if verb =='y':
+		print("Waveform shape:",waveforms.shape)
+		print("Events shape:",events.shape)
 
 	# print(points)
 
@@ -84,8 +118,9 @@ blue = Color("blue")
 # colors = list(red.range_to(Color("green"),len(files)//2))
 luminances = np.arange(0.8,0.2,-0.6/len(files))
 colors=[]
-logs = {}
-ampl_log = []
+logs = []
+logs_cols = []
+log ={}
 
 plt.figure(figsize=(15,20))
 for i,f in enumerate(files):
@@ -93,7 +128,8 @@ for i,f in enumerate(files):
 	# f = path+f
 	if(f.find("spikes")==-1 and f.find(".asc")!=-1):
 
-		print(f)
+		if verb=='y':
+			print(f)
 		ref = f.find("Euler")
 		f_events = f[:ref]+"spikes_"+f[ref:]
 		# print(f_events)
@@ -109,11 +145,17 @@ for i,f in enumerate(files):
 		# print(label)
 		labels.append(label)
 
+		try:
+			trial = get_events(f,f_events,ms=t)
+		except:
+			print("Error reading events from ",f)
+			continue
 
-		trial = get_events(f,f_events,ms=t)
-		print(trial.shape)
+		if verb=='y':
+			print(trial.shape)
 		if(trial.shape[0] <=3):
 			print("skiping and removing corrupt file")
+			print("f")
 			os.system("rm "+f+" "+f_events)
 			continue
 
@@ -124,18 +166,14 @@ for i,f in enumerate(files):
 
 		trial =trial[:-1]
 		
-		ax,ax1,ax2=plot_events(trial,color,tit=title,width_ms=t,dt=0.001,duration_log=ampl_log,show_durations=False)
-		# ax,ax1,ax2=plot_events(trial,color,tit=title,width_ms=t,dt=0.001)
-		# try:
-		# 	logs['spike'].append(ampl_log[:],axis=0)
-		# 	# print("success")
-		# except:
-			# logs['spike']=ampl_log[:]
+		ax,ax1,ax2=plot_events(trial,color,tit=title,width_ms=t,dt=0.001,df_log=log,show_durations=False)
 
-		logs['']=ampl_log[:]
+		logs_cols.append(label)
+		logs.append(log)
+		if stats=='y':
+			log_df = pd.DataFrame(log)
+			log_df.to_pickle(path+ref_param+"-"+first_line[:-3]+"_info.pkl")
 
-		# logs = logs.append(ampl_log[:])
-		# print(logs)
 		axs.append(ax)
 		colors.append(color)
 
@@ -150,25 +188,11 @@ plt.ylabel("Voltage (mV)")
 
 print( path+title+".png")
 plt.savefig(path+title+".png")
-# plt.show()
-# plt.clf()
 
-# print(logs)
+show = 'n'
 
-# df = pd.DataFrame(logs)
-df =pd.DataFrame(dict([ (k,pd.Series(v)) for k,v in logs.items() ]))
-# df = pd.DataFrame(logs)
-# print(df)
-print(df.describe())
-print(df.mean())
-#Saving duration dataframes
+if show=='y':
+	plt.show()
 
-df.to_pickle(path+title+"_info.pkl")
-
-
-#boxplot
-# df.boxplot(grid=False,figsize=(10,30),fontsize=20)
-# plt.xlabel(ref_param)
-# plt.ylabel("Spike width (ms)")
-# plt.savefig(path +title+"boxplots.png")
-# plt.show()
+# df = create_dataframe(logs,logs_cols)
+# print(df.describe())

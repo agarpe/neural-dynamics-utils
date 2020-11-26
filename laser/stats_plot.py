@@ -3,16 +3,7 @@ import sys
 import glob
 import os
 import matplotlib.pyplot as plt
-
-def set_titles(axes,title,path):
-	for ax in axes.values():
-		ax.set_ylabel(title)
-	plt.suptitle(path)
-
-def plot_boxplot(columns,title,path,fliers=True):
-	axes=all_trials.boxplot(column=columns,by='Trial',grid=False,layout=(3,1),return_type='axes',figsize=(10,15),fontsize=20,showmeans=True,showfliers=fliers)
-	set_titles(axes,title,path)
-
+from stats_plot_functions import *
 
 if len(sys.argv) ==3:
 	path = sys.argv[1]
@@ -24,7 +15,8 @@ else:
 	print("Use: python3 stats_plot.py path")
 	exit()
 
-show = True
+show = False
+save = False
 
 files = glob.glob(path+"*%s*.pkl"%extension)
 files.sort(key=os.path.getmtime)
@@ -48,95 +40,59 @@ for i,f in enumerate(files):
 
 all_trials=pd.concat(all_trials)
 
-duration_labels = ['control_pre_duration','laser_duration','control_pos_duration']
-amplitude_labels = ['control_pre_amplitude','laser_amplitude','control_pos_amplitude']
 
 
-duration_title = 'Spike width (ms)'
-amplitude_title = 'Spike amplitude (mV)'
+plot_boxplot(all_trials,duration_labels,duration_title+duration_unit,path)
+if save:
+	plt.savefig(path +"duration_boxplots"+ extension+".png")
+plot_boxplot(all_trials,duration_labels,duration_title+duration_unit,path,fliers=False)
+if save:
+	plt.savefig(path +"duration_boxplots_no_fliers"+ extension+".png")
+
+plot_boxplot(all_trials,amplitude_labels,amplitude_title+amplitude_unit,path)
+if save:
+	plt.savefig(path +"amplitude_boxplots"+ extension+".png")
+plot_boxplot(all_trials,amplitude_labels,amplitude_title+amplitude_unit,path,fliers=False)
+if save:
+	plt.savefig(path +"amplitude_boxplots_no_fliers"+ extension+".png")
 
 
-plot_boxplot(duration_labels,duration_title,path)
-plt.savefig(path +"duration_boxplots"+ extension+".png")
+plot_boxplot(all_trials,slope_dep_labels,slope_dep_title,path)
+if save:
+	plt.savefig(path +"slope_dep_boxplots"+ extension+".png")
+plot_boxplot(all_trials,slope_dep_labels,slope_dep_title,path,fliers=False)
+if save:
+	plt.savefig(path +"slope_dep_boxplots_no_fliers"+ extension+".png")
 
-if show:	
-	plt.show()
-else:
-	plt.clf()
+plot_boxplot(all_trials,slope_rep_labels,slope_rep_title,path)
+if save:
+	plt.savefig(path +"slope_rep_boxplots"+ extension+".png")
+plot_boxplot(all_trials,slope_rep_labels,slope_rep_title,path,fliers=False)
+if save:
+	plt.savefig(path +"slope_rep_boxplots_no_fliers"+ extension+".png")
 
-plot_boxplot(duration_labels,duration_title,path,fliers=False)
-plt.savefig(path +"duration_boxplots_no_fliers"+ extension+".png")
-
-# 
-if show:	
-	plt.show()
-else:
-	plt.clf()
-
-
-plot_boxplot(amplitude_labels,amplitude_title,path)
-plt.savefig(path +"amplitude_boxplots"+ extension+".png")
-
-# 
-if show:	
-	plt.show()
-else:
-	plt.clf()
-
-plot_boxplot(amplitude_labels,amplitude_title,path,fliers=False)
-plt.savefig(path +"amplitude_boxplots_no_fliers"+ extension+".png")
-
-if show:	
-	plt.show()
-else:
-	plt.clf()
-
-dur_pre_mean = all_trials['control_pre'].mean()
-dur_las_mean = all_trials['laser'].mean()
-dur_pos_mean = all_trials['control_pos'].mean()
-
-amp_pre_mean = all_trials['control_pre_amplitude'].mean()
-amp_las_mean = all_trials['laser_amplitude'].mean()
-amp_pos_mean = all_trials['control_pos_amplitude'].mean()
-
-
-dur_means = [all_trials['control_pre'].mean(),all_trials['laser'].mean(),all_trials['control_pos'].mean()]
-amp_means = [all_trials['control_pre_amplitude'].mean(),all_trials['laser_amplitude'].mean(),all_trials['control_pos_amplitude'].mean()]
+plt.rcParams.update({'font.size': 30})
+rows = 4
+cols = 2
 
 
 
-plt.rcParams.update({'font.size': 25})
+dur_means = all_trials[duration_labels].mean()
+amp_means = all_trials[amplitude_labels].mean()
+slo_dep_means = all_trials[slope_dep_labels].mean()
+slo_rep_means = all_trials[slope_rep_labels].mean()
 
-
-labels = ['control_pre','control_pre_amplitude','laser','laser_amplitude','control_pos','control_pos_amplitude']
-plt.figure(figsize=(30,30))
-plt.subplot(2,2,1)
-plt.bar([1,2,3],dur_means,color='g',width=0.3,tick_label=duration_labels)
-plt.ylabel("Mean value (ms)")
-plt.title("Spike width")
-
-plt.subplot(2,2,3)
-plt.bar([1,2,3],amp_means,color='b',width=0.3,tick_label=duration_labels)
-plt.ylabel("Mean value (mV)")
-plt.title("Spike amplitude")
-
-diffs_duration = [dur_pre_mean-dur_las_mean,dur_pre_mean-dur_pos_mean,dur_pos_mean-dur_las_mean]
-diffs_amplitude = [amp_pre_mean-amp_las_mean,amp_pre_mean-amp_pos_mean,amp_pos_mean-amp_las_mean]
-
-plt.subplot(2,2,2)
-plt.bar([1,2,3],diffs_duration,tick_label=['control_pre-laser', 'control_pre-control_pos','control_pos-laser'],width=0.3,color='g')
-plt.title("Spike width")
-plt.ylabel("Difference value (ms)")
-plt.subplot(2,2,4)
-plt.bar([1,2,3],diffs_amplitude,tick_label=['control_pre-laser', 'control_pre-control_pos','control_pos-laser'],width=0.3,color='b')
-plt.title("Spike amplitude")
-plt.ylabel("Difference value (mV)")
-
+diff_labels=['control_pre-laser', 'control_pre-control_pos','control_pos-laser']
+plt.figure(figsize=(30,35))
+plot_mean_bars(dur_means,duration_labels,rows,cols,1,duration_title,duration_unit,'b',diff_labels)
+plot_mean_bars(amp_means,amplitude_labels,rows,cols,3,amplitude_title,amplitude_unit,'g',diff_labels)
+plot_mean_bars(slo_dep_means,slope_dep_labels,rows,cols,5,slope_dep_title,slope_unit,'brown',diff_labels)
+plot_mean_bars(slo_rep_means,slope_rep_labels,rows,cols,7,slope_rep_title,slope_unit,'lightcoral',diff_labels)
 
 plt.suptitle(path)
-plt.savefig(path +"bar_chart"+ extension+".png")
+plt.tight_layout()
+if save:
+	plt.savefig(path +"bar_chart"+ extension+".png")
 
 if show:	
 	plt.show()
-else:
-	plt.clf()

@@ -9,13 +9,13 @@ if len(sys.argv)==6:
 
 else:
 	print("Use: python3 autom_spike_detection.py path sufix window(ms) min_exp max_exp\n")
-	print("Example: python3 autom_spike_detection.py ../../data/laser/27-Jul-2020 5400_50f 50 1 5")
+	print("Example: python3 autom_spike_detection.py ../../data/laser/single_neuron/27-Jul-2020 5400_50f 50 1 5")
 	exit()
 
 print("Detecting spikes...")
 
 for i in range(e_min,e_max+1):
-	os.system("python3 ../get_spike_events.py -p %s/exp%d_%s.asc -c 0 -e \"control_pre\" -s True -sv True"%(path,i,sufix))
-	os.system("python3 ../get_spike_events.py -p %s/exp%d_%s.asc -c 1 -e \"laser\" -s True -sv True"%(path,i,sufix))
-	os.system("python3 ../get_spike_events.py -p %s/exp%d_%s.asc -c 2 -e \"control_pos\" -s True -sv True"%(path,i,sufix))
+	os.system("python3 ../get_spike_events.py -p %s/exp%d_%s.asc -c 0 -e \"control_pre\" -s False -sv True"%(path,i,sufix))
+	os.system("python3 ../get_spike_events.py -p %s/exp%d_%s.asc -c 1 -e \"laser\" -s False -sv True"%(path,i,sufix))
+	os.system("python3 ../get_spike_events.py -p %s/exp%d_%s.asc -c 2 -e \"control_pos\" -s False -sv True"%(path,i,sufix))
 

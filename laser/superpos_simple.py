@@ -46,32 +46,26 @@ plt.tight_layout()
 
 #Individual plots
 
-<<<<<<< HEAD
 df = {}
 ax1,ax_fst,ax_last=plot_events(events,col='b',tit=label,width_ms=width,df_log=df,show_durations=True)
-=======
-dur_log = []
-slo_log = []
-df = {}
-ax1,ax_fst,ax_last=plot_events(events,col='b',tit=label,width_ms=width,duration_log=dur_log,df_log=df,amplitude_log=[],slope_log=slo_log,show_durations=True)
->>>>>>> bcc4c6d3f8293f6403b4c771de8d5c552b1a8cf2
 plt.legend([ax_fst,ax_last],["First spike","Last spike"])
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
 
 
-print(df)
+# print(df)
 df=pd.DataFrame(df)
 # df = df.add_suffix('_control_pre')
 print(df.describe())
 
 print("saving dataframes")
-<<<<<<< HEAD
-df= pd.concat([df.add_prefix('control_pre_'),df.add_suffix('laser_')],axis=1)
-=======
-df= pd.concat([df.add_suffix('_control_pre'),df.add_suffix('_laser')],axis=1)
->>>>>>> bcc4c6d3f8293f6403b4c771de8d5c552b1a8cf2
+df= pd.concat([df.add_prefix('control_pre_'),df.add_prefix('laser_')],axis=1)
 print(df.describe())
+
+m1,m2=df[['control_pre_duration','laser_duration']].mean()
+
+print(m1,m2)
+
 
 # df.to_pickle(path+"_info.pkl")
 
