@@ -7,6 +7,20 @@ from superpos_functions import *
 
 plt.rcParams.update({'font.size': 17})
 
+# ap = argparse.ArgumentParser()
+# ap.add_argument("-p1", "--path1", required=True, help="First path to wafeforms file")
+# ap.add_argument("-p2", "--path2", required=True, help="Second path to wafeforms file")
+# ap.add_argument("-w", "--window_width", required=True, help="Half window width in ms")
+# ap.add_argument("-l1", "--label1", required=True, help="Label of first file")
+# ap.add_argument("-l2", "--label2", required=True, help="Label of second file")
+# ap.add_argument("-c2", "--title", required=True, help="Color for second file")
+# ap.add_argument("-ti", "--title", required=True, help="Title of the resulting plot")
+# ap.add_argument("-sa", "--save", required=False, default='y', help="Option to save plot file")
+# ap.add_argument("-sh", "--show", required=False, default='y', help="Option to show plot file")
+# ap.add_argument("-st", "--stats", required=False, default='y', help="Option to save stats pkl file")
+# args = vars(ap.parse_args())
+
+
 
 if len(sys.argv) ==8:
 	path_control = sys.argv[1]

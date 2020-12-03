@@ -13,6 +13,7 @@ stats='y'
 
 import argparse
 
+# 	print("Example: python3 superpos_from_model.py ../../laser_model/HH/data/gna/ gna \"Gna simulation\" 0.001 8 20")
 ap = argparse.ArgumentParser()
 ap.add_argument("-p", "--path", required=True, help="Path to the file to plot")
 ap.add_argument("-rp", "--ref_param", required=True, help="Parameter varied during simulations")
@@ -37,36 +38,6 @@ show=args['show']
 stats=args['stats']
 save=args['save']
 verb=args['verbrose']
-# if len(sys.argv) >6:
-# 	path = sys.argv[1]
-# 	ref_param = sys.argv[2] #name of the parameter varied during simulations
-# 	title = sys.argv[3]
-# 	dt=float(sys.argv[4])
-# 	t=float(sys.argv[5])
-# 	show=sys.argv[6]
-# 	stats=sys.argv[7]
-# 	# lim=int(sys.argv[8]) #number of files limit
-# 	lim=-1
-
-# elif len(sys.argv) >3:
-# 	path = sys.argv[1]
-# 	ref_param = sys.argv[2] #name of the parameter varied during simulations
-# 	title = sys.argv[3]
-# 	dt=float(sys.argv[4])
-# 	t=float(sys.argv[5])
-# 	lim=-1
-# elif len(sys.argv) >2:
-# 	path = sys.argv[1]
-# 	ref_param = sys.argv[2]
-# 	title = ""
-# 	t=10 #hh 10ms #vav 10ms
-# 	dt=0.001
-# 	lim=-1
-# 	# path_spk = sys.argv[2]
-# else:
-# 	print("Use: python3 superpos_from_model.py path ref_param title [dt] [win_t] [max_files]")
-# 	print("Example: python3 superpos_from_model.py ../../laser_model/HH/data/gna/ gna \"Gna simulation\" 0.001 8 20")
-# 	exit()
 
 
 def get_events(f_data,f_events,ms,dt=0.001):
@@ -155,7 +126,7 @@ for i,f in enumerate(files):
 			print(trial.shape)
 		if(trial.shape[0] <=3):
 			print("skiping and removing corrupt file")
-			print("f")
+			print(f)
 			os.system("rm "+f+" "+f_events)
 			continue
 
