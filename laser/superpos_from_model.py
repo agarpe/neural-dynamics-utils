@@ -39,6 +39,8 @@ stats=args['stats']
 save=args['save']
 verb=args['verbrose']
 
+# lim= 25
+
 
 def get_events(f_data,f_events,ms,dt=0.001):
 	#read data
@@ -87,7 +89,7 @@ labels = []
 
 blue = Color("blue")
 # colors = list(red.range_to(Color("green"),len(files)//2))
-luminances = np.arange(0.8,0.2,-0.6/len(files))
+luminances = np.arange(0.9,0.1,-0.8/len(files))
 colors=[]
 logs = []
 logs_cols = []
@@ -124,7 +126,7 @@ for i,f in enumerate(files):
 
 		if verb=='y':
 			print(trial.shape)
-		if(trial.shape[0] <=3):
+		if(trial.shape[0] <=8):
 			print("skiping and removing corrupt file")
 			print(f)
 			os.system("rm "+f+" "+f_events)
