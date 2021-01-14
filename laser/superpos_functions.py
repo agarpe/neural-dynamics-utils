@@ -124,7 +124,10 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 		time = np.arange(0,spike.shape[0],1.0) #points to width_ms. 
 		time *= dt
 
-		#TODO: fail when fst or last spikes are ignored
+		if(df_log['amplitude'][-1]< 50):
+			break
+
+		#TODO: fix failure when fst or last spikes are ignored
 		#Plot first, last or general spike.
 		if(spike_i==0):
 			ax_fst,=plt.plot(time,spike,color=fst_color,linewidth=1.5)

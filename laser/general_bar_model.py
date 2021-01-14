@@ -65,10 +65,12 @@ for i,d in enumerate(dirs):
 		df["Trial"]=j
 		all_trials.append(df)
 
+	all_trials=pd.concat(all_trials)
 	try:
-		all_trials=pd.concat(all_trials)
+		plot_barchart(all_trials,i,labels)
+	except:
+		pass
 
-	plot_barchart(all_trials,i,labels)
 
 print(labels)
 
