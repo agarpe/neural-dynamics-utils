@@ -56,7 +56,7 @@ if len(sys.argv) ==3:
 	path_laser = path+"_laser_waveform.txt"
 	path_control_pos = path+"_control_pos_waveform.txt"
 	width = int(sys.argv[2])
-	show = 'y'
+	show = 'n'
 	save = 'y'
 	stats = 'y'
 else:
@@ -167,7 +167,7 @@ if show=='y':
 	plt.show()
 
 
-if stats=='y'
+if stats=='y':
 	#Saving dataframes
 	print("saving dataframes")
 

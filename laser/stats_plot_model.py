@@ -15,7 +15,7 @@ else:
 	print("Use: python3 stats_plot.py path")
 	exit()
 
-show = False
+show = True
 save = True
 
 files = glob.glob(path+"*%s*.pkl"%extension)

@@ -165,5 +165,7 @@ show = 'n'
 if show=='y':
 	plt.show()
 
-# df = create_dataframe(logs,logs_cols)
+df = create_dataframe(logs,logs_cols)
 # print(df.describe())
+df.to_pickle(path+ref_param+"_info.pkl")
+

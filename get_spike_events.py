@@ -32,7 +32,7 @@ ext = args['extension']
 
 
 try:
-	df = pd.read_csv(path, delimiter = " ",skiprows=1,header=None)
+	df = pd.read_csv(path, delimiter = "	",skiprows=1,header=None)
 except:
 	print("Error: file not found",path)
 	exit()
