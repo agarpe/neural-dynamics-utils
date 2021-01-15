@@ -40,19 +40,20 @@ def plot_diffs(means,labels,title,unit,colors,indexes=[1,2,3],width=0.1):
 	                Line2D([0], [0], color=colors[2], lw=4)]
 	plt.legend(custom_lines,labels,fontsize=13)
 
-def plot_mean_bars(means,labels,rows,cols,id_,title,unit,colors,indexes=[1,2,3],width=0.1,rotation=70):
+def plot_mean_bars(means,labels,rows,cols,id_,title,unit,colors,indexes=[1,2,3],width=0.1,rotation=70,legends=['control_pre','laser','control_pos']):
 	plt.subplot(rows,cols,id_)
 	plt.bar(indexes,means,color=colors,width=width)
 	plt.ylabel("Mean value %s"%unit)
 	custom_lines = [Line2D([0], [0], color=colors[0], lw=4),
 	                Line2D([0], [0], color=colors[1], lw=4),
 	                Line2D([0], [0], color=colors[2], lw=4)]
-	plt.legend(custom_lines,['control_pre','laser','control_pos'],fontsize=13)
+	if legend!=[]:
+		plt.legend(custom_lines,legends,fontsize=13)
 	plt.title(title)
 	plt.xticks(range(0,len(labels)),labels,rotation=rotation)
 
-def plot_mean_n_diffs_bars(means,labels,rows,cols,id_,title,unit,colors,diff_labels,indexes=[1,2,3],width=0.1,rotation=70):
-	plot_mean_bars(means,labels,rows,cols,id_,title,unit,colors,indexes,width,rotation)
+def plot_mean_n_diffs_bars(means,labels,rows,cols,id_,title,unit,colors,diff_labels,indexes=[1,2,3],width=0.1,rotation=70,legends=['control_pre','laser','control_pos']):
+	plot_mean_bars(means,labels,rows,cols,id_,title,unit,colors,indexes,width,rotation,legends)
 
 	plt.subplot(rows,cols,id_+1)
 	plot_diffs(means,diff_labels,title,unit,colors,indexes=indexes)

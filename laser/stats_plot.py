@@ -85,10 +85,10 @@ slo_rep_means = all_trials[slope_rep_labels].mean()
 diff_labels=['control_pre-laser', 'control_pre-control_pos','control_pos-laser']
 plt.figure(figsize=(30,35))
 colors=['b','r','g']
-plot_mean_bars(dur_means,duration_labels,rows,cols,1,duration_title,duration_unit,colors,diff_labels)
-plot_mean_bars(amp_means,amplitude_labels,rows,cols,3,amplitude_title,amplitude_unit,colors,diff_labels)
-plot_mean_bars(slo_dep_means,slope_dep_labels,rows,cols,5,slope_dep_title,slope_unit,colors,diff_labels)
-plot_mean_bars(slo_rep_means,slope_rep_labels,rows,cols,7,slope_rep_title,slope_unit,colors,diff_labels)
+plot_mean_n_diffs_bars(dur_means,duration_labels,rows,cols,1,duration_title,duration_unit,colors,diff_labels)
+plot_mean_n_diffs_bars(amp_means,amplitude_labels,rows,cols,3,amplitude_title,amplitude_unit,colors,diff_labels)
+plot_mean_n_diffs_bars(slo_dep_means,slope_dep_labels,rows,cols,5,slope_dep_title,slope_unit,colors,diff_labels)
+plot_mean_n_diffs_bars(slo_rep_means,slope_rep_labels,rows,cols,7,slope_rep_title,slope_unit,colors,diff_labels)
 
 plt.suptitle(path)
 plt.tight_layout()
