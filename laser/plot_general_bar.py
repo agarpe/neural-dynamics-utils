@@ -21,10 +21,10 @@ def plot_barchart(df_dir,id_,labels,colors = ['b','r','g'],rows=4,cols=2):
 
 #Function generally used for models. 
 def plot_barchart_simple(df_dir,id_,labels,colors = ['b','r','g'],rows=4,cols=1):
-	dur_means = df_dir[duration_labels].mean()
-	amp_means = df_dir[amplitude_labels].mean()
-	slo_dep_means = df_dir[slope_dep_labels].mean()
-	slo_rep_means = df_dir[slope_rep_labels].mean()
+	dur_means = df_dir["duration"].mean()
+	amp_means = df_dir["amplitude"].mean()
+	slo_dep_means = df_dir["slope_dep"].mean()
+	slo_rep_means = df_dir["slope_rep"].mean()
 
 	legends=[]
 	indexes = [id_]
@@ -32,7 +32,7 @@ def plot_barchart_simple(df_dir,id_,labels,colors = ['b','r','g'],rows=4,cols=1)
 	plot_mean_bars(dur_means,labels,rows,cols,1,duration_title,duration_unit,colors,indexes=indexes,legends=legends)
 	plot_mean_bars(amp_means,labels,rows,cols,2,amplitude_title,amplitude_unit,colors,indexes=indexes,legends=legends)
 	plot_mean_bars(slo_dep_means,labels,rows,cols,3,slope_dep_title,slope_unit,colors,indexes=indexes,legends=legends)
-	plot_mean_bars(slo_rep_means,labels,rows,cols,4,slope_rep_title,slope_unit,colors,indexes=indexes)
+	plot_mean_bars(slo_rep_means,labels,rows,cols,4,slope_rep_title,slope_unit,colors,indexes=indexes,legends=legends)
 
 
 
@@ -50,6 +50,9 @@ else:
 
 
 plot_type = "simple"
+ext_path = ""
+# ext_path = "events"
+
 
 
 dirs = sorted(glob.glob(path+"*%s*"%extension))
@@ -74,7 +77,8 @@ for i,d in enumerate(dirs):
 		continue
 
 	all_trials=[] #reset one day trials list.
-	files = glob.glob(d+"*/events/*.pkl")
+	# print(d+"/events/*.pkl")
+	files = glob.glob(d+"/"+ext_path+"/*.pkl")
 	files.sort(key=os.path.getmtime)
 
 	#Concat all trials from one same experiment day into one df and plots it.
@@ -97,7 +101,6 @@ for i,d in enumerate(dirs):
 			pass
 	else:
 		ignored +=1
-
 
 print(labels)
 

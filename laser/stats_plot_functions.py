@@ -47,7 +47,7 @@ def plot_mean_bars(means,labels,rows,cols,id_,title,unit,colors,indexes=[1,2,3],
 	custom_lines = [Line2D([0], [0], color=colors[0], lw=4),
 	                Line2D([0], [0], color=colors[1], lw=4),
 	                Line2D([0], [0], color=colors[2], lw=4)]
-	if legend!=[]:
+	if legends!=[]:
 		plt.legend(custom_lines,legends,fontsize=13)
 	plt.title(title)
 	plt.xticks(range(0,len(labels)),labels,rotation=rotation)
