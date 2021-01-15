@@ -13,10 +13,10 @@ def plot_barchart(df_dir,id_,labels,colors = ['b','r','g'],rows=4,cols=2):
 	diff_labels=['control_pre-control_pos','control_pre-laser', 'control_pos-laser']
 	indexes = [id_-0.15,id_,id_+0.15]
 
-	plot_mean_n_diffs_bars(dur_means,labels,rows,cols,1,duration_title,duration_unit,colors,diff_labels,indexes=indexes)
-	plot_mean_n_diffs_bars(amp_means,labels,rows,cols,3,amplitude_title,amplitude_unit,colors,diff_labels,indexes=indexes)
-	plot_mean_n_diffs_bars(slo_dep_means,labels,rows,cols,5,slope_dep_title,slope_unit,colors,diff_labels,indexes=indexes)
-	plot_mean_n_diffs_bars(slo_rep_means,labels,rows,cols,7,slope_rep_title,slope_unit,colors,diff_labels,indexes=indexes)
+	plot_mean_bars(dur_means,labels,rows,cols,1,duration_title,duration_unit,colors,indexes=indexes)
+	plot_mean_bars(amp_means,labels,rows,cols,2,amplitude_title,amplitude_unit,colors,indexes=indexes)
+	plot_mean_bars(slo_dep_means,labels,rows,cols,3,slope_dep_title,slope_unit,colors,indexes=indexes)
+	plot_mean_bars(slo_rep_means,labels,rows,cols,4,slope_rep_title,slope_unit,colors,indexes=indexes)
 
 
 
