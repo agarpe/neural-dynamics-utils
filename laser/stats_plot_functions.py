@@ -86,6 +86,7 @@ def plot_barchart_simple(df_dir,id_,labels,colors = ['b','r','g'],rows=4,cols=1)
 	indexes = [id_,id_+0.15,id_+0.15*2,id_+0.15*3]
 	colors=['darkorange','darkcyan','lightgreen','darkolivegreen']
 
+
 	plot_mean_bars(dur_means,labels,rows,cols,1,duration_title,duration_unit,colors,indexes=indexes,legends=legends)
 	plot_mean_bars(amp_means,labels,rows,cols,2,amplitude_title,amplitude_unit,colors,indexes=indexes,legends=legends)
 	plot_mean_bars(slo_dep_means,labels,rows,cols,3,slope_dep_title,slope_unit,colors,indexes=indexes,legends=legends)

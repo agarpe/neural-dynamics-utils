@@ -12,7 +12,6 @@ ap = argparse.ArgumentParser()
 ap.add_argument("-p", "--path", required=True, help="Path to the file to show stats from")
 ap.add_argument("-m", "--mode", required=True, help="Barchart plot mode: 'simple' for models and 'complete' for experimental")
 ap.add_argument("-pe", "--path_extension", required=False,default="", help="Path extension to the files to show stats from")
-ap.add_argument("-m", "--mode", required=True, help="Path to the file to show stats from")
 ap.add_argument("-sa", "--save", required=False, default='y', help="Option to save plot file")
 ap.add_argument("-sh", "--show", required=False, default='y', help="Option to show plot file")
 args = vars(ap.parse_args())
@@ -20,7 +19,7 @@ args = vars(ap.parse_args())
 
 path = args['path']
 plot_mode = args['mode'] 
-extension = args['path_extension'] #name of the parameter varied during simulations
+ext_path = args['path_extension'] #name of the parameter varied during simulations
 show= True if args['show']=='y' else False 
 save= True if args['save']=='y' else False 
 
@@ -28,7 +27,7 @@ save= True if args['save']=='y' else False
 
 
 
-dirs = sorted(glob.glob(path+"*%s*"%extension))
+dirs = sorted(glob.glob(path+"*%s*"%ext_path))
 # dirs.sort(key=os.path.getmtime)
 
 print(dirs)
@@ -47,6 +46,7 @@ for i,d in enumerate(dirs):
 
 	#ignore regular files
 	if dir_name.find(".")!=-1:
+		ignored +=1
 		continue
 
 	all_trials=[] #reset one day trials list.
@@ -64,14 +64,16 @@ for i,d in enumerate(dirs):
 
 	if len(files) >0: #If no trials on directory --> ignore data.
 		labels.append(dir_name) #Add label to list.
+		print(i,ignored)
 		try:
 			all_trials=pd.concat(all_trials)
 			if plot_mode=="complete":
 				plot_barchart(all_trials,i-ignored,labels)
 			elif plot_mode=="simple":
+				print(i-ignored)
 				plot_barchart_simple(all_trials,i-ignored,labels)
 				path2 = path+ext_path+"/"+dir_name+"/"
-				os.system("python3 stats_plot_model.py -p"+path2)
+				# os.system("python3 stats_plot_model.py -p"+path2+" -sh 'n' -fl 'y'")
 		except:
 			pass
 	else:
@@ -82,5 +84,7 @@ print(labels)
 
 plt.tight_layout()
 
-# plt.savefig(path+"general_barchart_"+plot_mode+".eps",format="eps")
-# plt.show()
+if save:
+	plt.savefig(path+"general_barchart_"+plot_mode+".eps",format="eps")
+if show:
+	plt.show()
