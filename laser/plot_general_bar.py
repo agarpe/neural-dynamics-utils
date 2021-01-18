@@ -5,20 +5,26 @@ from stats_plot_functions import *
 plt.rcParams.update({'font.size': 17})
 
 
-if len(sys.argv) ==3:
-	path = sys.argv[1]
-	extension = sys.argv[2]
-elif len(sys.argv) ==2:
-	path = sys.argv[1]
-	extension = ""
-else:
-	print("Use: python3 stats_plot.py path")
-	exit()
+import argparse
+
+# 	print("Example: python3 superpos_from_model.py ../../laser_model/HH/data/gna/ gna \"Gna simulation\" 0.001 8 20")
+ap = argparse.ArgumentParser()
+ap.add_argument("-p", "--path", required=True, help="Path to the file to show stats from")
+ap.add_argument("-m", "--mode", required=True, help="Barchart plot mode: 'simple' for models and 'complete' for experimental")
+ap.add_argument("-pe", "--path_extension", required=False,default="", help="Path extension to the files to show stats from")
+ap.add_argument("-m", "--mode", required=True, help="Path to the file to show stats from")
+ap.add_argument("-sa", "--save", required=False, default='y', help="Option to save plot file")
+ap.add_argument("-sh", "--show", required=False, default='y', help="Option to show plot file")
+args = vars(ap.parse_args())
 
 
-plot_type = "simple"
-ext_path = ""
-# ext_path = "events"
+path = args['path']
+plot_mode = args['mode'] 
+extension = args['path_extension'] #name of the parameter varied during simulations
+show= True if args['show']=='y' else False 
+save= True if args['save']=='y' else False 
+
+
 
 
 
@@ -60,12 +66,12 @@ for i,d in enumerate(dirs):
 		labels.append(dir_name) #Add label to list.
 		try:
 			all_trials=pd.concat(all_trials)
-			if plot_type=="complete":
+			if plot_mode=="complete":
 				plot_barchart(all_trials,i-ignored,labels)
-			elif plot_type=="simple":
+			elif plot_mode=="simple":
 				plot_barchart_simple(all_trials,i-ignored,labels)
 				path2 = path+ext_path+"/"+dir_name+"/"
-				os.system("python3 stats_plot_model.py "+path2)
+				os.system("python3 stats_plot_model.py -p"+path2)
 		except:
 			pass
 	else:
@@ -76,5 +82,5 @@ print(labels)
 
 plt.tight_layout()
 
-# plt.savefig(path+"general_barchart_"+plot_type+".eps",format="eps")
+# plt.savefig(path+"general_barchart_"+plot_mode+".eps",format="eps")
 # plt.show()

@@ -6,20 +6,25 @@ import matplotlib.pyplot as plt
 from stats_plot_functions import *
 
 
+import argparse
 
-if len(sys.argv) ==3:
-	path = sys.argv[1]
-	extension = sys.argv[2]
-elif len(sys.argv) ==2:
-	path = sys.argv[1]
-	extension = ""
-else:
-	print("Use: python3 stats_plot.py path")
-	exit()
+# 	print("Example: python3 superpos_from_model.py ../../laser_model/HH/data/gna/ gna \"Gna simulation\" 0.001 8 20")
+ap = argparse.ArgumentParser()
+ap.add_argument("-p", "--path", required=True, help="Path to the file to show stats from")
+ap.add_argument("-pe", "--path_extension", required=False,default="", help="Path extension to the files to show stats from")
+ap.add_argument("-sa", "--save", required=False, default='y', help="Option to save plot file")
+ap.add_argument("-sh", "--show", required=False, default='y', help="Option to show plot file")
+ap.add_argument("-fl", "--fliers", required=False, default='n', help="Option to show boxplot fliers")
+args = vars(ap.parse_args())
 
-show = False
-save = True
-fliers = False
+
+path = args['path']
+extension = args['path_extension'] #name of the parameter varied during simulations
+show= True if args['show']=='y' else False 
+save= True if args['save']=='y' else False 
+fliers= True if args['fliers']=='y' else False 
+
+
 
 files = glob.glob(path+"*%s*.pkl"%extension)
 files.sort(key=os.path.getmtime)
