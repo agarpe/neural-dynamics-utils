@@ -4,39 +4,6 @@ from stats_plot_functions import *
 
 plt.rcParams.update({'font.size': 17})
 
-#Function used for data of the type control1-laser-control2
-def plot_barchart(df_dir,id_,labels,colors = ['b','r','g'],rows=4,cols=2):
-	dur_means = df_dir[duration_labels].mean()
-	amp_means = df_dir[amplitude_labels].mean()
-	slo_dep_means = df_dir[slope_dep_labels].mean()
-	slo_rep_means = df_dir[slope_rep_labels].mean()
-
-	diff_labels=['control_pre-control_pos','control_pre-laser', 'control_pos-laser']
-	indexes = [id_-0.15,id_,id_+0.15]
-
-	plot_mean_n_diffs_bars(dur_means,labels,rows,cols,1,duration_title,duration_unit,colors,diff_labels,indexes=indexes)
-	plot_mean_n_diffs_bars(amp_means,labels,rows,cols,3,amplitude_title,amplitude_unit,colors,diff_labels,indexes=indexes)
-	plot_mean_n_diffs_bars(slo_dep_means,labels,rows,cols,5,slope_dep_title,slope_unit,colors,diff_labels,indexes=indexes)
-	plot_mean_n_diffs_bars(slo_rep_means,labels,rows,cols,7,slope_rep_title,slope_unit,colors,diff_labels,indexes=indexes)
-
-#Function generally used for models. 
-def plot_barchart_simple(df_dir,id_,labels,colors = ['b','r','g'],rows=4,cols=1):
-	dur_means = df_dir["duration"].mean()
-	amp_means = df_dir["amplitude"].mean()
-	slo_dep_means = df_dir["slope_dep"].mean()
-	slo_rep_means = df_dir["slope_rep"].mean()
-
-	legends=[]
-	indexes = [id_]
-
-	plot_mean_bars(dur_means,labels,rows,cols,1,duration_title,duration_unit,colors,indexes=indexes,legends=legends)
-	plot_mean_bars(amp_means,labels,rows,cols,2,amplitude_title,amplitude_unit,colors,indexes=indexes,legends=legends)
-	plot_mean_bars(slo_dep_means,labels,rows,cols,3,slope_dep_title,slope_unit,colors,indexes=indexes,legends=legends)
-	plot_mean_bars(slo_rep_means,labels,rows,cols,4,slope_rep_title,slope_unit,colors,indexes=indexes,legends=legends)
-
-
-
-
 
 if len(sys.argv) ==3:
 	path = sys.argv[1]
@@ -97,6 +64,8 @@ for i,d in enumerate(dirs):
 				plot_barchart(all_trials,i-ignored,labels)
 			elif plot_type=="simple":
 				plot_barchart_simple(all_trials,i-ignored,labels)
+				path2 = path+ext_path+"/"+dir_name+"/"
+				os.system("python3 stats_plot_model.py "+path2)
 		except:
 			pass
 	else:
@@ -107,5 +76,5 @@ print(labels)
 
 plt.tight_layout()
 
-plt.savefig(path+"general_barchart_"+plot_type+".eps",format="eps")
-plt.show()
+# plt.savefig(path+"general_barchart_"+plot_type+".eps",format="eps")
+# plt.show()
