@@ -15,16 +15,13 @@ ap = argparse.ArgumentParser()
 ap.add_argument("-p", "--path", required=True, help="Path to the file to analyze")
 ap.add_argument("-pw", "--path_waveforms", required=True, help="Path to the file to analyze")
 ap.add_argument("-mxz", "--z_value", required=True, help="Max Z value")
-ap.add_argument("-s", "--show", required=False,default=True, help="Show plot")
+ap.add_argument("-s", "--show", required=False,default='y', help="Show plot")
 args = vars(ap.parse_args())
 
 path = args['path']
 path_wf = args['path_waveforms']
 mx_z = float(args['z_value'])
-if(args['show']=='False'):
-	show = False
-else:
-	show = True
+show= True if args['show']=='y' else False 
 
 
 print(path)
@@ -66,24 +63,27 @@ zscores = stats.zscore(isis, axis=0, ddof=0)
 # plt.plot(spikes[1:],zscores,'.')
 # plt.show()
 
-zscores=abs(zscores)
+# zscores=abs(zscores)
 
-to_keep = []
-for i,z in enumerate(zscores):
-	if(z >= mx_z):
-		to_keep.append(i)
+# to_keep = []
+# for i,z in enumerate(zscores):
+# 	if(z >= mx_z):
+# 		to_keep.append(i)
 
 # to_keep = np.where((isis>500) & (isis <1000))[0]
-to_keep = np.where((isis>100) & (isis <1000))[0]
+# to_keep = np.where((isis>100) & (isis <1000))[0]
+to_keep = np.where((isis>100) & (isis <5000))[0]
+print(min(isis),max(isis))
+
 
 print("Spikes to remove: ",len(list(set(to_keep))))
 try:
-	# spikes_select = np.delete(spikes,to_keep) 
-	spikes_select = spikes[to_keep]
+	spikes_select = np.delete(spikes,to_keep) 
+	# spikes_select = spikes[to_keep]
 	#remove spikes
-	# spikes_wf_sel = np.delete(spikes_wf,to_keep,axis=0) 
-	spikes_wf_sel = spikes_wf[to_keep] 
-	zscores_select = zscores[to_keep]
+	spikes_wf_sel = np.delete(spikes_wf,to_keep,axis=0) 
+	# spikes_wf_sel = spikes_wf[to_keep] 
+	# zscores_select = zscores[to_keep]
 	# zscores_select = np.delete(zscores,to_keep) 
 
 except:
@@ -99,8 +99,9 @@ plt.subplot(3,1,2, sharex = ax1)
 # plt.plot(spikes_select[:-1],zscores_select,'.')
 plt.subplot(3,1,3, sharex = ax1)
 # plt.subplot(212)
-# plt.plot(spikes[:-1],isis,'.')
-# plt.plot(spikes_select[:-1],np.delete(isis,to_keep),'.')
+plt.plot(spikes[:-1],isis,'.')
+# plt.plot(spikes_select,isis[to_keep],'.')
+plt.plot(spikes_select[:-1],np.delete(isis,to_keep),'.')
 plt.show()
 
 

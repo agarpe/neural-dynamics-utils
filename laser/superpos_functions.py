@@ -107,6 +107,7 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 	except:
 		fst_color = col;last_color = col
 
+
 	count =[0]
 	for spike_i in range(events.shape[0]):
 		#remove possible nan values:
@@ -124,8 +125,8 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 		time = np.arange(0,spike.shape[0],1.0) #points to width_ms. 
 		time *= dt
 
-		if(df_log['amplitude'][-1]< 50):
-			break
+		# if(df_log['amplitude'][-1]< 50):
+		# 	break
 
 		#TODO: fix failure when fst or last spikes are ignored
 		#Plot first, last or general spike.
@@ -140,7 +141,10 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 	if count[0] >0:
 		print(count,"\"spikes\" ignored")
 
-	return ax,ax_fst,ax_last
+	try:
+		return ax,ax_fst,ax_last
+	except UnboundLocalError:
+		return ax,ax_last,ax_last
 
 
 
