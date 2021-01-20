@@ -30,7 +30,7 @@ if len(sys.argv) ==8:
 	label2= sys.argv[5]
 	color2= sys.argv[6]
 	title=sys.argv[7]
-	show = False
+	show = True
 else:
 	print("Use1: python3 superpos_from_events.py events_1_path.txt events_2_path.txt width label1 label2 color2 title")
 	exit()

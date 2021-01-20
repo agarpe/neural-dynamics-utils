@@ -12,11 +12,12 @@ else:
 	print("Example: python3 autom_superpos.py ../../data/laser/single_neuron/27-Jul-2020 5400_50f 50 1 5")
 	exit()
 
+path += "/events"
 
 #Plot all experiments grid pre-laser-pos
 for i in range(e_min,e_max+1):
 	print("Exp ",i)
-	os.system("python3 superpos_from_events_3.py %s/events/exp%d_%s %d"%(path,i,sufix,wind))
+	os.system("python3 superpos_from_events_3.py %s/exp%d_%s %d"%(path,i,sufix,wind))
 
 # ------------------------------------------------
 
@@ -29,7 +30,7 @@ color2 = 'g'
 title = "First Last control"
 
 print("first-last control")
-os.system("python3 superpos_from_events.py %s/events/exp%d_%s_control_pre_waveform.txt %s/events/exp%d_%s_control_pre_waveform.txt %d '%s' '%s' '%s' '%s'"%(path,e_min,sufix,path,e_max,sufix,wind,label1,label2,color2,title))
+os.system("python3 superpos_from_events.py %s/exp%d_%s_control_pre_waveform.txt %s/exp%d_%s_control_pre_waveform.txt %d '%s' '%s' '%s' '%s'"%(path,e_min,sufix,path,e_max,sufix,wind,label1,label2,color2,title))
 
 #------------------------------------------------
 
@@ -41,9 +42,9 @@ color2 = 'r'
 title = "First Last laser"
 
 print("first-last laser")
-os.system("python3 superpos_from_events.py %s/events/exp%d_%s_laser_waveform.txt %s/events/exp%d_%s_laser_waveform.txt %d '%s' '%s' '%s' '%s'"%(path,e_min,sufix,path,e_max,sufix,wind,label1,label2,color2,title))
+os.system("python3 superpos_from_events.py %s/exp%d_%s_laser_waveform.txt %s/exp%d_%s_laser_waveform.txt %d '%s' '%s' '%s' '%s'"%(path,e_min,sufix,path,e_max,sufix,wind,label1,label2,color2,title))
 
 #------------------------------------------------
 
 #Analyze general plot files 
-os.system("python3 stats_plot.py %s/events/ > 'amplitudes_log.log'"%(path)) 
+os.system("python3 stats_plot.py %s/ > 'amplitudes_log.log'"%(path)) 

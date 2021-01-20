@@ -5,20 +5,20 @@ import os
 import matplotlib.pyplot as plt
 from stats_plot_functions import *
 
-#Function used for data of the type control1-laser-control2
-def plot_barchart(df_dir,id_,labels,colors = ['b','r','g'],rows=4,cols=2):
-	dur_means = df_dir[duration_labels].mean()
-	amp_means = df_dir[amplitude_labels].mean()
-	slo_dep_means = df_dir[slope_dep_labels].mean()
-	slo_rep_means = df_dir[slope_rep_labels].mean()
+# #Function used for data of the type control1-laser-control2
+# def plot_barchart(df_dir,id_,labels,colors = ['b','r','g'],rows=4,cols=2):
+# 	dur_means = df_dir[duration_labels].mean()
+# 	amp_means = df_dir[amplitude_labels].mean()
+# 	slo_dep_means = df_dir[slope_dep_labels].mean()
+# 	slo_rep_means = df_dir[slope_rep_labels].mean()
 
-	diff_labels=['control_pre-control_pos','control_pre-laser', 'control_pos-laser']
-	indexes = [id_-0.15,id_,id_+0.15]
+# 	diff_labels=['control_pre-control_pos','control_pre-laser', 'control_pos-laser']
+# 	indexes = [id_-0.15,id_,id_+0.15]
 
-	plot_mean_n_diffs_bars(dur_means,labels,rows,cols,1,duration_title,duration_unit,colors,diff_labels,indexes=indexes)
-	plot_mean_n_diffs_bars(amp_means,labels,rows,cols,3,amplitude_title,amplitude_unit,colors,diff_labels,indexes=indexes)
-	plot_mean_n_diffs_bars(slo_dep_means,labels,rows,cols,5,slope_dep_title,slope_unit,colors,diff_labels,indexes=indexes)
-	plot_mean_n_diffs_bars(slo_rep_means,labels,rows,cols,7,slope_rep_title,slope_unit,colors,diff_labels,indexes=indexes)
+# 	plot_mean_n_diffs_bars(dur_means,labels,rows,cols,1,duration_title,duration_unit,colors,diff_labels,indexes=indexes)
+# 	plot_mean_n_diffs_bars(amp_means,labels,rows,cols,3,amplitude_title,amplitude_unit,colors,diff_labels,indexes=indexes)
+# 	plot_mean_n_diffs_bars(slo_dep_means,labels,rows,cols,5,slope_dep_title,slope_unit,colors,diff_labels,indexes=indexes)
+# 	plot_mean_n_diffs_bars(slo_rep_means,labels,rows,cols,7,slope_rep_title,slope_unit,colors,diff_labels,indexes=indexes)
 
 
 if len(sys.argv) ==3:
