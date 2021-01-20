@@ -133,5 +133,5 @@ if show:
 	plt.show()
 
 if save:
-	save_files(spikes_select,spikes_wf_sel,path_save,"events_bursts",file_name+"_"+file_ext)
-	save_files(spikes_select2,spikes_wf_sel2,path_save,"events_no_bursts",file_name+"_"+file_ext+"2")
+	save_files(spikes_select,spikes_wf_sel,path_save,"events_bursts",file_name)
+	save_files(spikes_select2,spikes_wf_sel2,path_save,"events_no_bursts",file_name)

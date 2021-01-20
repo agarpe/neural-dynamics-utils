@@ -12,7 +12,7 @@ else:
 	print("Example: python3 autom_superpos.py ../../data/laser/single_neuron/27-Jul-2020 5400_50f 50 1 5")
 	exit()
 
-path += "/events"
+path += "/events_bursts"
 
 #Plot all experiments grid pre-laser-pos
 for i in range(e_min,e_max+1):

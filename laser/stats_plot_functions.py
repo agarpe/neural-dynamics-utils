@@ -21,7 +21,7 @@ def plot_boxplot(df,columns,title,path,fliers=True,rot_val=0):
 	lay=(len(columns),1)
 	figsize=(10,len(columns)*5)
 	axes=df.boxplot(column=columns,by='Trial',grid=False,layout=lay,return_type='axes',figsize=figsize,fontsize=20,showmeans=True,showfliers=fliers,rot=rot_val)
-	for ax in axes:
+	for ax in axes.values():
 		ax.set_ylabel(title)
 	plt.suptitle(path)
 	plt.tight_layout()
