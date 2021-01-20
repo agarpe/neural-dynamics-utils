@@ -156,6 +156,7 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 #	width_ms milliseconds to save at each side. 
 # 	dt Data adquisition time
 def center(spike,width_ms,dt=0.1):
+	spike = spike[~np.isnan(spike)] 
 
 	mx_index = np.argmax(spike) #index of maximum V value (spike)
 
@@ -188,6 +189,7 @@ def center(spike,width_ms,dt=0.1):
 
 def no_drift(spike):
 	if(spike.shape[0]!=0):
+		spike = spike[~np.isnan(spike)] 
 		mn = np.min(spike)
 		if mn != 0:
 			spike = spike-mn
@@ -205,6 +207,7 @@ def no_drift(spike):
 # Return:
 #	(min_thres,max_thres)
 def get_spike_duration(spike,dt,tol=0.2): 
+	spike = spike[~np.isnan(spike)]
 	mx_value = np.max(spike) #maximum V value (spike)
 	mn_value = np.min(spike) #minimum V value (spike)
 
@@ -229,7 +232,8 @@ def get_spike_duration(spike,dt,tol=0.2):
 # 	dt time rate
 # Return:
 #	amplitude
-def get_spike_amplitude(spike,dt): 
+def get_spike_amplitude(spike,dt):
+	spike = spike[~np.isnan(spike)] 
 	mx_value = np.max(spike) #maximum V value (spike)
 	mn_value = np.min(spike) #minimum V value (spike)
 
@@ -248,6 +252,7 @@ def get_spike_amplitude(spike,dt):
 #	amplitude
 
 def get_slope(spike,dt):
+	spike = spike[~np.isnan(spike)] 
 	mid_ps,th = get_spike_duration(spike,dt)
 	indx1 = int(mid_ps[0]/dt) #From ms to point ref
 	indx2 = int(mid_ps[1]/dt) #From ms to point ref
