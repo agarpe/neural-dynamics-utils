@@ -27,7 +27,7 @@ save= True if args['save']=='y' else False
 
 
 
-dirs = sorted(glob.glob(path+"*%s*"%ext_path))
+dirs = sorted(glob.glob(path+"*%s*"%""))
 # dirs.sort(key=os.path.getmtime)
 
 print(dirs)
@@ -64,7 +64,6 @@ for i,d in enumerate(dirs):
 
 	if len(files) >0: #If no trials on directory --> ignore data.
 		labels.append(dir_name) #Add label to list.
-		print(i,ignored)
 		try:
 			all_trials=pd.concat(all_trials)
 			if plot_mode=="complete":
@@ -85,6 +84,6 @@ print(labels)
 plt.tight_layout()
 
 if save:
-	plt.savefig(path+"general_barchart_"+plot_mode+".eps",format="eps")
+	plt.savefig(path+"general_barchart_select_"+plot_mode+".eps",format="eps")
 if show:
 	plt.show()
