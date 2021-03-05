@@ -56,7 +56,7 @@ if len(sys.argv) ==3:
 	path_laser = path+"_laser_waveform.txt"
 	path_control_pos = path+"_control_pos_waveform.txt"
 	width = int(sys.argv[2])
-	show = 'n'
+	show = 'y'
 	save = 'y'
 	stats = 'y'
 else:

@@ -109,13 +109,20 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 
 
 	count =[0]
+	# ax_fst,=plt.plot([],[])
+	# ax_last,=plt.plot([],[])
+	# ax,=plt.plot([],[])
 	for spike_i in range(events.shape[0]):
 		#remove possible nan values:
 		spike = events[spike_i,:][~np.isnan(events[spike_i,:])]
 
 		#prepare spike
-		spike = center(spike,width_ms,dt) #center spike from max
-		spike = no_drift(spike) #adjust drift
+		try:
+			spike = center(spike,width_ms,dt) #center spike from max
+			spike = no_drift(spike) #adjust drift
+		except:
+			print("skip ",spike_i)
+			continue
 
 		# get stat info
 		df_log = get_spike_info(df_log,spike,dt,show_durations,spike_i,count)
@@ -128,6 +135,8 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 		# if(df_log['amplitude'][-1]< 50):
 		# 	break
 
+		ax_fst,=plt.plot([],[])
+		ax_last,=plt.plot([],[])
 		#TODO: fix failure when fst or last spikes are ignored
 		#Plot first, last or general spike.
 		if(spike_i==0):
@@ -135,16 +144,14 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 		elif(spike_i==events.shape[0]-1):
 			ax_last,=plt.plot(time,spike,color=last_color,linewidth=1.5)
 		else:
-			ax,=plt.plot(time,spike,color=col,linewidth=0.1)	
+			ax,=plt.plot(time,spike,color=col,linewidth=0.1)
+			# ax_last,=plt.plot(time,spike,color=last_color,linewidth=1.5)
 			# ax,=plt.plot(time,spike,linewidth=0.1) #darker effect ?
 	plt.title(tit)
 	if count[0] >0:
 		print(count,"\"spikes\" ignored")
 
-	try:
-		return ax,ax_fst,ax_last
-	except UnboundLocalError:
-		return ax,ax_last,ax_last
+	return ax,ax_fst,ax_last
 
 
 

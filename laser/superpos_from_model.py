@@ -3,7 +3,7 @@ from colour import Color
 import glob
 
 # rcParams["legend.markerscale"]=10
-plt.rcParams.update({'legend.markerscale': 2000})
+plt.rcParams.update({'legend.markerscale': 2200})
 # plt.rcParams.update({'font.size': 14})
 
 show='n'
@@ -34,10 +34,10 @@ title = args['title']
 dt=float(args['time_step'])
 t=float(args['wind_t'])
 lim=int(args['file_limit']) #number of files limit
-show=args['show']
-stats=args['stats']
-save=args['save']
-verb=args['verbrose']
+show = True if args['show']=='y' else False 
+save = True if args['save']=='y' else False 
+stats = True if args['save']=='y' else False 
+verb= True if args['save']=='y' else False 
 
 # lim= 25
 
@@ -53,7 +53,7 @@ def get_events(f_data,f_events,ms,dt=0.001):
 	points = int(ms /dt)
 
 	waveforms = np.empty((events.shape[0],(points*2)),float)
-	if verb =='y':
+	if verb :
 		print("Waveform shape:",waveforms.shape)
 		print("Events shape:",events.shape)
 
@@ -101,7 +101,7 @@ for i,f in enumerate(files):
 	# f = path+f
 	if(f.find("spikes")==-1 and f.find(".asc")!=-1):
 
-		if verb=='y':
+		if verb:
 			print(f)
 		ref = f.find("Euler")
 		f_events = f[:ref]+"spikes_"+f[ref:]
@@ -115,7 +115,7 @@ for i,f in enumerate(files):
 
 
 		label = ref_param+"="+first_line
-		# print(label)
+		print(label)
 		labels.append(label)
 
 		try:
@@ -124,7 +124,7 @@ for i,f in enumerate(files):
 			print("Error reading events from ",f)
 			continue
 
-		if verb=='y':
+		if verb:
 			print(trial.shape)
 		if(trial.shape[0] <=8):
 			print("skiping and removing corrupt file")
@@ -143,9 +143,12 @@ for i,f in enumerate(files):
 
 		logs_cols.append(label)
 		logs.append(log)
-		if stats=='y':
+		if stats:
+			# try:
 			log_df = pd.DataFrame(log)
 			log_df.to_pickle(path+ref_param+"-"+first_line[:-3]+"_info.pkl")
+			# except:
+				# pass
 
 		axs.append(ax)
 		colors.append(color)
@@ -159,15 +162,17 @@ plt.title(title)
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
 
-print( path+title+".png")
-plt.savefig(path+title+".png")
+# print( path+title+".png")
+# plt.savefig(path+title+".png")
+print( path+title+".eps")
+plt.savefig(path+title+".eps",format="eps")
 
-show = 'n'
 
-if show=='y':
+
+if show:
 	plt.show()
 
 df = create_dataframe(logs,logs_cols)
-# print(df.describe())
+print(df.describe())
 df.to_pickle(path+ref_param+"_info.pkl")
 

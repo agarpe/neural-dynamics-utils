@@ -30,9 +30,9 @@ else:
 col = int(args['column'])
 ext = args['extension']
 
-
+	
 try:
-	df = pd.read_csv(path, delimiter = "	",skiprows=1,header=None)
+	df = pd.read_csv(path, delimiter = " ",skiprows=1,header=None)
 except:
 	print("Error: file not found",path)
 	exit()
@@ -67,7 +67,7 @@ plt.plot(spikes_select,np.ones(spikes_select.shape)*th,'.')
 if show:
 	plt.show()
 else:
-	plt.savefig(path[:-4]+"_spikes_detected.png")
+	plt.savefig(path[:-4]+"_"+ext+"_spikes_detected.png")
 
 print("Number of spikes detected: ",spikes_select.shape[0])
 if spikes_select.shape[0] > 10000:

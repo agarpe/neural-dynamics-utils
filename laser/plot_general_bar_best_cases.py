@@ -35,7 +35,11 @@ print(dirs)
 if(dirs==[]):
 	print("Error: No dirs found. Check the extension provided")
 
-plt.figure(figsize=(15,25))
+if plot_mode=="complete":
+	columns = ['duration','amplitude','slope_rep','slope_dep','spikes']
+else:
+	columns = [plot_mode]
+plt.figure(figsize=(15,8*len(columns)))
 
 labels=[]
 ignored=0
@@ -54,12 +58,14 @@ for i,d in enumerate(dirs):
 	files = glob.glob(d+"/"+ext_path+"/*.pkl")
 	files.sort(key=os.path.getmtime)
 
+	best_trial = 0
 	#Concat all trials from one same experiment day into one df and plots it.
 	for j,f in enumerate(files):
 		df = pd.read_pickle(f)
 		# print(df.describe())
+		# print(j,f)
 
-		df["Trial"]=j # adds Trial reference to the data frame.
+		# df["Trial"]=j # adds Trial reference to the data frame.
 		try:
 			df["control_pre_count"]=df["control_pre_duration"].count() # adds each trial number of spikes count
 			df["laser_count"]=df["laser_duration"].count() # adds each trial number of spikes count
@@ -69,23 +75,30 @@ for i,d in enumerate(dirs):
 			df["laser_count"]=0 # adds each trial number of spikes count
 			df["control_pos_count"]=0 # adds each trial number of spikes count
 
-		all_trials.append(df) #appends df to all trials list
+		try:
+			dur_means = df[duration_labels].mean()
+			laser_diff=get_diffs(dur_means)[1] #Get duration mean in this Trial
+			if(laser_diff>best_trial):
+				# all_trials = df #appends df to all trials list
+				df["Trial"]=j
+				df_best = df #appends df to all trials list
+				best_trial = laser_diff
+				best_trial_id = j
+				# print(j)
+		except Exception as e:
+			print("Skiping",f)
+			print(e)
+			pass
 
+	#Print experiment stats:
 	if len(files) >0: #If no trials on directory --> ignore data.
 		labels.append(dir_name) #Add label to list.
 		try:
-			all_trials=pd.concat(all_trials)
-			# print(all_trials.describe())
-			if plot_mode=="complete":
-				plot_barchart(all_trials,i-ignored,labels)
-			elif plot_mode=="simple":
-				print(i-ignored)
-				plot_barchart_simple(all_trials,i-ignored,labels)
-				path2 = path+ext_path+"/"+dir_name+"/"
-				# os.system("python3 stats_plot_model.py -p"+path2+" -sh 'n' -fl 'y'")
-		except Exception as e:
+			# all_trials=pd.concat(all_trials)
+			# print(df_best.describe())
+			plot_barchart(df_best,i-ignored,labels,plot_diffs=False,cols=1,columns=columns)
+		except:
 			print("failed %s"%dir_name)
-			print(e)
 			pass
 	else:
 		ignored +=1
@@ -96,7 +109,7 @@ print(labels)
 plt.tight_layout()
 
 if save:
-	plt.savefig(path+"general_barchart_"+plot_mode+".eps",format="eps")
-	plt.savefig(path+"general_barchart_"+plot_mode+".png",format="png")
+	plt.savefig(path+"general_barchart_bests_"+plot_mode+".eps",format="eps")
+	plt.savefig(path+"general_barchart_bests_"+plot_mode+".png",format="png")
 if show:
 	plt.show()

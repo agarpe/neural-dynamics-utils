@@ -17,7 +17,9 @@ path += "/events"
 #Plot all experiments grid pre-laser-pos
 for i in range(e_min,e_max+1):
 	print("Exp ",i)
-	os.system("python3 superpos_from_events_3.py %s/exp%d_%s %d"%(path,i,sufix,wind))
+	cmd = "python3 superpos_from_events_3.py %s/exp%d_%s %d"%(path,i,sufix,wind)
+	print(cmd)
+	os.system(cmd)
 
 # ------------------------------------------------
 
