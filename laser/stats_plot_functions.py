@@ -85,36 +85,6 @@ def plot_barchart(df_dir,id_,labels,colors = ['b','r','g'],rows=5,cols=2,plot_di
 		plot_f(means,error,labels,rows,cols,plot_id,titles[col]['title'],n_spikes_unit,colors,indexes=indexes,width=0.2,error_kw=error_kw)
 
 
-# #Function used for data of the type control1-laser-control2
-# def plot_barchart(df_dir,id_,labels,colors = ['b','r','g'],rows=5,cols=2,plot_diffs=False):
-# 	n_spikes = df_dir[n_spikes_labels].mean()
-# 	dur_means = df_dir[duration_labels].mean()
-# 	amp_means = df_dir[amplitude_labels].mean()
-# 	slo_dep_means = df_dir[slope_dep_labels].mean()
-# 	slo_rep_means = df_dir[slope_rep_labels].mean()
-
-# 	n_spikes_error = df_dir[n_spikes_labels].std()
-# 	dur_means_error = df_dir[duration_labels].std()
-# 	amp_means_error = df_dir[amplitude_labels].std()
-# 	slo_dep_means_error = df_dir[slope_dep_labels].std()
-# 	slo_rep_means_error = df_dir[slope_rep_labels].std()
-
-# 	diff_labels=['control_pre-control_pos','control_pre-laser', 'control_pos-laser']
-# 	indexes = [id_-0.15,id_,id_+0.15]
-
-# 	if(plot_diffs):
-# 		plot_f = plot_mean_n_diffs_bars
-# 		labels = [labels,diff_labels]
-# 	else:
-# 		plot_f = plot_mean_bars
-
-# 	plot_f(n_spikes,n_spikes_error,labels,rows,cols,1,n_spike_title,n_spikes_unit,colors,indexes=indexes)
-# 	plot_f(dur_means,dur_means_error,labels,rows,cols,3,duration_title,duration_unit,colors,indexes=indexes)
-# 	plot_f(amp_means,amp_means_error,labels,rows,cols,5,amplitude_title,amplitude_unit,colors,indexes=indexes)
-# 	plot_f(slo_dep_means,slo_dep_means_error,labels,rows,cols,7,slope_dep_title,slope_unit,colors,indexes=indexes)
-# 	plot_f(slo_rep_means,slo_rep_means_error,labels,rows,cols,9,slope_rep_title,slope_unit,colors,indexes=indexes)
-
-
 
 # #Function generally used for models. 
 # def plot_barchart_simple(df_dir,id_,labels,colors = ['b','r','g'],rows=4,cols=1):
