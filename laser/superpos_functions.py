@@ -4,6 +4,7 @@ import pandas as pd
 import sys
 import os
 from random import randint
+from colour import Color
 
 
 def create_dataframe(dicts,prefixes):
@@ -82,8 +83,7 @@ def get_spike_info(df_log,spike,dt,show_durations,spike_i,error_count):
 	return df_log	
 
 
-
-colors = {'b':['cyan','darkblue'],'r':['coral','maroon'],'g':['lime','darkgreen']}
+COLORS = {'b':['cyan','darkblue'],'r':['coral','maroon'],'g':['lime','darkgreen']}
 
 # Description: 
 #	Plots several spike events superpossed. When duration_log is a list, returns info 
@@ -92,7 +92,8 @@ colors = {'b':['cyan','darkblue'],'r':['coral','maroon'],'g':['lime','darkgreen'
 # 	Drift is fixed normalizing to each spike minimum
 # Parameters:
 #	events array with spikes voltage values. Each row has all the voltage values from a spike. 
-#	col plot color
+#	col plot color tuple of strings or Color.
+#		
 #	tit plot title
 #	width_ms milliseconds to save at each side. 
 # 	dt Data adquisition time
@@ -101,11 +102,21 @@ colors = {'b':['cyan','darkblue'],'r':['coral','maroon'],'g':['lime','darkgreen'
 def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False):
 	ax=0
 
+	if(isinstance(col,str)):
 	#set first and last spike colors
-	try:
-		fst_color,last_color = colors[col]
-	except:
-		fst_color = col;last_color = col
+		try:#fix in superpos scripts colors dict. Change name or change dict concept.
+			# colors = COLORS[col]
+			fst_color,last_color = COLORS[col] #when color is a tupple of strings
+
+		except:
+			fst_color,last_color=col,col
+	else: #when color is a tupple of Color
+		fst_color=col[0].hex_l
+		last_color = col[1].hex_l
+		luminances = np.arange(1,0.2,-0.8/len(events))
+		colors = list(col[0].range_to(col[1],len(events)))
+
+	# print(colors)
 
 
 	count =[0]
@@ -137,6 +148,15 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 
 		ax_fst,=plt.plot([],[])
 		ax_last,=plt.plot([],[])
+		
+		try:
+			# col.luminance = luminances[spike_i%(len(events))]
+			# color = col.hex_l
+			color = colors[spike_i]
+			color = color.hex_l
+		except:
+			color=col
+
 		#TODO: fix failure when fst or last spikes are ignored
 		#Plot first, last or general spike.
 		if(spike_i==0):
@@ -144,7 +164,7 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 		elif(spike_i==events.shape[0]-1):
 			ax_last,=plt.plot(time,spike,color=last_color,linewidth=1.5)
 		else:
-			ax,=plt.plot(time,spike,color=col,linewidth=0.1)
+			ax,=plt.plot(time,spike,color=color,linewidth=0.1)
 			# ax_last,=plt.plot(time,spike,color=last_color,linewidth=1.5)
 			# ax,=plt.plot(time,spike,linewidth=0.1) #darker effect ?
 	plt.title(tit)

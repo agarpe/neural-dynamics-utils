@@ -56,7 +56,7 @@ if len(sys.argv) ==3:
 	path_laser = path+"_laser_waveform.txt"
 	path_control_pos = path+"_control_pos_waveform.txt"
 	width = int(sys.argv[2])
-	show = 'y'
+	show = 'n'
 	save = 'y'
 	stats = 'y'
 else:
@@ -75,6 +75,7 @@ try:
 	control_pos_events =  read_from_events(path_control_pos,max_cols=300,dt=0.1)
 except:
 	print("Error: file not found")
+	print(path_control_pre)
 	exit()
 
 
@@ -99,6 +100,22 @@ control_pre_log ={}
 laser_log ={}
 control_pos_log ={}
 
+# color_pre = 'b'
+# color_laser = 'r'
+# color_pos = 'g'
+
+#Error: invalid color???
+color_pre = (Color("lightcyan"),Color("cornflowerblue"))
+color_pos = (Color("skyblue"),Color("darkblue"))
+color_laser = (Color("lightsalmon"),Color("darkred"))
+
+
+
+# blue = Color("blue")
+# color = blue
+# color.luminance = luminances[i%(len(files))]
+# color = color.hex_l
+colors = {'b':['cyan','darkblue'],'r':['coral','maroon'],'g':['lime','darkgreen']}
 
 #------------------------------------------------
 
@@ -110,25 +127,26 @@ rows = 3
 columns= 3
 
 
+
 #Individual plots
 plt.subplot(rows,columns,1)
-ax1,ax_fst,ax_last =plot_events(control_pre_events,col='b',tit=label1,width_ms=width,df_log=control_pre_log,show_durations=False)
+ax1,ax_fst,ax_last =plot_events(control_pre_events,col=color_pre,tit=label1,width_ms=width,df_log=control_pre_log,show_durations=False)
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 plt.subplot(rows,columns,2)
-ax1,ax_fst,ax_last =plot_events(laser_events,col='r',tit=label2,width_ms=width,df_log=laser_log,show_durations=False)
+ax1,ax_fst,ax_last =plot_events(laser_events,col=color_laser,tit=label2,width_ms=width,df_log=laser_log,show_durations=False)
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 plt.subplot(rows,columns,3)
-ax1,ax_fst,ax_last =plot_events(control_pos_events,col='g',tit=label3,width_ms=width,df_log=control_pos_log,show_durations=False)
+ax1,ax_fst,ax_last =plot_events(control_pos_events,col=color_pos,tit=label3,width_ms=width,df_log=control_pos_log,show_durations=False)
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 
 #ControlPre-Laser
 
 plt.subplot(rows,columns,4)
-ax1,ax_fst,ax_last= plot_events(control_pre_events,'b',tit="ControlPre-Laser",width_ms=width)
-ax2,ax_fst,ax_last=plot_events(laser_events,'r',tit="ControlPre-Laser",width_ms=width)
+ax1,ax_fst,ax_last= plot_events(control_pre_events,color_pre,tit="ControlPre-Laser",width_ms=width)
+ax2,ax_fst,ax_last=plot_events(laser_events,color_laser,tit="ControlPre-Laser",width_ms=width)
 
 set_plot_info([ax1,ax2],[label1,label2],loc="lower left")
 
@@ -136,25 +154,25 @@ set_plot_info([ax1,ax2],[label1,label2],loc="lower left")
 #ControlPos-Laser
 
 plt.subplot(rows,columns,5)
-ax1,ax_fst,ax_last= plot_events(control_pos_events,'g',tit="ControlPos-Laser",width_ms=width)
-ax2,ax_fst,ax_last=plot_events(laser_events,'r',tit="ControlPos-Laser",width_ms=width)
+ax1,ax_fst,ax_last= plot_events(control_pos_events,color_pos,tit="ControlPos-Laser",width_ms=width)
+ax2,ax_fst,ax_last=plot_events(laser_events,color_laser,tit="ControlPos-Laser",width_ms=width)
 
 set_plot_info([ax1,ax2],[label3,label2],loc="lower left")
 
 #ControlPre-ControlPos
 
 plt.subplot(rows,columns,6)
-ax1,ax_fst,ax_last= plot_events(control_pre_events,'b',tit="ControlPre-ControlPos",width_ms=width)
-ax3,ax_fst,ax_last=plot_events(control_pos_events,'g',tit="ControlPre-ControlPos",width_ms=width)
+ax1,ax_fst,ax_last= plot_events(control_pre_events,color_pre,tit="ControlPre-ControlPos",width_ms=width)
+ax3,ax_fst,ax_last=plot_events(control_pos_events,color_pos,tit="ControlPre-ControlPos",width_ms=width)
 
 set_plot_info([ax1,ax3],[label1,label3],loc="lower left")
 
 #Pre-Laser-Pos
 
 plt.subplot(rows,columns,8)
-ax1,ax_fst,ax_last= plot_events(control_pre_events,'b',tit="Pre-Laser-Pos",width_ms=width)
-ax2,ax_fst,ax_last=plot_events(laser_events,'r',tit="Pre-Laser-Pos",width_ms=width)
-ax3,ax_fst,ax_last= plot_events(control_pos_events,'g',tit="Pre-Laser-Pos",width_ms=width)
+ax1,ax_fst,ax_last= plot_events(control_pre_events,color_pre,tit="Pre-Laser-Pos",width_ms=width)
+ax2,ax_fst,ax_last=plot_events(laser_events,color_laser,tit="Pre-Laser-Pos",width_ms=width)
+ax3,ax_fst,ax_last= plot_events(control_pos_events,color_pos,tit="Pre-Laser-Pos",width_ms=width)
 
 set_plot_info([ax1,ax2,ax3],[label1,label2,label3],loc="lower left")
 

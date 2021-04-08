@@ -5,6 +5,9 @@ import os
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
+legend_fontsize = 25
+ticks_fontsize = 30
+
 n_spikes_labels = ['control_pre_count','laser_count','control_pos_count']
 duration_labels = ['control_pre_duration','laser_duration','control_pos_duration']
 amplitude_labels = ['control_pre_amplitude','laser_amplitude','control_pos_amplitude']
@@ -12,7 +15,7 @@ slope_dep_labels = ['control_pre_slope_dep','laser_slope_dep','control_pos_slope
 slope_rep_labels = ['control_pre_slope_rep','laser_slope_rep','control_pos_slope_rep']
 
 n_spike_title = 'Number of spikes'; n_spikes_unit = ''
-duration_title = 'Spike width'; duration_unit = '(ms)'
+duration_title = 'Spike duration'; duration_unit = '(ms)'
 amplitude_title = 'Spike amplitude'; amplitude_unit = '(mV)'
 slope_dep_title = 'Depolarization slope'; slope_unit = ''
 slope_rep_title = 'Repolarization slope'; slope_unit = ''
@@ -42,7 +45,7 @@ def plot_diffs(means,errors,labels,title,unit,colors,indexes=[1,2,3],width=0.1):
 	plt.ylabel("Difference value %s"%unit)
 	
 	custom_lines=[Line2D([0], [0], color=colors[i], lw=4) for i in range(len(colors))]
-	plt.legend(custom_lines,labels,fontsize=13)
+	plt.legend(custom_lines,labels,fontsize=legend_fontsize)
 
 def plot_mean_bars(means,errors,labels,rows,cols,id_,title,unit,colors,indexes=[1,2,3],width=0.1,rotation=60,legends=['control_pre','laser','control_pos'],error_kw=dict(lw=1, capsize=4, capthick=1.5)):
 	plt.subplot(rows,cols,id_)
@@ -52,21 +55,21 @@ def plot_mean_bars(means,errors,labels,rows,cols,id_,title,unit,colors,indexes=[
 	custom_lines=[Line2D([0], [0], color=colors[i], lw=4) for i in range(len(colors))]
 
 	if legends!=[]:
-		plt.legend(custom_lines,legends,fontsize=13)
+		plt.legend(custom_lines,legends,fontsize=legend_fontsize)
 	plt.title(title)
-	plt.xticks(range(0,len(labels)),labels,rotation=rotation,horizontalalignment='right',fontsize=15)
+	plt.xticks(range(0,len(labels)),labels,rotation=rotation,horizontalalignment='right',fontsize=ticks_fontsize)
 
 def plot_mean_n_diffs_bars(means,errors,labels,rows,cols,id_,title,unit,colors,indexes=[1,2,3],width=0.1,rotation=60,legends=['control_pre','laser','control_pos'],error_kw=dict(lw=1, capsize=4, capthick=1.5)):
 	plot_mean_bars(means,errors,labels[0],rows,cols,id_,title,unit,colors,indexes,width,rotation,legends)
 
 	plt.subplot(rows,cols,id_+1)
 	plot_diffs(means,errors,labels[1],title,unit,colors,indexes=indexes,width=width)
-	plt.xticks(range(0,len(labels)),labels,rotation=rotation,horizontalalignment='right',fontsize=15)
+	plt.xticks(range(0,len(labels)),labels,rotation=rotation,horizontalalignment='right',fontsize=ticks_fontsize)
 
 
 #Function used for data of the type control1-laser-control2
 def plot_barchart(df_dir,id_,labels,colors = ['b','r','g'],rows=5,cols=2,plot_diffs=False,columns=['spikes','duration','amplitude','slope_rep','slope_dep'],error_kw=dict(lw=1, capsize=4, capthick=1.5)):
-	rows = len(columns)
+	# rows = len(columns)
 	for i,col in enumerate(columns):
 		means = df_dir[titles[col]['labels']].mean()
 		error = df_dir[titles[col]['labels']].std()

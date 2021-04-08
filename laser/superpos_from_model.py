@@ -4,7 +4,7 @@ import glob
 
 # rcParams["legend.markerscale"]=10
 plt.rcParams.update({'legend.markerscale': 2200})
-# plt.rcParams.update({'font.size': 14})
+plt.rcParams.update({'font.size': 23})
 
 show='n'
 stats='y'
@@ -164,15 +164,16 @@ plt.ylabel("Voltage (mV)")
 
 # print( path+title+".png")
 # plt.savefig(path+title+".png")
+
 print( path+title+".eps")
 plt.savefig(path+title+".eps",format="eps")
-
-
 
 if show:
 	plt.show()
 
 df = create_dataframe(logs,logs_cols)
 print(df.describe())
-df.to_pickle(path+ref_param+"_info.pkl")
+
+os.system("mkdir %s/general"%path)
+df.to_pickle(path+"/general/"+ref_param+"_info.pkl")
 

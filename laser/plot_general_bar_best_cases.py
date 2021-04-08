@@ -2,7 +2,7 @@ from matplotlib.lines import Line2D
 from stats_plot_functions import *
 
 
-plt.rcParams.update({'font.size': 17})
+plt.rcParams.update({'font.size': 30})
 
 
 import argparse
@@ -11,6 +11,8 @@ import argparse
 ap = argparse.ArgumentParser()
 ap.add_argument("-p", "--path", required=True, help="Path to the file to show stats from")
 ap.add_argument("-m", "--mode", required=True, help="Barchart plot mode: 'simple' for models and 'complete' for experimental")
+ap.add_argument("-c", "--cols", required=False,default=1, help="Number of columns in plot")
+ap.add_argument("-sb", "--sort_by", required=False,default='time', help="Sort data by 'time' or 'name'")
 ap.add_argument("-s", "--selection", required=False,default='n', help="Spike selection of no_bursts and burst spikes")
 ap.add_argument("-pe", "--path_extension", required=False,default="", help="Path extension to the files to show stats from")
 ap.add_argument("-sa", "--save", required=False, default='y', help="Option to save plot file")
@@ -21,10 +23,11 @@ args = vars(ap.parse_args())
 path = args['path']
 plot_mode = args['mode'] 
 ext_path = args['path_extension'] #name of the parameter varied during simulations
+sort_by = args['sort_by']
 show= True if args['show']=='y' else False 
 save= True if args['save']=='y' else False 
 spike_selection= True if args['selection']=='y' else False 
-
+cols=int(args['cols'])
 
 colors = ['cornflowerblue','indianred','royalblue']
 # colors = ['cornflowerblue','firebrick','olivedrab']
@@ -38,10 +41,19 @@ if(dirs==[]):
 	print("Error: No dirs found. Check the extension provided")
 
 if plot_mode=="complete":
-	columns = ['duration','amplitude','slope_rep','slope_dep','spikes']
+	# columns = ['duration','amplitude','slope_rep','slope_dep','spikes']
+	columns = ['duration','amplitude','slope_rep','slope_dep']
 else:
 	columns = [plot_mode]
-plt.figure(figsize=(15,8*len(columns)))
+
+
+# plt.figure(figsize=(15,4*len(columns))) #best size for 4 rows
+
+# cols =1
+fig_setup=(cols,len(columns)//cols+len(columns)%cols)
+# fig_setup=(2,2)
+
+plt.figure(figsize=(20,8*fig_setup[1])) 
 
 labels=[]
 ignored=0
@@ -65,7 +77,11 @@ for i,d in enumerate(dirs):
 	all_trials=[] #reset one day trials list.
 	# print(d+"/events/*.pkl")
 	files = glob.glob(d+"/"+ext_path+"/*.pkl")
-	files.sort(key=os.path.getmtime)
+	if sort_by == 'time':
+		files.sort(key=os.path.getmtime)
+	elif sort_by == 'name':
+		files.sort(key=os.path.basename)
+
 
 	best_trial = (0,0)
 	#Concat all trials from one same experiment day into one df and plots it.
@@ -106,7 +122,7 @@ for i,d in enumerate(dirs):
 		try:
 			# all_trials=pd.concat(all_trials)
 			# print(df_best.describe())
-			plot_barchart(df_best,i-ignored,labels,plot_diffs=False,cols=1,columns=columns,colors=colors)
+			plot_barchart(df_best,i-ignored,labels,plot_diffs=False,cols=fig_setup[0],rows=fig_setup[1],columns=columns,colors=colors)
 			trial_log.write("%s %s %d %d %d\n"%(dir_name,best_trial_f,best_trial_id,best_trial[0],best_trial[1]))
 		except:
 			print("failed %s"%dir_name)
