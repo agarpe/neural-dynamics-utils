@@ -36,8 +36,8 @@ t=float(args['wind_t'])
 lim=int(args['file_limit']) #number of files limit
 show = True if args['show']=='y' else False 
 save = True if args['save']=='y' else False 
-stats = True if args['save']=='y' else False 
-verb= True if args['save']=='y' else False 
+stats = True if args['stats']=='y' else False 
+verb= True if args['verbrose']=='y' else False 
 
 # lim= 25
 
@@ -75,7 +75,8 @@ def get_events(f_data,f_events,ms,dt=0.001):
 	# print(waveforms)
 	return waveforms[2:] #Ignore 2 first events, usally artefacts
 
-
+if verb:
+	print(path)
 # files = sorted(os.listdir(path))
 files = glob.glob(path+"*")
 files.sort(key=os.path.getmtime)
@@ -144,11 +145,17 @@ for i,f in enumerate(files):
 		logs_cols.append(label)
 		logs.append(log)
 		if stats:
-			# try:
-			log_df = pd.DataFrame(log)
-			log_df.to_pickle(path+ref_param+"-"+first_line[:-3]+"_info.pkl")
-			# except:
-				# pass
+			try:
+				log_df = pd.DataFrame(log)
+				log_df.to_pickle(path+ref_param+"-"+first_line[:-3]+"_info.pkl")
+
+			except ValueError as e:
+				print("Passing data ",i,"with length",[len(log[x]) for x in log if isinstance(log[x], list)])
+				print("Exception:",e)
+				pass
+			except Exception as e:
+				print("Passing data",i,e)
+				pass
 
 		axs.append(ax)
 		colors.append(color)

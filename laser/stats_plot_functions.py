@@ -14,6 +14,12 @@ amplitude_labels = ['control_pre_amplitude','laser_amplitude','control_pos_ampli
 slope_dep_labels = ['control_pre_slope_dep','laser_slope_dep','control_pos_slope_dep']
 slope_rep_labels = ['control_pre_slope_rep','laser_slope_rep','control_pos_slope_rep']
 
+n_spikes_labels = ['count']
+duration_labels = ['duration']
+amplitude_labels = ['amplitude']
+slope_dep_labels = ['slope_dep']
+slope_rep_labels = ['slope_rep']
+
 n_spike_title = 'Number of spikes'; n_spikes_unit = ''
 duration_title = 'Spike duration'; duration_unit = '(ms)'
 amplitude_title = 'Spike amplitude'; amplitude_unit = '(mV)'
@@ -23,6 +29,10 @@ slope_rep_title = 'Repolarization slope'; slope_unit = ''
 titles = {'spikes':{'labels':n_spikes_labels,'title':n_spike_title},'duration':{'labels':duration_labels,'title':duration_title},
 'amplitude':{'labels':amplitude_labels,'title':amplitude_title},'slope_dep':{'labels':slope_dep_labels,'title':slope_dep_title},
 'slope_rep':{'labels':slope_rep_labels,'title':slope_rep_title}}
+
+# titles_model ={'spikes':{'labels':n_spikes_label,'title':n_spike_title},'duration':{'labels':duration_label,'title':duration_title},
+# 'amplitude':{'labels':amplitude_label,'title':amplitude_title},'slope_dep':{'labels':slope_dep_label,'title':slope_dep_title},
+# 'slope_rep':{'labels':slope_rep_label,'title':slope_rep_title}}
 
 def plot_boxplot(df,columns,title,path,fliers=True,rot_val=0):
 	lay=(len(columns),1)
@@ -68,11 +78,14 @@ def plot_mean_n_diffs_bars(means,errors,labels,rows,cols,id_,title,unit,colors,i
 
 
 #Function used for data of the type control1-laser-control2
-def plot_barchart(df_dir,id_,labels,colors = ['b','r','g'],rows=5,cols=2,plot_diffs=False,columns=['spikes','duration','amplitude','slope_rep','slope_dep'],error_kw=dict(lw=1, capsize=4, capthick=1.5)):
+def plot_barchart(df_dir,id_,labels,colors = ['b','r','g'],rows=5,cols=2,plot_diffs=False,columns=['spikes','duration','amplitude','slope_rep','slope_dep'],error_kw=dict(lw=1, capsize=4, capthick=1.5),titles=titles):
 	# rows = len(columns)
 	for i,col in enumerate(columns):
 		means = df_dir[titles[col]['labels']].mean()
 		error = df_dir[titles[col]['labels']].std()
+		print(len(titles))
+		print(len(means))
+		print(error)
 
 		diff_labels=['control_pre-control_pos','control_pre-laser', 'control_pos-laser']
 		indexes = [id_-0.23,id_,id_+0.23]

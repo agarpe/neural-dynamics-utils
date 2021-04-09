@@ -48,7 +48,8 @@ def set_plot_info(axes,labels,loc="best",xlabel="Time (ms)",ylabel="Voltage (mV)
 
 def get_spike_info(df_log,spike,dt,show_durations,spike_i,error_count):
 	if(df_log == {}): #if first spike
-		df_log['duration']=[];df_log['amplitude']=[];df_log['slope_dep']=[];df_log['slope_rep']=[]
+		df_log['duration']=[];df_log['amplitude']=[];
+		df_log['slope_dep']=[];df_log['slope_rep']=[]
 
 	if spike.shape[0]==0:
 		return df_log
@@ -99,7 +100,7 @@ COLORS = {'b':['cyan','darkblue'],'r':['coral','maroon'],'g':['lime','darkgreen'
 # 	dt Data adquisition time
 #	duration_log List where info from spikes duration is saved. Ignored when =0. 
 #	show_durations when True detected durations are ploted. 
-def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False):
+def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False,error=False):
 	ax=0
 
 	if(isinstance(col,str)):
@@ -111,10 +112,14 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 		except:
 			fst_color,last_color=col,col
 	else: #when color is a tupple of Color
-		fst_color=col[0].hex_l
-		last_color = col[1].hex_l
-		luminances = np.arange(1,0.2,-0.8/len(events))
-		colors = list(col[0].range_to(col[1],len(events)))
+		try:
+			fst_color = col[0].hex_l
+			last_color = col[1].hex_l
+			luminances = np.arange(1,0.2,-0.8/len(events))
+			colors = list(col[0].range_to(col[1],len(events)))
+		except: #when color is a single color
+			fst_color,last_color = col,col
+			col = col.hex_l
 
 	# print(colors)
 
@@ -137,7 +142,7 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 
 		# get stat info
 		df_log = get_spike_info(df_log,spike,dt,show_durations,spike_i,count)
-		if(count[0] >20):
+		if(count[0] >20): #failed event
 			break
 		#Calculate time
 		time = np.arange(0,spike.shape[0],1.0) #points to width_ms. 
@@ -155,7 +160,7 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 			color = colors[spike_i]
 			color = color.hex_l
 		except:
-			color=col
+			color = col
 
 		#TODO: fix failure when fst or last spikes are ignored
 		#Plot first, last or general spike.
@@ -169,6 +174,11 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 			# ax,=plt.plot(time,spike,linewidth=0.1) #darker effect ?
 	plt.title(tit)
 	if count[0] >0:
+		# print([len(df_log[x]) for x in df_log if isinstance(df_log[x], list)])
+		if not error: #In case there is no error allowance the dict is reduced.
+			df_log['amplitude']=df_log['amplitude'][:-count[0]]
+			df_log['slope_dep']=df_log['slope_dep'][:-count[0]]
+			df_log['slope_rep']=df_log['slope_rep'][:-count[0]]
 		print(count,"\"spikes\" ignored")
 
 	return ax,ax_fst,ax_last
