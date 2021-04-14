@@ -67,10 +67,12 @@ elif data_type=='model':
 
 	legends = []
 
-titles = {'spikes':{'labels':n_spikes_labels,'title':n_spike_title},'duration':{'labels':duration_labels,'title':duration_title},
-'amplitude':{'labels':amplitude_labels,'title':amplitude_title},'slope_dep':{'labels':slope_dep_labels,'title':slope_dep_title},
-'slope_rep':{'labels':slope_rep_labels,'title':slope_rep_title}}
 
+titles = {'spikes':{'labels':n_spikes_labels,'title':n_spikes_title,'unit':n_spikes_unit}
+,'duration':{'labels':duration_labels,'title':duration_title,'unit':duration_unit},
+'amplitude':{'labels':amplitude_labels,'title':amplitude_title,'unit':amplitude_unit},
+'slope_dep':{'labels':slope_dep_labels,'title':slope_dep_title,'unit':slope_unit},
+'slope_rep':{'labels':slope_rep_labels,'title':slope_rep_title,'unit':slope_unit}}
 
 if plot_mode=="complete" or plot_mode=="simple":
 	columns = ['duration','amplitude','slope_rep','slope_dep','spikes']
@@ -192,6 +194,7 @@ if spike_selection:
 
 if save:
 	plt.savefig(path+"general_barchart_bests_"+plot_mode+".eps",format="eps")
+	plt.savefig(path+"general_barchart_bests_"+plot_mode+".pdf",format="pdf")
 	plt.savefig(path+"general_barchart_bests_"+plot_mode+".png",format="png")
 if show:
 	plt.show()

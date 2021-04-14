@@ -101,6 +101,10 @@ COLORS = {'b':['cyan','darkblue'],'r':['coral','maroon'],'g':['lime','darkgreen'
 #	duration_log List where info from spikes duration is saved. Ignored when =0. 
 #	show_durations when True detected durations are ploted. 
 def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False,error=False):
+	if len(events)==0:
+		print("Error: no events to plot")
+		return plt.plot([]),plt.plot([]),plt.plot([])
+
 	ax=0
 
 	if(isinstance(col,str)):
@@ -148,11 +152,12 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 		time = np.arange(0,spike.shape[0],1.0) #points to width_ms. 
 		time *= dt
 
-		# if(df_log['amplitude'][-1]< 50):
+		# if(df_log['amplitude'][-1]>11):
+		# 	print(spike_i)
 		# 	break
 
-		ax_fst,=plt.plot([],[])
-		ax_last,=plt.plot([],[])
+		ax_fst,=plt.plot([],[],color=fst_color)
+		ax_last,=plt.plot([],[],color=last_color)
 		
 		try:
 			# col.luminance = luminances[spike_i%(len(events))]

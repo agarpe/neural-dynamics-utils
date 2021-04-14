@@ -20,19 +20,17 @@ amplitude_labels = ['amplitude']
 slope_dep_labels = ['slope_dep']
 slope_rep_labels = ['slope_rep']
 
-n_spike_title = 'Number of spikes'; n_spikes_unit = ''
+n_spikes_title = 'Number of spikes'; n_spikes_unit = ''
 duration_title = 'Spike duration'; duration_unit = '(ms)'
 amplitude_title = 'Spike amplitude'; amplitude_unit = '(mV)'
 slope_dep_title = 'Depolarization slope'; slope_unit = ''
 slope_rep_title = 'Repolarization slope'; slope_unit = ''
 
-titles = {'spikes':{'labels':n_spikes_labels,'title':n_spike_title},'duration':{'labels':duration_labels,'title':duration_title},
-'amplitude':{'labels':amplitude_labels,'title':amplitude_title},'slope_dep':{'labels':slope_dep_labels,'title':slope_dep_title},
-'slope_rep':{'labels':slope_rep_labels,'title':slope_rep_title}}
-
-# titles_model ={'spikes':{'labels':n_spikes_label,'title':n_spike_title},'duration':{'labels':duration_label,'title':duration_title},
-# 'amplitude':{'labels':amplitude_label,'title':amplitude_title},'slope_dep':{'labels':slope_dep_label,'title':slope_dep_title},
-# 'slope_rep':{'labels':slope_rep_label,'title':slope_rep_title}}
+titles = {'spikes':{'labels':n_spikes_labels,'title':n_spikes_title,'unit':n_spikes_unit}
+,'duration':{'labels':duration_labels,'title':duration_title,'unit':duration_unit},
+'amplitude':{'labels':amplitude_labels,'title':amplitude_title,'unit':amplitude_unit},
+'slope_dep':{'labels':slope_dep_labels,'title':slope_dep_title,'unit':slope_unit},
+'slope_rep':{'labels':slope_rep_labels,'title':slope_rep_title,'unit':slope_unit}}
 
 def plot_boxplot(df,columns,title,path,fliers=True,rot_val=0):
 	lay=(len(columns),1)
@@ -117,46 +115,6 @@ def plot_barchart(df_dir,id_,labels,columns,colors,fig_size,
 			plot_f = plot_mean_bars
 			plot_id = i+1
 
-		plot_f(means,error,labels,fig_size,plot_id,titles[col]['title'],n_spikes_unit,colors,indexes=indexes,width=0.2,error_kw=error_kw,legends=legends)
-
-
-
-# #Function generally used for models. 
-# def plot_barchart_simple(df_dir,id_,labels,colors = ['b','r','g'],rows=4,cols=1):
-# 	dur_means = [df_dir["duration"].mean(),df_dir["duration"].std(),df_dir["duration"].min(),df_dir["duration"].max()]
-# 	amp_means = [df_dir["amplitude"].mean(),df_dir["amplitude"].std(),df_dir["amplitude"].min(),df_dir["amplitude"].max()]
-# 	slo_dep_means = [df_dir["slope_dep"].mean(),df_dir["slope_dep"].std(),df_dir["slope_dep"].min(),df_dir["slope_dep"].max()]
-# 	slo_rep_means = [df_dir["slope_rep"].mean(),df_dir["slope_rep"].std(),df_dir["slope_rep"].min(),df_dir["slope_rep"].max()]
-
-# 	legends=["mean","std","min","max"]
-# 	indexes = [id_,id_+0.15,id_+0.15*2,id_+0.15*3]
-# 	colors=['darkorange','darkcyan','lightgreen','darkolivegreen','green']
-
-
-# 	plot_mean_bars(dur_means,labels,rows,cols,1,duration_title,duration_unit,colors,indexes=indexes,legends=legends)
-# 	plot_mean_bars(amp_means,labels,rows,cols,2,amplitude_title,amplitude_unit,colors,indexes=indexes,legends=legends)
-# 	plot_mean_bars(slo_dep_means,labels,rows,cols,3,slope_dep_title,slope_unit,colors,indexes=indexes,legends=legends)
-# 	plot_mean_bars(slo_rep_means,labels,rows,cols,4,slope_rep_title,slope_unit,colors,indexes=indexes,legends=legends)
-
-
-# #Function generally used for models. 
-# def plot_barchart_simple(df_dir,id_,labels,colors = ['b','r','g'],rows=4,cols=1):
-# 	dur_means = [df_dir["duration"].mean(),df_dir["duration"].std(),df_dir["duration"].min(),df_dir["duration"].max(),df_dir["duration"].max()-df_dir["duration"].min()]
-# 	amp_means = [df_dir["amplitude"].mean(),df_dir["amplitude"].std(),df_dir["amplitude"].min(),df_dir["amplitude"].max(),df_dir["amplitude"].max()-df_dir["amplitude"].min()]
-# 	slo_dep_means = [df_dir["slope_dep"].mean(),df_dir["slope_dep"].std(),df_dir["slope_dep"].min(),df_dir["slope_dep"].max(),df_dir["slope_dep"].max()-df_dir["slope_dep"].min()]
-# 	slo_rep_means = [df_dir["slope_rep"].mean(),df_dir["slope_rep"].std(),df_dir["slope_rep"].min(),df_dir["slope_rep"].max(),df_dir["slope_rep"].max()-df_dir["slope_rep"].min()]
-
-# 	legends=["mean","std","min","max","diff-width"]
-# 	indexes = [id_,id_+0.15,id_+0.15*2,id_+0.15*3,id_+0.15*4]
-# 	colors=['darkorange','darkcyan','lightgreen','darkolivegreen','green']
-
-
-# 	plot_mean_bars(dur_means,labels,rows,cols,1,duration_title,duration_unit,colors,indexes=indexes,legends=legends)
-# 	plot_mean_bars(amp_means,labels,rows,cols,2,amplitude_title,amplitude_unit,colors,indexes=indexes,legends=legends)
-# 	plot_mean_bars(slo_dep_means,labels,rows,cols,3,slope_dep_title,slope_unit,colors,indexes=indexes,legends=legends)
-# 	plot_mean_bars(slo_rep_means,labels,rows,cols,4,slope_rep_title,slope_unit,colors,indexes=indexes,legends=legends)
-
-
-
+		plot_f(means,error,labels,fig_size,plot_id,titles[col]['title'],titles[col]['unit'],colors,indexes=indexes,width=0.2,error_kw=error_kw,legends=legends)
 
 
