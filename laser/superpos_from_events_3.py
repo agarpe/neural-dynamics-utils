@@ -23,6 +23,7 @@ ap.add_argument("-ws", "--window_width", required=True, help="Half window width 
 ap.add_argument("-ti", "--title", required=False, default='', help="Title shown in plot")
 ap.add_argument("-nr", "--rows", required=False, default=2, 
 				help="Number of rows. 2 for single and comparations. 3 for prevs and single subplot with the three of them")
+ap.add_argument("-ex", "--ext", required=False, default='', help="Extension after laser or control.")
 ap.add_argument("-sa", "--save", required=False, default='y', help="Option to save plot file")
 ap.add_argument("-sh", "--show", required=False, default='y', help="Option to show plot file")
 ap.add_argument("-st", "--stats", required=False, default='y', help="Option to save stats pkl file")
@@ -30,34 +31,22 @@ args = vars(ap.parse_args())
 
 
 path = args['path']
-path_control_pre = path+"_control_pre_waveform.txt"
-path_laser = path+"_laser_waveform.txt"
-path_control_pos = path+"_control_pos_waveform.txt"
+ext = args['ext']
+path_control_pre = path+"_control_pre_"+ext+"_waveform.txt"
+path_laser = path+"_laser_"+ext+"_waveform.txt"
+path_control_pos = path+"_control_pos_"+ext+"_waveform.txt"
 width = int(args['window_width'])
 rows = int(args['rows'])
 
 show= True if args['show']=='y' else False 
 save= True if args['save']=='y' else False 
 stats= True if args['stats']=='y' else False 
+
 if args['title'] == '':
 	title = path
 else:
 	title = args['title']
 print(title)
-# if len(sys.argv) ==3:
-# 	path = sys.argv[1]
-# 	path_control_pre = path+"_control_pre_waveform.txt"
-# 	path_laser = path+"_laser_waveform.txt"
-# 	path_control_pos = path+"_control_pos_waveform.txt"
-# 	width = int(sys.argv[2])
-# 	show = 'n'
-# 	save = 'y'
-# 	stats = 'n'
-# 	title = path
-# else:
-# 	print("Use: python3 superpos_from_events_3.py path width ")
-# 	exit()
-
 
 print("\nSuperposing from ",path)
 
@@ -80,18 +69,18 @@ n_control_pos = len(control_pos_events.index)
 
 
 #Parse to array
-control_pre_events=control_pre_events.values
-laser_events=laser_events.values
-control_pos_events=control_pos_events.values
+control_pre_events=control_pre_events.values*10
+laser_events=laser_events.values*10
+control_pos_events=control_pos_events.values*10
 
 
 #Labels for Control-Laser
-# label1 = "Control pre. N. spikes: %d"%(n_control_pre)
-# label2 = "Laser. N. spikes: %d"%(n_laser)
-# label3 = "Control pos. N. spikes: %d"%(n_control_pos)
 label1 = "Control pre"
 label2 = "Laser"
 label3 = "Control pos"
+label1_nspikes = label1+". N. spikes: %d"%(n_control_pre)
+label2_nspikes = label2+"Laser. N. spikes: %d"%(n_laser)
+label3_nspikes = label3+"Control pos. N. spikes: %d"%(n_control_pos)
 
 
 #Dafaframes and logs
@@ -99,14 +88,14 @@ control_pre_log ={}
 laser_log ={}
 control_pos_log ={}
 
-# color_pre = 'b'
-# color_laser = 'r'
-# color_pos = 'g'
+color_pre = 'b'
+color_laser = 'r'
+color_pos = 'g'
 
 #Error: invalid color???
-color_pre = (Color("lightcyan"),Color("cornflowerblue"))
-color_pos = (Color("skyblue"),Color("darkblue"))
-color_laser = (Color("lightsalmon"),Color("darkred"))
+# color_pre = (Color("lightcyan"),Color("cornflowerblue"))
+# color_pos = (Color("skyblue"),Color("darkblue"))
+# color_laser = (Color("lightsalmon"),Color("darkred"))
 
 
 
@@ -130,15 +119,15 @@ plt.figure(figsize=(columns*10,rows*10))
 
 #Individual plots
 plt.subplot(rows,columns,1)
-ax1,ax_fst,ax_last =plot_events(control_pre_events,col=color_pre,tit=label1,width_ms=width,df_log=control_pre_log,show_durations=False)
+ax1,ax_fst,ax_last =plot_events(control_pre_events,col=color_pre,tit=label1_nspikes,width_ms=width,df_log=control_pre_log,show_durations=False)
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 plt.subplot(rows,columns,2)
-ax1,ax_fst,ax_last =plot_events(laser_events,col=color_laser,tit=label2,width_ms=width,df_log=laser_log,show_durations=False)
+ax1,ax_fst,ax_last =plot_events(laser_events,col=color_laser,tit=label2_nspikes,width_ms=width,df_log=laser_log,show_durations=False)
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 plt.subplot(rows,columns,3)
-ax1,ax_fst,ax_last =plot_events(control_pos_events,col=color_pos,tit=label3,width_ms=width,df_log=control_pos_log,show_durations=False)
+ax1,ax_fst,ax_last =plot_events(control_pos_events,col=color_pos,tit=label3_nspikes,width_ms=width,df_log=control_pos_log,show_durations=False)
 set_plot_info([ax_fst,ax_last],["First spike","Last spike"])
 
 
@@ -181,9 +170,11 @@ plt.suptitle(title) #general title
 plt.tight_layout(rect=[0, 0, 1, 0.95]) #tight with upper title
 
 if save:
-	figname=path +"_"+title
+	if title == path:
+		title=''
+	figname=path +"_"+ext+"_"+title
 	plt.savefig(figname+".png")
-	plt.savefig(figname+".eps",format='eps',dpi=1200)
+	# plt.savefig(figname+".eps",format='eps',dpi=1200)
 	plt.savefig(figname+".pdf",format='pdf',dpi=600)
 if show:
 	plt.show()
@@ -194,5 +185,5 @@ if stats:
 
 	df = create_dataframe([control_pre_log,laser_log,control_pos_log],['control_pre_','laser_','control_pos_'])
 	print(df.describe())
-	df.to_pickle(path+"_info.pkl")
+	df.to_pickle(path+"_"+ext+"_info.pkl")
 

@@ -72,11 +72,14 @@ titles = {'spikes':{'labels':n_spikes_labels,'title':n_spikes_title,'unit':n_spi
 ,'duration':{'labels':duration_labels,'title':duration_title,'unit':duration_unit},
 'amplitude':{'labels':amplitude_labels,'title':amplitude_title,'unit':amplitude_unit},
 'slope_dep':{'labels':slope_dep_labels,'title':slope_dep_title,'unit':slope_unit},
-'slope_rep':{'labels':slope_rep_labels,'title':slope_rep_title,'unit':slope_unit}}
+'slope_rep':{'labels':slope_rep_labels,'title':slope_rep_title,'unit':slope_unit},
+'slope_dep_max':{'labels':slope_dep_labels,'title':slope_dep_title,'unit':slope_unit},
+'slope_rep_max':{'labels':slope_rep_labels,'title':slope_rep_title,'unit':slope_unit}}
 
 if plot_mode=="complete" or plot_mode=="simple":
-	columns = ['duration','amplitude','slope_rep','slope_dep','spikes']
-	# columns = ['duration','amplitude','slope_rep','slope_dep']
+	# columns = ['duration','amplitude','slope_rep','slope_dep','spikes']
+	columns = ['duration','amplitude','slope_rep','slope_dep']
+	# columns = ['duration','amplitude','slope_rep','slope_dep','slope_rep_max','slope_dep_max']
 else:
 	columns = [plot_mode]
 
@@ -144,6 +147,7 @@ for i,d in enumerate(dirs):
 				df[n_l] = 0
 
 		#In models each pkl is a set of 50 spikes with a specific parameters config
+		#each pkl is in a different directory
 		if data_type == 'model': 
 			all_trials.append(df)
 		else:
@@ -171,6 +175,7 @@ for i,d in enumerate(dirs):
 		try:
 			if verb:
 				print(df_best.describe())
+
 			plot_barchart(df_best,i-ignored,labels,plot_diffs=plot_diffs,fig_size=fig_setup
 				,columns=columns,colors=colors,titles=titles,legends=legends)
 			if log:

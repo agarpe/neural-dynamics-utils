@@ -36,28 +36,16 @@ stats = True if args['save']=='y' else False
 
 
 
-# if len(sys.argv) ==8:
-# 	path_control = sys.argv[1]
-# 	path_laser = sys.argv[2]
-# 	width = int(sys.argv[3])
-# 	label1= sys.argv[4]
-# 	label2= sys.argv[5]
-# 	color2= sys.argv[6]
-# 	title=sys.argv[7]
-# 	show = False
-# 	save = True
-# else:
-# 	print("Use1: python3 superpos_from_events.py events_1_path.txt events_2_path.txt width label1 label2 color2 title")
-# 	exit()
-
-
-
 # #Each row contains voltage values of the corresponding event.
 try:
-	control_events = read_from_events(path_control,max_cols=300,dt=0.1)
-	laser_events = read_from_events(path_laser,max_cols=300,dt=0.1)
+	control_events = read_from_events(path_control,max_cols=300,dt=0.1,dataview=True)
 except:
-	print("Error: file not found")
+	print("Error: file 1 not found")
+	exit()
+try:
+	laser_events = read_from_events(path_laser,max_cols=300,dt=0.1,dataview=True)
+except:
+	print("Error: file 2 not found")
 	exit()
 
 n_control = len(control_events.index)
@@ -76,6 +64,10 @@ print(laser_events.shape)
 label1 = label1+" "+str(n_control)
 label2 = label2+" "+str(n_laser)
 
+log_1={}
+log_2={}
+
+
 #------------------------------------------------
 # Plot 
 
@@ -85,14 +77,14 @@ plt.tight_layout()
 #Individual plots
 plt.subplot(2,2,1)
 
-ax1,ax_fst,ax_last=plot_events(control_events,col='b',tit=label1,width_ms=width)
+ax1,ax_fst,ax_last=plot_events(control_events,col='b',tit=label1,width_ms=width,df_log=log_1)
 plt.legend([ax_fst,ax_last],["First spike","Last spike"])
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
 
 
 plt.subplot(2,2,2)
-ax1,ax_fst,ax_last=plot_events(laser_events,col=color2,tit=label2,width_ms=width)
+ax1,ax_fst,ax_last=plot_events(laser_events,col=color2,tit=label2,width_ms=width,df_log=log_2)
 plt.legend([ax_fst,ax_last],["First spike","Last spike"])
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
@@ -112,7 +104,9 @@ plt.ylabel("Voltage (mV)")
 
 path = path_control
 
-path = path[:path.find("exp")] +title
+# path = path[:path.find("exp")] +title
+
+path = path[:-4]+"_"+title
 
 plt.suptitle(title)
 plt.tight_layout(rect=[0, 0, 1, 0.95])
@@ -121,3 +115,12 @@ if save:
 	plt.savefig(path +".png")
 if show:
 	plt.show()
+
+
+if stats:
+	#Saving dataframes
+	print("saving dataframes")
+
+	df = create_dataframe([log_1,log_2],[label1,label2])
+	print(df.describe())
+	df.to_pickle(path+"_info.pkl")

@@ -23,12 +23,16 @@ def create_dataframe(dicts,prefixes):
 
 	return df
 	
-def read_from_events(path,dt =0.1, max_cols = 300, delim="\t"):
+def read_from_events(path,dt =0.1, max_cols = 300, delim="\t",dataview=False):
 	#Column names list generation to read files with distinct number of columns in each row. 
 	#Indispensable when events obtained by threshold detection in DataView
 	# dt =0.1
 	# max_cols = 300 ##counting rows from file requires reading the whole file too long. 
 	col_names = [i for i in range(0, int(max_cols/dt))]
+
+	if dataview:
+		#changes , by . as separator (for dataview)
+		os.system("sed -i 's/\,/./g' "+path)
 
 	#Each row contains Voltage values of the corresponding event.
 	events =  pd.read_csv(path, delimiter = delim,skiprows=0,header=None,names=col_names)
@@ -49,7 +53,9 @@ def set_plot_info(axes,labels,loc="best",xlabel="Time (ms)",ylabel="Voltage (mV)
 def get_spike_info(df_log,spike,dt,show_durations,spike_i,error_count):
 	if(df_log == {}): #if first spike
 		df_log['duration']=[];df_log['amplitude']=[];
-		df_log['slope_dep']=[];df_log['slope_rep']=[]
+		df_log['slope_dep']=[];df_log['slope_rep']=[];
+		
+		df_log['slope_dep_max']=[];df_log['slope_rep_max']=[]
 
 	if spike.shape[0]==0:
 		return df_log
@@ -80,6 +86,11 @@ def get_spike_info(df_log,spike,dt,show_durations,spike_i,error_count):
 	slope_inc,slope_dec = get_slope(spike,dt)
 	df_log['slope_dep'].append(slope_inc)
 	df_log['slope_rep'].append(slope_dec)	
+
+	##########TODO: QUITAR
+	slope_inc,slope_dec = get_slope_max(spike,dt)
+	df_log['slope_dep_max'].append(slope_inc)
+	df_log['slope_rep_max'].append(slope_dec)	
 
 	return df_log	
 
@@ -301,5 +312,30 @@ def get_slope(spike,dt):
 
 	slope1 = (spike[indx1]-spike[indx1-1])/dt 
 	slope2 = (spike[indx2]-spike[indx2-1])/dt
+
+	return (slope1,slope2)
+
+
+
+# Description: 
+# 	Recives spike values and return the increasing and decreasing slope values at the 
+#	two points matching a threshold in "the middle" of the spike
+#	maximum and minimum voltage value.
+# Parameters:
+# 	spike voltage values
+# 	dt time rate
+# Return:
+#	amplitude
+
+def get_slope_max(spike,dt):
+	spike = spike[~np.isnan(spike)] 
+	mid_ps,th = get_spike_duration(spike,dt)
+	mx_value = np.max(spike) #maximum V value (spike)
+
+	indx1 = int(mid_ps[0]/dt) #From ms to point ref
+	indx2 = int(mid_ps[1]/dt) #From ms to point ref
+
+	slope1 = (spike[indx1]-mx_value)/dt 
+	slope2 = (mx_value-spike[indx2-1])/dt
 
 	return (slope1,slope2)

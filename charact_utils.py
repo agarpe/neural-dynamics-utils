@@ -400,12 +400,13 @@ def trunc(values, decs=0):
 ##############	SPIKES 
 ##############################################################################
 
-def detect_spikes(data,dt=0.1,tol=0.2):
+def detect_spikes(data,dt=0.1,tol=2):
 
 	#define threshold
 	mx_value = np.max(data) #maximum V value (spike)
 	mn_value = np.min(data) #minimum V value (spike)
 
+	# th = mx_value-(mx_value+mn_value)/4*3 #threshold in the "middle" of the spike.
 	th = (mx_value+mn_value)/2 #threshold in the "middle" of the spike.
 	#TODO: check spike by spike or threshold at 1/4 spike
 
@@ -414,7 +415,8 @@ def detect_spikes(data,dt=0.1,tol=0.2):
 	# print(time.shape)
 	# print(mx_value,mn_value,th)
 
-	event_indices = np.where(np.isclose(data, th,atol=tol))
+	event_indices = np.where(np.isclose(data, th,atol=tol*dt))
+	# print(event_indices.shape)
 	# event_indices = np.where(np.isclose(data+abs(mn_value), th,atol=tol))
 	
 	return time[event_indices],th

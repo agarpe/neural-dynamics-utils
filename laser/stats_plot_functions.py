@@ -4,6 +4,7 @@ import glob
 import os
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+from colour import Color
 
 legend_fontsize = 25
 ticks_fontsize = 30
@@ -14,11 +15,11 @@ amplitude_labels = ['control_pre_amplitude','laser_amplitude','control_pos_ampli
 slope_dep_labels = ['control_pre_slope_dep','laser_slope_dep','control_pos_slope_dep']
 slope_rep_labels = ['control_pre_slope_rep','laser_slope_rep','control_pos_slope_rep']
 
-n_spikes_labels = ['count']
-duration_labels = ['duration']
-amplitude_labels = ['amplitude']
-slope_dep_labels = ['slope_dep']
-slope_rep_labels = ['slope_rep']
+# n_spikes_labels = ['count']
+# duration_labels = ['duration']
+# amplitude_labels = ['amplitude']
+# slope_dep_labels = ['slope_dep']
+# slope_rep_labels = ['slope_rep']
 
 n_spikes_title = 'Number of spikes'; n_spikes_unit = ''
 duration_title = 'Spike duration'; duration_unit = '(ms)'
@@ -118,3 +119,13 @@ def plot_barchart(df_dir,id_,labels,columns,colors,fig_size,
 		plot_f(means,error,labels,fig_size,plot_id,titles[col]['title'],titles[col]['unit'],colors,indexes=indexes,width=0.2,error_kw=error_kw,legends=legends)
 
 
+def plot_caract(df,column,ylabel,col):
+
+	colors = list(col[0].range_to(col[1],len(df[column])))
+	# colors = [c.hex_l for c in colors]
+	for i,l in enumerate(df[column]):
+		plt.plot(i,l,marker='o',color=colors[i].hex_l)
+	# plt.plot(df[column],'o',color=colors)
+	plt.ylabel(ylabel)
+	plt.xlabel("Number of spike")
+	# df.plot(y=column)
