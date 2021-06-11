@@ -62,7 +62,7 @@ def get_spike_info(df_log,spike,dt,show_durations,spike_i,error_count):
 
 
 	#Measure durations:
-	durations,th = get_spike_duration(spike,dt,tol=0.2)
+	durations,th = get_spike_duration(spike,dt,tol=1)
 	dur =  durations[1]-durations[0]
 
 	if(dur > 1): #Ignore artefacts
@@ -97,6 +97,30 @@ def get_spike_info(df_log,spike,dt,show_durations,spike_i,error_count):
 
 COLORS = {'b':['cyan','darkblue'],'r':['coral','maroon'],'g':['lime','darkgreen']}
 
+def parse_color(col):
+	colors=None
+	if(isinstance(col,str)):
+	#set first and last spike colors
+		try:#fix in superpos scripts colors dict. Change name or change dict concept.
+			# colors = COLORS[col]
+			fst_color,last_color = COLORS[col] #when color is a tupple of strings
+
+		except:
+			fst_color,last_color=col,col
+	else: #when color is a tupple of Color
+		try:
+			fst_color = col[0].hex_l
+			last_color = col[1].hex_l
+			luminances = np.arange(1,0.2,-0.8/len(events))
+			colors = list(col[0].range_to(col[1],len(events)))
+		except: #when color is a single color
+			fst_color,last_color = col,col
+			col = col.hex_l
+
+	return col,fst_color,last_color,colors
+
+
+
 # Description: 
 #	Plots several spike events superpossed. When duration_log is a list, returns info 
 # 	of the spikes duration.
@@ -118,23 +142,25 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 
 	ax=0
 
-	if(isinstance(col,str)):
-	#set first and last spike colors
-		try:#fix in superpos scripts colors dict. Change name or change dict concept.
-			# colors = COLORS[col]
-			fst_color,last_color = COLORS[col] #when color is a tupple of strings
+	# if(isinstance(col,str)):
+	# #set first and last spike colors
+	# 	try:#fix in superpos scripts colors dict. Change name or change dict concept.
+	# 		# colors = COLORS[col]
+	# 		fst_color,last_color = COLORS[col] #when color is a tupple of strings
 
-		except:
-			fst_color,last_color=col,col
-	else: #when color is a tupple of Color
-		try:
-			fst_color = col[0].hex_l
-			last_color = col[1].hex_l
-			luminances = np.arange(1,0.2,-0.8/len(events))
-			colors = list(col[0].range_to(col[1],len(events)))
-		except: #when color is a single color
-			fst_color,last_color = col,col
-			col = col.hex_l
+	# 	except:
+	# 		fst_color,last_color=col,col
+	# else: #when color is a tupple of Color
+	# 	try:
+	# 		fst_color = col[0].hex_l
+	# 		last_color = col[1].hex_l
+	# 		luminances = np.arange(1,0.2,-0.8/len(events))
+	# 		colors = list(col[0].range_to(col[1],len(events)))
+	# 	except: #when color is a single color
+	# 		fst_color,last_color = col,col
+	# 		col = col.hex_l
+
+	col,fst_color,last_color,colors =  parse_color(col)
 
 	# print(colors)
 
@@ -143,11 +169,12 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 	# ax_fst,=plt.plot([],[])
 	# ax_last,=plt.plot([],[])
 	# ax,=plt.plot([],[])
+	ploted=0
 	for spike_i in range(events.shape[0]):
 		#remove possible nan values:
 		spike = events[spike_i,:][~np.isnan(events[spike_i,:])]
 
-		#prepare spike
+		# prepare spike
 		try:
 			spike = center(spike,width_ms,dt) #center spike from max
 			spike = no_drift(spike) #adjust drift
@@ -159,6 +186,7 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 		df_log = get_spike_info(df_log,spike,dt,show_durations,spike_i,count)
 		if(count[0] >20): #failed event
 			break
+
 		#Calculate time
 		time = np.arange(0,spike.shape[0],1.0) #points to width_ms. 
 		time *= dt
@@ -186,9 +214,11 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 			ax_last,=plt.plot(time,spike,color=last_color,linewidth=1.5)
 		else:
 			ax,=plt.plot(time,spike,color=color,linewidth=0.1)
+		ploted+=1
+	print(ploted)
 			# ax_last,=plt.plot(time,spike,color=last_color,linewidth=1.5)
 			# ax,=plt.plot(time,spike,linewidth=0.1) #darker effect ?
-	plt.title(tit)
+	plt.title(tit + str(ploted))
 	if count[0] >0:
 		# print([len(df_log[x]) for x in df_log if isinstance(df_log[x], list)])
 		if not error: #In case there is no error allowance the dict is reduced.
@@ -199,6 +229,30 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 
 	return ax,ax_fst,ax_last
 
+def simple_plot(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False,error=False):
+	for spike_i in range(events.shape[0]):
+		#remove possible nan values:
+		spike = events[spike_i,:][~np.isnan(events[spike_i,:])]
+
+		spike = no_drift(spike)
+
+		#Calculate time
+		time = np.arange(0,spike.shape[0],1.0) #points to width_ms. 
+		time *= dt
+
+		parse_color(col)
+		try:
+			# col.luminance = luminances[spike_i%(len(events))]
+			# color = col.hex_l
+			color = colors[spike_i]
+			color = color.hex_l
+		except:
+			color = col
+
+		ax,=plt.plot(time,spike,color=color,linewidth=0.1)
+		plt.title(tit)
+
+	return ax,ax,ax
 
 
 # Description: 
@@ -218,17 +272,17 @@ def center(spike,width_ms,dt=0.1):
 	ini = int(mx_index-width_points) #init as max point - number of points. 
 	end = int(mx_index+width_points) #end as max point + number of points. 
 
-	###Beta func: Beware in models
-	if mx_index!=0: #ignore artefacts
-		#Adjust window when there are not enough points 
-		if(ini < 0):
-			app = np.full(abs(ini),spike[0]) 
-			spike =np.insert(spike,0,app) #Add events at the begining
-			return center(spike,width_ms,dt) #re-center
-		if(end > spike.shape[0]):
-			app = np.full(end-spike.shape[0],spike[-1]) #Add events at the end
-			spike = np.insert(spike,spike.shape[0],app) #re-center
-			return center(spike,width_ms,dt)
+	# ###Beta func: Beware in models
+	# if mx_index!=0: #ignore artefacts
+	# 	#Adjust window when there are not enough points 
+	# 	if(ini < 0):
+	# 		app = np.full(abs(ini),spike[0]) 
+	# 		spike =np.insert(spike,0,app) #Add events at the begining
+	# 		return center(spike,width_ms,dt) #re-center
+	# 	if(end > spike.shape[0]):
+	# 		app = np.full(end-spike.shape[0],spike[-1]) #Add events at the end
+	# 		spike = np.insert(spike,spike.shape[0],app) #re-center
+	# 		return center(spike,width_ms,dt)
 	####
 
 	return spike[ini:end]
