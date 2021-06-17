@@ -284,7 +284,15 @@ def save_events(events,file_name,split=False,dataview=False):
 
 	print(events.shape)
 		# events = np.array(result)
-	f1 = open(file_name,'w')
+	try:
+		f1 = open(file_name,'w')
+	except FileNotFoundError:
+		print("Unable to write on the specified path")
+		return
+	except Exception as e:
+		print(e)
+		return
+
 	np.savetxt(f1,events,delimiter='\t')
 	f1.close()
 	if(dataview):
@@ -312,8 +320,17 @@ def save_waveforms(data,events,path,width_ms,dt=0.1):
 			count +=1
 
 	print(waveforms.shape)
+	
+	try:
+		f1 = open(path,'w')
+	except FileNotFoundError:
+		print("Unable to write on the specified path")
+		return
+	except Exception as e:
+		print("Error saving waveforms")
+		print("\t",e)
+		return
 
-	f1 = open(path,'w')
 	np.savetxt(f1,waveforms,delimiter='\t')
 	f1.close()
 
@@ -356,7 +373,7 @@ def read_spike_events(file_name,dataview=True,dt=0.1):
 
 #Read spike events from file as on/off events and returns single value from each event as mean(on/off). 
 
-def read_bursts_events(file_name,dataview=True,scale= 1000):
+def read_bursts_events(file_name,dataview=True):
 	if dataview:
 		#changes , by . as separator (for dataview)
 		os.system("sed -i 's/\,/./g' "+file_name)
@@ -364,11 +381,6 @@ def read_bursts_events(file_name,dataview=True,scale= 1000):
 	data_n = np.loadtxt(file_name)
 
 	print(data_n.shape)
-
-	# #Change to secs
-
-	# data_n /= scale
-
 
 	return data_n
 
@@ -399,27 +411,72 @@ def trunc(values, decs=0):
 #############################################################################
 ##############	SPIKES 
 ##############################################################################
-
-def detect_spikes(data,dt=0.1,tol=2):
+#def detect_spikes_on_off_events(data,dt=0.1,tol=0.1)
+def detect_spikes_indices(data,dt=0.1,tol=0.5):
 
 	#define threshold
 	mx_value = np.max(data) #maximum V value (spike)
 	mn_value = np.min(data) #minimum V value (spike)
+ 	
+	th = mx_value-(mx_value-mn_value)/4 #threshold in the "middle" of the spike.
 
-	# th = mx_value-(mx_value+mn_value)/4*3 #threshold in the "middle" of the spike.
-	th = (mx_value+mn_value)/2 #threshold in the "middle" of the spike.
+
+	return np.where(np.isclose(data, th,atol=tol)),th
+
+
+def detect_spikes(data,dt=0.1,tol=0.5):
 	#TODO: check spike by spike or threshold at 1/4 spike
 
-	time = np.arange(0,data.shape[0],1.0) #time array 
-	time *= dt
-	# print(time.shape)
-	# print(mx_value,mn_value,th)
+	time = np.arange(0,data.shape[0],dt) #time array 
+	# time *= dt
 
-	event_indices = np.where(np.isclose(data, th,atol=tol*dt))
-	# print(event_indices.shape)
-	# event_indices = np.where(np.isclose(data+abs(mn_value), th,atol=tol))
+	event_indices,th = detect_spikes_indices(data,dt,tol)
 	
-	return time[event_indices],th
+	spikes = time[event_indices]
+
+	# #remove artefacts TODO: add it at event_indices detection?
+	isis = get_ISI(spikes)
+	spikes = np.delete(spikes,np.where(isis<=min(isis)+1))
+
+
+	return spikes,th
+
+# def detect_spikes_on_off_events(data,dt=0.1,tol=0.1)
+def detect_spikes_single_events(data,dt=0.1,tol=0.5):
+
+	#define threshold
+	mx_value = np.max(data) #maximum V value (spike)
+	mn_value = np.min(data) #minimum V value (spike)
+ 	
+	th = mx_value-(mx_value-mn_value)/4 #threshold in the "middle" of the spike.
+
+	#TODO: check spike by spike or threshold at 1/4 spike
+
+	time = np.arange(0,data.shape[0],dt) #time array 
+	# time *= dt
+
+	event_indices = np.where(np.isclose(data, th,atol=tol))
+
+	event_indices= event_indices[0]
+
+	isis = get_ISI(event_indices)
+	event_indices = np.delete(event_indices,np.where(isis<=min(isis)+1))
+
+
+	event_indices = to_on_off_events(event_indices)
+
+	spikes_t = []
+	spikes_v = []
+	
+	for on,off in event_indices:
+	# for on,off in zip(event_indices[:-1],event_indices[1:]):
+		spk = max(data[on:off])
+		if spk > th+2:
+			spikes_t.append(time[np.where(data==spk)])
+			spikes_v.append(spk)
+
+	return np.array(spikes_t),np.array(spikes_v)
+
 
 
 
@@ -571,6 +628,43 @@ def get_phases(data,init,end,th1=6,th2=7.5):
 ##############	BURSTS 
 ##############################################################################
 
+#TODO:complete
+
+#Signal
+#max_isi value considered in ms
+#data value in ms
+
+def detect_burst_from_events(spikes,max_isi,dt=0.1):
+	if spikes.shape[0] == 0:
+		print("No spikes found")
+		return []
+
+	print(spikes.shape)
+	spikes = to_on_off_events(spikes)
+	print(spikes.shape)
+	spikes = to_mean(spikes)
+	# isis = get_ISI(spikes)
+
+	print(spikes.shape)
+	# m = mean(isis)
+	bursts=[spikes[0]]
+
+	for i,(s1,s2) in enumerate(zip(spikes[:-1],spikes[1:])):
+		if s2-s1 > max_isi/dt:
+			bursts.append(s1)
+			bursts.append(s2)
+	bursts.append(spikes[-1])
+
+	bursts = [bursts[i:i + 2] for i in range(0, len(bursts), 2)]
+	bursts = np.array(bursts)
+
+	return bursts
+
+def detect_burst_from_signal(data,max_isi,dt=0.1,tol=0.1):
+	spikes,th = detect_spikes(data,dt,tol)
+	return detect_burst_from_events(spikes,max_isi,dt,tol),th
+
+
 #########  SINGLE INTERVALS
 
 
@@ -670,7 +764,7 @@ def analyse(data,neuron,stats,index,plot=False):
 	print("\tCovarianze BD and Period:",cov)
 	print("\tR-squared expected:",cov**2/(np.var(n_intervals[DUR])*np.var(n_intervals[PER])))
 	# if plot:
-	# 	plot_hists([dur,ibi,period],neuron)
+	# 	plot_hists([DUR,IBI,PER],neuron)
 
 	# stats[neuron] = [[np.mean(dur),np.std(dur)],[np.mean(ibi),np.std(ibi)],[np.mean(period),np.std(period)]]
 	stats[str(index[0])+neuron] = to_dict(n_intervals,SINGLE)
