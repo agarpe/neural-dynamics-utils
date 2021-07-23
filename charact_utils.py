@@ -10,7 +10,7 @@ from sklearn.linear_model import LinearRegression
 from scipy.stats import linregress
 import sys
 
-
+import scipy.stats as stats
 #############################################################################
 ##############	PLOT 
 ##############################################################################
@@ -418,7 +418,7 @@ def detect_spikes_indices(data,dt=0.1,tol=0.5):
 	mx_value = np.max(data) #maximum V value (spike)
 	mn_value = np.min(data) #minimum V value (spike)
  	
-	th = mx_value-(mx_value-mn_value)/4 #threshold in the "middle" of the spike.
+	th = mx_value-(mx_value-mn_value)/4 #threshold in upper quarter of the spike.
 
 
 	return np.where(np.isclose(data, th,atol=tol)),th
@@ -427,7 +427,7 @@ def detect_spikes_indices(data,dt=0.1,tol=0.5):
 def detect_spikes(data,dt=0.1,tol=0.5):
 	#TODO: check spike by spike or threshold at 1/4 spike
 
-	time = np.arange(0,data.shape[0],dt) #time array 
+	time = np.arange(0,data.shape[0],1)*dt #time array 
 	# time *= dt
 
 	event_indices,th = detect_spikes_indices(data,dt,tol)
@@ -443,42 +443,42 @@ def detect_spikes(data,dt=0.1,tol=0.5):
 
 # def detect_spikes_on_off_events(data,dt=0.1,tol=0.1)
 def detect_spikes_single_events(data,dt=0.1,tol=0.5):
+	time = np.arange(0,data.shape[0],1)*dt #time array 
 
-	#define threshold
-	mx_value = np.max(data) #maximum V value (spike)
-	mn_value = np.min(data) #minimum V value (spike)
- 	
-	th = mx_value-(mx_value-mn_value)/4 #threshold in the "middle" of the spike.
+	event_indices,th = detect_spikes_indices(data,dt,tol)
 
-	#TODO: check spike by spike or threshold at 1/4 spike
-
-	time = np.arange(0,data.shape[0],dt) #time array 
-	# time *= dt
-
-	event_indices = np.where(np.isclose(data, th,atol=tol))
+	spikes = time[event_indices]
 
 	event_indices= event_indices[0]
 
-	isis = get_ISI(event_indices)
+	isis = get_ISI(spikes)
 	event_indices = np.delete(event_indices,np.where(isis<=min(isis)+1))
-
-
-	event_indices = to_on_off_events(event_indices)
 
 	spikes_t = []
 	spikes_v = []
-	
-	for on,off in event_indices:
-	# for on,off in zip(event_indices[:-1],event_indices[1:]):
+
+	skiped=0
+	for i in range(0,len(event_indices)):
+		try:
+			on = event_indices[i+skiped]
+			off = event_indices[i+1+skiped]
+		except IndexError:
+			continue
+
 		spk = max(data[on:off])
-		if spk > th+2:
-			spikes_t.append(time[np.where(data==spk)])
+		index = np.where(data==spk)[0]
+		times = time[index[np.where(np.logical_and(index>=on,index <= off))]]
+		
+		if(spk < th+2):
+			# print(times,off-on)
+			skiped=1
+		else:
+			times = times[0]
+			spikes_t.append(times)
 			spikes_v.append(spk)
+	print(skiped)
 
 	return np.array(spikes_t),np.array(spikes_v)
-
-
-
 
 
 ##spike condition --> mean point init-end event
@@ -634,23 +634,28 @@ def get_phases(data,init,end,th1=6,th2=7.5):
 #max_isi value considered in ms
 #data value in ms
 
-def detect_burst_from_events(spikes,max_isi,dt=0.1):
+def detect_burst_from_events(spikes,max_isi=0,dt=0.1,tol=0.5):
 	if spikes.shape[0] == 0:
 		print("No spikes found")
 		return []
 
 	print(spikes.shape)
-	spikes = to_on_off_events(spikes)
-	print(spikes.shape)
-	spikes = to_mean(spikes)
-	# isis = get_ISI(spikes)
-
-	print(spikes.shape)
 	# m = mean(isis)
-	bursts=[spikes[0]]
+	bursts=[spikes[0]] #get first spike
+	print(max_isi)
 
-	for i,(s1,s2) in enumerate(zip(spikes[:-1],spikes[1:])):
-		if s2-s1 > max_isi/dt:
+	if max_isi > 0:
+		ibi= max_isi
+	else:
+		isis = get_ISI(spikes)
+		zscores = stats.zscore(isis)
+		zref = np.median(zscores)
+		ibi = isis[np.where(np.isclose(zscores,zref,atol=0.01))[0][-1]]
+	print(ibi)
+
+
+	for i,(s1,s2) in enumerate(zip(spikes[1:-2],spikes[2:])):
+		if s2-s1 > ibi/dt:
 			bursts.append(s1)
 			bursts.append(s2)
 	bursts.append(spikes[-1])
@@ -660,9 +665,16 @@ def detect_burst_from_events(spikes,max_isi,dt=0.1):
 
 	return bursts
 
-def detect_burst_from_signal(data,max_isi,dt=0.1,tol=0.1):
-	spikes,th = detect_spikes(data,dt,tol)
-	return detect_burst_from_events(spikes,max_isi,dt,tol),th
+def detect_burst_from_signal(data,max_isi,dt=0.1,tol=0.5):
+	# spikes,th = detect_spikes(data,dt,tol)
+	# print(spikes.shape)
+	# spikes = to_on_off_events(spikes)
+	# print(spikes.shape)
+	# spikes = to_mean(spikes)
+	spikes,th = detect_spikes_single_events(data,dt,tol)
+	print(spikes.shape)
+	return detect_burst_from_events(spikes,max_isi,dt,tol),th[0]
+	# return spikes,th
 
 
 #########  SINGLE INTERVALS

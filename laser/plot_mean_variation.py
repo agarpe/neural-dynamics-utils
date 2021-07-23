@@ -2,7 +2,29 @@ from matplotlib.lines import Line2D
 from stats_plot_functions import *
 
 
-plt.rcParams.update({'font.size': 20})
+plt.rcParams.update({'font.size': 40})
+
+def plot_boxplot(df,columns,colors,legend,labels,labels_indexes,ylabel):
+	bp = df.boxplot(return_type='dict',patch_artist=True,grid=False,column=columns,showfliers=False)
+
+	colors = colors*4
+
+	used =[]
+	legend_patchs=[]
+
+	for i,(patch,color) in enumerate(zip(bp['boxes'],colors)):
+			patch.set_facecolor(color)
+			if(color not in used):
+				used.append(color)
+				legend_patchs.append(patch)
+
+	for patch in bp['medians']:
+		plt.setp(patch, color='black',linewidth=1.5)
+
+	plt.tight_layout()
+	plt.xticks(labels_indexes, labels)
+	plt.legend(legend_patchs,legend,loc='upper left')
+	plt.ylabel(ylabel)
 
 
 
@@ -54,8 +76,8 @@ if data_type=='experimental':
 	slope_dep_labels = ['control_pre_slope_dep','laser_slope_dep','control_pos_slope_dep']
 	slope_rep_labels = ['control_pre_slope_rep','laser_slope_rep','control_pos_slope_rep']
 
-	colors = ['cornflowerblue','indianred','royalblue']
-	# colors = ['cornflowerblue','firebrick','olivedrab']
+	# colors = ['cornflowerblue','indianred','royalblue']
+	colors = ['cornflowerblue','firebrick','olivedrab']
 	legends = ['control_pre','laser','control_pos']
 
 elif data_type=='model':
@@ -80,7 +102,13 @@ titles = {'spikes':{'labels':n_spikes_labels,'title':n_spikes_title,'unit':n_spi
 
 if plot_mode=="complete" or plot_mode=="simple":
 	# columns = ['duration','amplitude','slope_rep','slope_dep','spikes']
-	columns = ['duration','amplitude','slope_rep','slope_dep']
+	# columns = ['duration','amplitude','slope_rep','slope_dep']
+	# columns = ['duration','amplitude','slope_dep','slope_rep']
+	columns = ['duration','slope_rep','slope_dep','amplitude']
+	# columns = ['duration','amplitude','slope_rep_max','slope_dep_max']
+	# columns = ['duration','amplitude','slope_dep_max','slope_rep_max']
+
+
 	# columns = ['duration','amplitude','slope_rep','slope_dep','slope_rep_max','slope_dep_max']
 else:
 	# columns = [plot_mode]
@@ -92,7 +120,7 @@ else:
 fig_setup=(cols,len(columns)//cols+len(columns)%cols)
 print(fig_setup)
 # fig_setup=(2,2)
-plt.figure(figsize=(20,8*fig_setup[1])) 
+# plt.figure(figsize=(20,20*fig_setup[1])) 
 
 
 dirs = sorted(glob.glob(path+"*%s*"%""))
@@ -105,6 +133,7 @@ if(dirs==[]):
 
 labels=[]
 ignored=0
+df_trials = []
 
 if log:
 	trial_log = open(path+"best_trial_id.log","w")
@@ -133,7 +162,9 @@ for i,d in enumerate(dirs):
 	elif sort_by == 'name':
 		files.sort(key=os.path.basename)
 
-
+	# if dir_name == 'exp19':
+	# 	print('skiping 19')
+	# 	continue
 	best_trial = (0,0)
 	#Concat all trials from one same experiment day into one df and plots it.
 	for j,f in enumerate(files):
@@ -141,77 +172,139 @@ for i,d in enumerate(dirs):
 		# print(df.describe())
 		# print(j,f)
 
-		# # df["Trial"]=j # adds Trial reference to the data frame.
-		# if data_type=='experimental':
 		try:
-			for n_l,d_l in zip(n_spikes_labels,duration_labels):
-				df[n_l] = df[d_l].count()
-		except: #in case labels are not found.
-			for n_l,d_l in zip(n_spikes_labels,duration_labels):
-				df[n_l] = 0
-
-		#In models each pkl is a set of 50 spikes with a specific parameters config
-		#each pkl is in a different directory
-		if data_type == 'model': 
-			all_trials.append(df)
-		else:
-			try:
-				dur_means = df[duration_labels].mean()
-				laser_diff_pre,laser_diff_pos=get_diffs(dur_means)[1:] #Get duration mean in this Trial
-				if(laser_diff_pre>best_trial[0] and laser_diff_pos>best_trial[1] ):
-					indx = f.find("exp")
-					if(indx >=0):
-						trial_id = int(f[indx+3])
-					else:
-						trial_id = 1
-					df["Trial"]=trial_id
-					df_best = df 
-					best_trial = (laser_diff_pre,laser_diff_pos)
-					best_trial_id = trial_id
-					best_trial_f=f[f.find("exp"):]
-					# print(j)
-			except Exception as e:
-				print("Skiping",f)
-				print(e)
-				pass
-
-	#Print experiment stats:
-	if len(files) >0: #If no trials on directory --> ignore data.
-		labels.append(dir_name) #Add label to list.
-		if data_type == 'model':
-			df_best=pd.concat(all_trials)
-		try:
-			if verb:
-				print(df_best.describe())
-
-			plot_barchart(df_best,i-ignored,labels,plot_diffs=plot_diffs,fig_size=fig_setup
-				,columns=columns,colors=colors,titles=titles,legends=legends)
-
-			if log:
-				trial_log.write("%s %s %d %d %d\n"%(
-					dir_name,best_trial_f,best_trial_id,best_trial[0],best_trial[1]))
-		except Exception as ex:
-			print("failed %s"%dir_name)
-			# print(e)
-			print(type(ex).__name__, ex.args)
+			dur_means = df[duration_labels].mean()
+			laser_diff_pre,laser_diff_pos=get_diffs(dur_means)[1:] #Get duration mean in this Trial
+			if(laser_diff_pre>best_trial[0] and laser_diff_pos>best_trial[1] ):
+				indx = f.find("exp")
+				if(indx >=0):
+					trial_id = int(f[indx+3])
+				else:
+					trial_id = 1
+				# df["Trial"]=trial_id
+				df_best = df 
+				best_trial = (laser_diff_pre,laser_diff_pos)
+				best_trial_id = trial_id
+				best_trial_f=f[f.find("exp"):]
+				# print(j)
+		except Exception as e:
+			print("Skiping",f)
+			print(e)
 			pass
-	else:
-		ignored +=1
 
+	try:
+		df_trials.append(df_best)
+	except:
+		pass
+
+
+means_df = []
+for trial in df_trials:
+	# print(trial.describe())
+	# print(trial.mean())
+	new_df = pd.DataFrame(trial.mean().to_dict(),index=[trial.index.values[-1]])
+	# new_df = pd.DataFrame((trial[duration_labels].mean()/trial['control_pre_duration']).to_dict(),index=[trial.index.values[-1]])
+	# new_df = pd.DataFrame((trial[duration_labels].mean()/trial['control_pre_duration'].mean()).to_dict(),index=[trial.index.values[-1]])
+	# print(trial[duration_labels].mean()/trial['control_pre_duration'])
+
+	# new_df = pd.DataFrame((abs(trial.std()/trial.mean())).to_dict(),index=[trial.index.values[-1]])
+	# new_df = pd.DataFrame((trial.std()/trial.mean()).to_dict(),index=[trial.index.values[-1]])
+	# print(new_df.describe)
+	means_df.append(new_df)
+	# print("\n\n\n\n")
+
+
+means_df = pd.concat(means_df)
+
+columns_in_order = ['control_pre_duration','laser_duration','control_pos_duration',
+			'control_pre_amplitude','laser_amplitude','control_pos_amplitude',
+			'control_pre_slope_dep','laser_slope_dep','control_pos_slope_dep',
+			'control_pre_slope_rep','laser_slope_rep','control_pos_slope_rep']
+
+legend = ['Control pre','Laser','Control pos']
+labels = ['Duration'] + ['Amplitude']  + ['Depolarization \n Slope']+ ['Repolarization \n Slope']
+labels_indexes = [2,5,8,11]
 print(labels)
-if log:
-	trial_log.close()
 
-plt.tight_layout()
+plt.figure(figsize=(30,20))
+plot_boxplot(means_df,columns_in_order,colors,legend,labels,labels_indexes,"Mean value (n=20)")
 
-if spike_selection:
-	plot_mode+="_selection"
+save_name = path+"general_boxplot_mean_"+save_extension
 
-plot_mode+=save_extension
-plot_mode=plot_mode.replace(' ','_')
-print(plot_mode)
+if save:
+	plt.savefig(save_name+".eps",format="eps")
+	plt.savefig(save_name+".pdf",format="pdf")
+	plt.savefig(save_name+".png",format="png")
+if show:
+	plt.show()
 
-save_name = path+"general_barchart_bests_"+plot_mode
+plt.figure(figsize=(30,20))
+for i,var in enumerate(columns):
+	pre_label = 'control_pre_'+var
+	var_labels = titles[var]['labels']
+	var_title = titles[var]['title']
+
+	means_df = []
+	for trial in df_trials:
+		# new_df = pd.DataFrame((trial[var_labels].mean()/trial[pre_label].mean()).to_dict(),index=[trial.index.values[-1]])
+		new_df = pd.DataFrame((trial[var_labels].mean()).to_dict(),index=[trial.index.values[-1]])
+		means_df.append(new_df)
+
+
+	means_df = pd.concat(means_df)
+
+	columns_in_order = var_labels
+
+	legend = ['Control pre','Laser','Control pos']
+	# labels = ['Duration'] + ['Amplitude']  + ['Depolarization \n Slope']+ ['Repolarization \n Slope']
+	labels = [var_title]
+	# labels_indexes = [2,5,8,11]
+	labels_indexes = [2]
+	print(labels)
+
+	plt.subplot(2,2,i+1)
+	plot_boxplot(means_df,columns_in_order,colors,legend,labels,labels_indexes,"Mean value (n=20)")
+
+columns_in_order = []
+labels = []
+
+save_name = path+"general_boxplot_grid_mean_"+save_extension
+
+if save:
+	plt.savefig(save_name+".eps",format="eps")
+	plt.savefig(save_name+".pdf",format="pdf")
+	plt.savefig(save_name+".png",format="png")
+if show:
+	plt.show()
+
+means_df = []
+for var in columns:
+	pre_label = 'control_pre_'+var
+	var_labels = titles[var]['labels']
+	var_title = titles[var]['title']
+
+	for trial in df_trials:
+		new_df = trial[var_labels]*100/trial[pre_label].mean()
+		means_df.append(new_df)
+
+	columns_in_order += var_labels
+	labels += [var_title]
+
+	# print(labels)
+
+legend = ['Control pre','Laser','Control pos']
+labels_indexes = [2,5,8,11]
+means_df = pd.concat(means_df,axis=0)
+print(means_df.describe())
+plt.figure(figsize=(30,20))
+plot_boxplot(means_df,columns_in_order,colors,legend,labels,labels_indexes,"% variation from initial control (n=20)")
+
+
+# plot_mode+=save_extension
+# plot_mode=plot_mode.replace(' ','_')
+# print(plot_mode)
+
+save_name = path+"general_boxplot_norm_mean_"+save_extension
 
 if save:
 	plt.savefig(save_name+".eps",format="eps")

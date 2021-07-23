@@ -16,10 +16,12 @@ ap.add_argument("-l1", "--label1", required=True, help="Label of first file")
 ap.add_argument("-l2", "--label2", required=True, help="Label of second file")
 ap.add_argument("-c2", "--color2", required=True, help="Color for second file")
 ap.add_argument("-ti", "--title", required=True, help="Title of the resulting plot")
+ap.add_argument("-mean","--mean",required=False, default='n',help="When == 'y'. Plot mean of all spikes and not spike per spike.")
 ap.add_argument("-sa", "--save", required=False, default='y', help="Option to save plot file")
 ap.add_argument("-sh", "--show", required=False, default='y', help="Option to show plot file")
 ap.add_argument("-st", "--stats", required=False, default='y', help="Option to save stats pkl file")
 args = vars(ap.parse_args())
+
 
 
 
@@ -35,6 +37,7 @@ save = True if args['save']=='y' else False
 stats = True if args['save']=='y' else False 
 
 
+plot_func = plot_events_mean if args['mean']=='y' else plot_events 
 
 # #Each row contains voltage values of the corresponding event.
 try:
@@ -75,17 +78,21 @@ plt.figure(figsize=(20,15))
 plt.tight_layout()
 
 #Individual plots
+if plot_func==plot_events:
+	legends = ["First spike","Last spike"]
+else:
+	legends = []
 plt.subplot(2,2,1)
 
-ax1,ax_fst,ax_last=plot_events(control_events,col='b',tit=label1,width_ms=width,df_log=log_1)
-plt.legend([ax_fst,ax_last],["First spike","Last spike"])
+ax1,ax_fst,ax_last=plot_func(control_events,col='b',tit=label1,width_ms=width,df_log=log_1)
+plt.legend([ax_fst,ax_last],legends)
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
 
 
 plt.subplot(2,2,2)
-ax1,ax_fst,ax_last=plot_events(laser_events,col=color2,tit=label2,width_ms=width,df_log=log_2)
-plt.legend([ax_fst,ax_last],["First spike","Last spike"])
+ax1,ax_fst,ax_last=plot_func(laser_events,col=color2,tit=label2,width_ms=width,df_log=log_2)
+plt.legend([ax_fst,ax_last],legends)
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
 
@@ -94,10 +101,10 @@ plt.ylabel("Voltage (mV)")
 plt.tight_layout()
 
 plt.subplot(2,2,3)
-ax1,ax_fst,ax_last= plot_events(control_events,'b',tit="ControlPre-Laser",width_ms=width)
-ax2,ax_fst,ax_last=plot_events(laser_events,color2,tit="ControlPre-Laser",width_ms=width)
+ax1,ax_fst,ax_last= plot_func(control_events,'b',tit=label1+"-"+label2,width_ms=width)
+ax2,ax_fst,ax_last=plot_func(laser_events,color2,tit=label1+"-"+label2,width_ms=width)
 
-plt.legend([ax1,ax2,ax_fst,ax_last],[label1,label2,"First spike","Last spike"])
+plt.legend([ax1,ax2,ax_fst,ax_last],[label1,label2,legends])
 plt.tight_layout()
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")

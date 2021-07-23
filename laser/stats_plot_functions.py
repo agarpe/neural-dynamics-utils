@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd 
 import sys
 import glob
@@ -6,8 +7,8 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from colour import Color
 
-legend_fontsize = 25
-ticks_fontsize = 30
+legend_fontsize = 20
+ticks_fontsize = 15
 
 n_spikes_labels = ['control_pre_count','laser_count','control_pos_count']
 duration_labels = ['control_pre_duration','laser_duration','control_pos_duration']
@@ -44,6 +45,7 @@ def plot_boxplot(df,columns,title,path,fliers=True,rot_val=0):
 	plt.tight_layout()
 
 def plot_mean_bars(means,errors,labels,fig_size,id_,title,unit,colors,indexes=[1,2,3],width=0.1,rotation=60,legends=['control_pre','laser','control_pos'],error_kw=dict(lw=1, capsize=4, capthick=1.5)):
+	# print(fig_size[1],fig_size[0],id_)
 	plt.subplot(fig_size[1],fig_size[0],id_)
 	plt.bar(indexes,means,yerr=errors,color=colors,width=width,error_kw=error_kw)
 	plt.ylabel("Mean value %s"%unit)
@@ -129,3 +131,39 @@ def plot_caract(df,column,ylabel,col):
 	plt.ylabel(ylabel)
 	plt.xlabel("Number of spike")
 	# df.plot(y=column)
+
+def plot_barchart_coefs(dfs,id_,labels,columns,colors,fig_size,
+	plot_diffs=False,error_kw=dict(lw=1, capsize=4, capthick=1.5),
+	titles=titles,legends=['control_pre','laser','control_pos']):
+	# for each df get mean of each column.
+	all_means =np.array(len(dfs))
+	for i,col in enumerate(columns):
+		for df in dfs:
+			means = df[titles[col]['labels']].mean()
+			# error = df_dir[titles[col]['labels']].std()
+
+			all_means[i]=means
+
+		means = all_means[i].mean()
+		error = all_means[i].error()
+
+		indexes = [id_-0.23,id_,id_+0.23]
+
+		plot_mean_bars(means,error,legends,fig_size,plot_id,'Mean variations','',colors,indexes,0.2,error_kw,labels)
+
+		# if legends != []:
+		# 	indexes = [id_-0.23,id_,id_+0.23]
+		# else:
+		# 	indexes = id_
+
+		# if(plot_diffs):
+		# 	diff_labels=['control_pre-control_pos','control_pre-laser', 'control_pos-laser']
+		# 	plot_f = plot_mean_n_diffs_bars
+		# 	labels = [labels,diff_labels]
+		# 	plot_id = i*2+1
+		# else:
+		# 	plot_f = plot_mean_bars
+		# 	plot_id = i+1
+
+		# # plot_f(means,error,labels,fig_size,plot_id,titles[col]['title']
+		# 	,titles[col]['unit'],colors,indexes=indexes,width=0.2,error_kw=error_kw,legends=legends)

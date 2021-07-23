@@ -1,7 +1,7 @@
 import charact_utils as utils 
 import matplotlib.pyplot as plt
 import argparse
-
+#TODO: split in two functions
 def read_n_plot(path,title,limit=-1):
 	spikes = utils.read_spike_events(path)
 	isis = utils.get_ISI(spikes)
@@ -9,8 +9,14 @@ def read_n_plot(path,title,limit=-1):
 		isis_y = isis[1:limit+1]
 	else:
 		isis_y = isis[1:]
+		# limit = max(isis)
 	print(limit)
-	plt.plot(isis[:limit],isis_y,'.')
+	# plt.plot(isis[:limit],isis_y,'.')
+	plt.plot(isis[:-1],isis[1:],'.')
+
+	if limit>0:
+		plt.xlim(-5,limit)
+		plt.ylim(-5,limit)
 	plt.xlabel("ISI(t)")
 	plt.ylabel("ISI(t+1)")
 	plt.title(title)
@@ -32,21 +38,32 @@ show= True if args['show']=='y' else False
 save= True if args['save']=='y' else False 
 
 
-plt.figure(figsize=(5,30))
-plt.subplot(3,2,1)
+# if(i==1):
+# 	ax1 = plt.subplot(rows,1,i)
+# else:	
+# 	plt.subplot(rows,1,i,sharex=ax1)
+plt.figure(figsize=(20,20))
+ax2 = plt.subplot(3,2,1)
 read_n_plot(path_control_pre,"control_pre",)
-plt.subplot(3,2,2)
-read_n_plot(path_control_pre,"control_pre",limit=1000)
-plt.subplot(3,2,3)
+ax1 = plt.subplot(3,2,2)
+read_n_plot(path_control_pre,"control_pre",limit=70)
+plt.subplot(3,2,3,sharex=ax2,sharey=ax2)
 read_n_plot(path_laser,"laser")
-plt.subplot(3,2,4)
-read_n_plot(path_laser,"laser",limit=1000)
-plt.subplot(3,2,5)
+plt.subplot(3,2,4,sharex=ax1,sharey=ax1)
+read_n_plot(path_laser,"laser",limit=70)
+plt.subplot(3,2,5,sharex=ax2,sharey=ax2)
 read_n_plot(path_control_pos,"control_pos")
-plt.subplot(3,2,6)
-read_n_plot(path_control_pos,"control_pos",limit=1000)
+plt.subplot(3,2,6,sharex=ax1,sharey=ax1)
+read_n_plot(path_control_pos,"control_pos",limit=70)
 
 plt.tight_layout()
+
+if save:
+	save_path = path+"_return_map_"
+	print(save_path)
+	plt.savefig(save_path+".eps",format='eps')
+	plt.savefig(save_path+".png",format='png')
+
 if show:
 	plt.show()
 

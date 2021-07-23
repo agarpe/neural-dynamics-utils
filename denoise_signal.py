@@ -32,7 +32,6 @@ def filt_intracellular(v):
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-p", "--path", required=True, help="Path to the file to analyze")
-ap.add_argument("-e", "--extension", required=True, help="File extension")
 ap.add_argument("-c", "--column", required=False,default=0, help="Column")
 ap.add_argument("-sh", "--show", required=False,default='y', help="Show plot")
 ap.add_argument("-sv", "--save", required=False,default='y', help="Save events")
@@ -48,13 +47,14 @@ denoise =True
 
 
 col = int(args['column'])
-ext = args['extension']
-
 	
 try:
-	df = pd.read_csv(path, delimiter = " ",skiprows=1,header=None)
-except:
+	df = pd.read_csv(path, delimiter = " ",skiprows=2,header=None)
+except(FileNotFoundError):
 	print("Error: file not found",path)
+	exit()
+except Exception as e:
+	print(e)
 	exit()
 
 print("Denoising from ",path)
@@ -71,15 +71,17 @@ data = df[col]
 # plt.plot(d_data)
 # plt.show()
 
-
+# https://www.programcreek.com/python/example/59508/scipy.signal.butter
 if denoise:
-	Wn = 0.008
+	fs=10000
+	Wn =50 #40 for lymnaea
 	N=5
-	b, a = signal.butter(N, Wn, 'low')
+	b, a = signal.butter(N, Wn, 'low',fs=fs)
 	d_data = signal.filtfilt(b, a, data)
 
 plt.plot(data[:50000])
 plt.plot(d_data[:50000])
 plt.show()
+
 
 #TODO: save new signal
