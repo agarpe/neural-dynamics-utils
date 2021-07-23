@@ -1,5 +1,6 @@
 from matplotlib.lines import Line2D
 from stats_plot_functions import *
+import pickle5 as pickle
 
 
 plt.rcParams.update({'font.size': 30})
