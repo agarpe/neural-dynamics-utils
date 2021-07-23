@@ -1,383 +1,76 @@
-
-from charact_utils import *
-
-# plt.rcParams.update({'savefig.dpi': 1000})
-
-N1m = 'N1M'
-N2v = 'N2v'
-N3t = 'N3t'
-SO = 'SO'
-
-# extension = "png"
-extension = "eps"
-
-
-
-#####################
-# Loads file from record
-date = '08-Jul-2019'
-file = 'burst_ph1.txt'
-file_name = '08-Jul-2019'
-
-path = '../data/'+date+'/'
-
-N1m_data = read_bursts_events(path+file)
-
-# date = '08-Jul-2019'
-file = 'burst_ph2.txt'
-
-N2v_data = read_bursts_events(path+file)
-
-# date = '08-Jul-2019'
-file = 'burst_ph3.txt'
-
-N3t_data = read_bursts_events(path+file)
-
-
-print(len(N1m_data),len(N2v_data),len(N3t_data))
-#Adjust burst to periods
-#Input: Ref, Snd, Thrd.
-
-N1m_data,N2v_data,N3t_data = fix_length(N1m_data,N2v_data,N3t_data)
-
-print(len(N1m_data),len(N2v_data),len(N3t_data))
-
-
-ran_x = (0,90)
-ran_y = (0,90)
-box_ran = (-0.95,70)
-
-driven=8
-#####################
-
-# ####################
-# ## Loads file from model neuron
-
-# ### test2: n3t [1:] on load
-# ##			n1m, n2v [:-1] on plot
-
-# ##  test3: n3t [1:] on load
-# ##			n1m, n2v, n3t [:-1] on plot
-
-# # path = ""
-
-
-# # # path = "../model/slow-fast/" + file_name + "/"
-# # # path = "../lymnaea-model/test_intervals_long/"
-# # # path = file_name +"/"
-# path = "../model/no_variability/"
-
-# # path = "../model/SO/"
-# path = "../model/N1m/"
-# # path = "../model/N3t/test17/"
-
-# if len(sys.argv)>1 and sys.argv[1] =="i":
-# 	print("Use: python3 burst_charact.py path file_name (without extension) time_scale")
-# 	sys.exit()
-
-# log=""
-# driven=N1m
-
-# if len(sys.argv) >4:
-# 	log=sys.argv[4]
-
-# if len(sys.argv) >3:
-# 	driven=sys.argv[3]
-
-# if len(sys.argv) >2:
-# 	path = sys.argv[1]
-# 	file_name = sys.argv[2]
-# 	time_scale=1000
-# 	# time_scale= int(sys.argv[3])
-# else:
-# 	file_name = "so_test19"
-# 	# file_name = "test1"
-# 	# file_name = "n3t_test17"
-# 	# time_scale = 10000
-# 	time_scale = 1000
-# 	# time_scale = 1000
-
-
-# # python3 burst_charact.py ../model/N3t/test17/ n3t_test17 1000; python3 burst_charact.py ../model/SO/ so_test19 10000;python3 burst_charact.py ../model/N1m/ test1 1000
-
-
-
-# path+= file_name + "/"
-
-
-# N1m_data = read_model_burst_path(path+"N1M",scale=time_scale)
-# N2v_data = read_model_burst_path(path+"N2v",scale=time_scale)[:-1]
-# N3t_data = read_model_burst_path(path+"N3t",scale=time_scale)
-
-
-# print("-------",len(N1m_data),len(N2v_data),len(N3t_data))
-# # N1m_data = N1m_data[:len(N1m_data)//2]
-# # N2v_data = N2v_data[:len(N2v_data)//2]
-# # N3t_data = N3t_data[:len(N3t_data)//2]
-
-
-# print(len(N1m_data),len(N2v_data),len(N3t_data))
-# # #Adjust burst to periods
-# # #Input: Ref, Snd, Thrd.
-
-# N1m_data,N2v_data,N3t_data = fix_length(N1m_data,N2v_data,N3t_data)
-
-# print("Number of bursts:")
-# print(len(N1m_data),len(N2v_data),len(N3t_data))
-
-
-
-if(driven==N1m):
-	ran_x_dur =(2,5.0); ran_x_interval =(2,5.0); ran_x_delay =(2,5.0) 
-	ran_y_dur =(0,3.0); ran_y_interval =(0,4.2); ran_y_delay =(-0.3,3.0) 
-
-elif(driven==SO):
-	ran_x_dur =(1,5); ran_x_interval = (1,5); ran_x_delay = (1,5)
-	ran_y_dur =(0,4); ran_y_interval =(0.5,4); ran_y_delay =(-0.3,4) 
-
-elif(driven==N3t):
-	ran_x_dur =(2,4); ran_x_interval =(2.2,3.7); ran_x_delay = (2,4) 
-	ran_y_dur =(0,2.8); ran_y_interval = (0,3.3); ran_y_delay = (-0.3,2.0)
-
-elif(driven==8): #recording
-	ran_x_dur = (0,90); ran_x_interval = (0,90); ran_x_delay = (0,90); 
-	ran_y_dur =(-5,80); ran_y_interval = (-5,80); ran_y_delay = (-5,80)
-else:
-	ran_x_dur = False; ran_x_interval = False; ran_x_delay = False; 
-	ran_y_dur = False; ran_y_interval = False; ran_y_delay = False
-	
-# box_ran = (-0.95,4)
-
-
-
-####################################################
-save=False
-show=True
-
-###########################################################################
-
-N1m_data=trunc(N1m_data,decs=2)
-N2v_data=trunc(N2v_data,decs=2)
-N3t_data=trunc(N3t_data,decs=2)
-print(N1m_data[:2])
-
-stats={}
-
-index = [0]
-
-N1m_interv = analyse(N1m_data,N1m,stats,index)
-N2v_interv = analyse(N2v_data,N2v,stats,index)
-N3t_interv = analyse(N3t_data,N3t,stats,index)
-
-
-
-N1N2,N2N1 = analyse_pair(N1m_data,N2v_data,"N1","N2",stats,index)
-N1N3,N3N1 = analyse_pair(N1m_data,N3t_data,"N1","N3",stats,index)
-N2N3,N3N2 = analyse_pair(N2v_data,N3t_data,"N2","N3",stats,index)
-print(index)
-
-
-
-
-
-plot_intervals_stats(stats,box_ran)
-# 
-if save:
-	# plt.savefig("./results_invariant_tests/images/"+file_name+"_boxplot.png")
-	plt.savefig(path+file_name+log+"_boxplot."+extension,format='eps')
-# 
-if show:
-	plt.show()
-
-# plot_intervals_stats(stats,norm=True)
-# plt.savefig("./results_invariant_tests/images/"+file_name+"_boxplot_norm.png")
-# plt.show()
-
-# plot_bar(stats)
-# plt.savefig("./results_invariant_tests/images/"+file_name+"_std_bar.png")
-# plt.show()
-
-# plot_intervals_stats(stats,norm=True,pos=True)
-# plt.savefig("./results_invariant_tests/images/"+file_name+"_boxplot_norm_pos.png")
-# plt.show()
-# colors = ['maroon', 'teal', 'brown', 'blue', 'green']
-
-
-
-
-# print("\n","\n",stats,"\n","\n")
-
-# # print(N1m_data.shape,N2v_data.shape,N3t_data.shape)
-# # # print(N1m_interv.shape,N2v_interv.shape,N3t_interv.shape)
-
-# # #TODO: if shapes != then reshape(min(shape))
-
-
-#####################
-
-
-
-# ####################################
-# ########  CORRELATIONS  ############
-# ####################################
-
-period = N1m_interv[PER]
-print(period.shape,N3t_interv[DUR].shape)
-
-ran_x= ran_x_dur
-ran_y= ran_y_dur
-
-
-plt.figure(figsize=(20,5))
-
-plt.subplot(1,3,1)
-plot_corr(period,N1m_interv[DUR][:-1],"Period (s)",N1m +" Burst Duration"+" (s)",ran_x,ran_y,False,color='royalblue')
-
-plt.subplot(1,3,2)
-plot_corr(period,N2v_interv[DUR][:-1],"Period (s)",N2v+" Burst Duration" +" (s)",ran_x,ran_y,False,color='royalblue')
-
-plt.subplot(1,3,3)
-if(driven==SO):
-	txt_pos=0
-else:
-	txt_pos=3
-plot_corr(period,N3t_interv[DUR][:-1],"Period (s)",N3t+" Burst Duration" +" (s)",ran_x,ran_y,False,color='royalblue',text_pos=txt_pos)
-
+import charact_utils as utils 
+import matplotlib.pyplot as plt
+import argparse
+
+DUR =0
+IBI =1
+
+
+def plot_hist(data,title,xlabel="Time (ms)",rang=None,width=10):
+	plt.hist(data,rang,width=width)
+	plt.title(title)
+	plt.xlabel(xlabel)
+
+ap = argparse.ArgumentParser()
+ap.add_argument("-p", "--path", required=True, help="Path to the file with the spike events")
+ap.add_argument("-r","--range",required=False,default=None, help="Range of data")
+ap.add_argument("-sh", "--show", required=False,default='y', help="Show plot")
+ap.add_argument("-sv", "--save", required=False,default='y', help="Save events")
+ap.add_argument("-ex", "--ext", required=False, default='', help="Extension after laser or control.")
+
+args = vars(ap.parse_args())
+ext = args['ext']
+
+if ext != '':
+	ext += '_'
+
+path = args['path']
+path1 = path+"_control_pre_"+ext+"_burst_events.txt"
+path2 = path+"_laser_"+ext+"_burst_events.txt"
+path3 = path+"_control_pos_"+ext+"_burst_events.txt"
+
+rang = args['range']
+rang_str = ''
+if str(rang) != 'None':
+	rang = [float(r) for r in rang.split()]
+	rang_str = "range"
+
+show= True if args['show']=='y' else False 
+save= True if args['save']=='y' else False 
+
+
+burst1 = utils.read_bursts_events(path1)
+burst2 = utils.read_bursts_events(path2)
+burst3 = utils.read_bursts_events(path3)
+
+
+stats1 = utils.get_single_intervals(burst1)
+stats2 = utils.get_single_intervals(burst2)
+stats3 = utils.get_single_intervals(burst3)
+
+
+plt.figure(figsize=(20,20))
+ax2 = plt.subplot(3,2,1)
+plot_hist(stats1[DUR],"Control pre",xlabel="Burst duration (ms)",width=10,rang=rang)
+ax1 = plt.subplot(3,2,2)
+plot_hist(stats1[IBI],"Control pre",xlabel="IBI (ms)",width=100,rang=rang)
+plt.subplot(3,2,3,sharex=ax2,sharey=ax2)
+plot_hist(stats2[DUR],"Laser",xlabel="Burst duration (ms)",width=10,rang=rang)
+plt.subplot(3,2,4,sharex=ax1,sharey=ax1)
+plot_hist(stats2[IBI],"Laser",xlabel="IBI (ms)",width=100,rang=rang)
+plt.subplot(3,2,5,sharex=ax2,sharey=ax2)
+plot_hist(stats3[DUR],"Control pos",xlabel="Burst duration (ms)",width=10,rang=rang)
+plt.subplot(3,2,6,sharex=ax1,sharey=ax1)
+plot_hist(stats3[IBI],"Control pos",xlabel="IBI (ms)",width=100,rang=rang)
 
 plt.tight_layout()
+
+
 if save:
-	# plt.savefig("./results_invariant_tests/images/"+file_name+".png")
-	plt.savefig(path+file_name+log+"."+extension,format='eps')
-# 
+	save_path = path+"_burst_stats_"+rang_str
+	print(save_path)
+	plt.savefig(save_path+".eps",format='eps')
+	plt.savefig(save_path+".png",format='png')
 if show:
 	plt.show()
-
-
-
-ran_x= ran_x_interval
-ran_y= ran_y_interval
-
-
-period = N1m_interv[PER]
-
-plt.figure(figsize=(20,10))
-
-plt.subplot(2,3,1)
-plot_corr(period,N1N2[INTERVAL][:-1],"Period (s)","N1-N2 interval (s)",ran_x,ran_y,False,color='seagreen')
-
-plt.subplot(2,3,4)
-plot_corr(period,N2N1[INTERVAL],"Period (s)","N2-N1 interval (s)",ran_x,ran_y,False,color='seagreen')
-
-plt.subplot(2,3,2)
-plot_corr(period,N1N3[INTERVAL][:-1],"Period (s)","N1-N3 interval (s)",ran_x,ran_y,False,color='seagreen')
-
-plt.subplot(2,3,5)
-plot_corr(period,N3N1[INTERVAL],"Period (s)","N3-N1 interval (s)",ran_x,ran_y,False,color='seagreen')
-
-plt.subplot(2,3,3)
-if(driven==SO):
-	ran_y=(0,ran_y[1]) #SO
-
-plot_corr(period,N2N3[INTERVAL][:-1],"Period (s)","N2-N3 interval (s)",ran_x,ran_y,False,color='seagreen')
-
-plt.subplot(2,3,6)
-plot_corr(period,N3N2[INTERVAL],"Period (s)","N3-N2 interval (s)",ran_x,ran_y,False,color='seagreen',text_pos=3)
-
-
-plt.tight_layout()
-# 
-if save:
-	# plt.savefig("./results_invariant_tests/images/"+file_name+"_intervals.png")
-	plt.savefig(path+file_name+log+"_intervals."+extension,format='eps')
-# 
-if show:
-	plt.show()
-
-
-
-
-
-period = N1m_interv[PER]
-
-ran_x= ran_x_delay
-ran_y= ran_y_delay
-
-
-plt.figure(figsize=(20,10))
-
-
-plt.subplot(2,3,1)
-plot_corr(period,N1N2[DELAY][:-1],"Period (s)","N1-N2 delay (s)",ran_x,ran_y,False,color='brown')
-
-
-plt.subplot(2,3,2)
-plot_corr(period,N1N3[DELAY][:-1],"Period (s)","N1-N3 delay (s)",ran_x,ran_y,False,color='brown')
-
-plt.subplot(2,3,3)
-plot_corr(period,N2N3[DELAY][:-1],"Period (s)","N2-N3 delay (s)",ran_x,ran_y,False,color='brown')
-
-
-plt.subplot(2,3,4)
-if(driven==N3t):
-	ran_y=(0.5,2) #N3t
-
-if(driven==SO):
-	txt_pos=0
-else:
-	txt_pos=3
-
-plot_corr(period,N2N1[DELAY],"Period (s)","N2-N1 delay (s)",ran_x,ran_y,False,color='brown',text_pos=txt_pos)
-
-
-plt.subplot(2,3,5)
-if(driven==N3t):
-	ran_y=(-1,2) #N3t
-elif(driven==SO):
-	ran_y=(-1.5,ran_y_delay[1]) #SO
-
-plot_corr(period,N3N1[DELAY],"Period (s)","N3-N1 delay (s)",ran_x,ran_y,False,color='brown')
-
-
-plt.subplot(2,3,6)
-if(driven==N3t):
-	ran_y=(0.5,2) #N3t
-elif(driven==SO):
-	ran_y=ran_y_delay
-
-plot_corr(period,N3N2[DELAY],"Period (s)","N3-N2 delay (s)",ran_x,ran_y,False,color='brown')
-
-
-
-plt.tight_layout()
-# 
-if save:
-	# plt.savefig("./results_invariant_tests/images/"+file_name+"_delays.png")
-	plt.savefig(path+file_name+log+"_delays."+extension,format='eps')
-
-if show:
-	plt.show()
-# 
-
-
-
-
-# # period = N1m_interv[PER]
-# # print(period.shape,N3t_interv[DUR].shape)
-
-# # plt.figure(figsize=(20,5))
-# # ran_x = (0,90.0)
-# # plt.subplot(1,3,1)
-# # plot_corr(period,N1m_interv[IBI],"Period (s)","IBI "+N1m +" (s)",ran_x,ran_y,False,color='blue')
-
-# # plt.subplot(1,3,2)
-# # plot_corr(period,N2v_interv[IBI],"Period (s)","IBI "+N2v +" (s)",ran_x,ran_y,False,color='blue')
-
-# # plt.subplot(1,3,3)
-# # plot_corr(period,N3t_interv[IBI],"Period (s)","IBI "+N3t +" (s)",ran_x,ran_y,False,color='blue')
-
-
-# # plt.tight_layout()
-# # # plt.savefig("./results_invariant_tests/images/"+file_name+".png")
-# # plt.show()
-
 

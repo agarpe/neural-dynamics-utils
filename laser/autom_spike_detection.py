@@ -17,7 +17,7 @@ else:
 print("Detecting spikes...")
 
 for i in range(e_min,e_max+1):
-	os.system("python3 ../get_spike_events.py -p %s/exp%d_%s.asc -c 0 -e \"control_pre\" -s False -sv True"%(path,i,sufix))
-	os.system("python3 ../get_spike_events.py -p %s/exp%d_%s.asc -c 1 -e \"laser\" -s False -sv True"%(path,i,sufix))
-	os.system("python3 ../get_spike_events.py -p %s/exp%d_%s.asc -c 2 -e \"control_pos\" -s False -sv True"%(path,i,sufix))
+	os.system("python3 ../get_spike_events.py -p %s/exp%d_%s.asc -c 0 -e \"control_pre\" -sh n -sv y"%(path,i,sufix))
+	os.system("python3 ../get_spike_events.py -p %s/exp%d_%s.asc -c 1 -e \"laser\" -sh n -sv y"%(path,i,sufix))
+	os.system("python3 ../get_spike_events.py -p %s/exp%d_%s.asc -c 2 -e \"control_pos\" -sh n -sv y"%(path,i,sufix))
 

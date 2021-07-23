@@ -11,5 +11,7 @@ dir_name=${dir##*/}
 line=$(head -n 1 $1/run_info.txt)
 # echo $1/$dir_name $line
 echo autom_spike_n_superpos.py ../../data/laser/single_neuron/$dir_name $line
-python3 autom_spike_n_superpos.py ../../data/laser/single_neuron/$dir_name $line ;
+python3 autom_spike_n_superpos.py ../../data/laser/pyloric/$dir_name $line ;
+# python3 autom_spike_n_superpos.py ../../data/laser/single_neuron/$dir_name $line ;
+
 # done
