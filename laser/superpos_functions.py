@@ -43,9 +43,9 @@ def read_from_events(path,dt =0.1, max_cols = 300, delim="\t",dataview=False):
 	return events
 
 
-def set_plot_info(axes,labels,width,loc="best",xlabel="Time (ms)",ylabel="Voltage (mV)"):
+def set_plot_info(axes,labels,width,loc="upper left",xlabel="Time (ms)",ylabel="Voltage (mV)"):
 	if labels != []:
-		plt.legend(axes,labels,loc=loc)
+		plt.legend(axes,labels,loc=loc,prop={'size': 10})
 	plt.xlabel(xlabel)
 	plt.ylabel(ylabel)
 	plt.xlim(0,width*2)
@@ -125,7 +125,7 @@ def align_spike(spike,width_ms,dt,id_,mode='peak'):
 	# prepare spike
 	try:
 		spike = center(spike,width_ms,dt) #center spike from max
-		spike = no_drift(spike) #adjust drift
+		# spike = no_drift(spike) #adjust drift
 		spike = align_to(spike,mode)
 		return spike
 
@@ -161,7 +161,7 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 	ax,=plt.plot([],[])
 	ploted=0
 	for spike_i in range(events.shape[0]):
-	# for spike_i in range(2):
+	# for spike_i in range(1):
 		#remove possible nan values:
 		spike = events[spike_i,:][~np.isnan(events[spike_i,:])]
 
@@ -347,37 +347,49 @@ def no_drift(spike,mode='first_min',dt=0.1):
 # Parameters:
 # 	spike voltage values
 
-def align_to(spike,mode='first_min',dt=0.1):
+# sec_wind window in ms to measure the slope between two points
+
+def align_to(spike,mode='peak',dt=0.1,sec_wind=2.0):
+	mode = 'peak'
 	if(spike.shape[0]!=0):
 		if mode == 'min':
 			mn = np.min(spike)
 		elif mode == 'peak':
 			mn = np.max(spike)
 		elif mode == 'first_min':
-			slopes = [ (s1-s2)/dt for s1,s2  in zip(spike[:spike.shape[0]//2-1],spike[1:spike.shape[0]//2-1])]
+			sec_wind = int(sec_wind/dt)
+			slopes = [ (s1-s2)/dt for s1,s2  in zip(spike[:spike.shape[0]//2-1],spike[sec_wind:spike.shape[0]//2-1])]
 			# # indx = np.argmin(slopes)
 			
 			slopes = np.array(slopes)
-			slopes = abs(slopes[np.where(slopes<0)])
-			diffs = slopes[1:]-slopes[:-1]
-			# diffs = slopes[:-1]-slopes[1:]
-			# print(np.mean(diffs),max(diffs),min(diffs))
-			th = max(abs(diffs))
-			indx = np.where(abs(diffs)>th-1)[0][0]
+			# slopes = abs(slopes[np.where(slopes<0)])
+			# slopes = slopes[np.where(slopes>0)]
+			# diffs = slopes[1:]-slopes[:-1]
+			# # diffs = slopes[:-1]-slopes[1:]
+			# # print(np.mean(diffs),max(diffs),min(diffs))
+			# th = max(abs(diffs))
+			# indx = np.where(abs(diffs)==th)[0][0]
+			# # diffs = diffs[np.where(diffs <0)]
+			# indx = np.argmax(diffs)
+			# # indx = np.argmin(diffs)
+			# # indx = np.where(spike>np.min(spike)+10)[0][0]
+			indx = np.argmax(slopes)
 			# print(slopes)
 			mn = spike[indx]
-			time = np.arange(0,spike.shape[0],1.0) #points to width_ms. 
+			time = np.arange(0,spike.shape[0]//2,1.0) #points to width_ms. 
 			time *= dt
-			# time=time[indx]
-			time = indx*dt
+			time=time[indx]
 			# mn = spike[0]
 
-			# plt.plot(time,mn,'.',color='k') 
 		else:
 			print("fail")
 		# mn = np.min(spike)
 		if mn != 0:
 			spike = spike-mn
+			# time = indx*dt
+
+			# plt.plot(time,mn,'.',color='k') 
+			# plt.plot(np.ones(spike[np.where(slopes>0)].shape)*dt,spike[np.where(slopes>0)],'.',color='k') 
 	
 	return spike
 

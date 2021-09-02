@@ -1,3 +1,0 @@
-plot_events: amplitude --> duration_log
-get_spike_duration--> error return (0,0),th
-		in plot_events, error checking changed.

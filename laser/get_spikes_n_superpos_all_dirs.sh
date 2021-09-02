@@ -1,4 +1,5 @@
 #!/bin/bash
+# Go through all dirs and get run_info.txt to run autom_spike_n_superpos.py charact script.
 
 
 for dir in $1/*/     # list directories in the form "/tmp/dirname/"
@@ -8,7 +9,8 @@ do
     dir_name=${dir##*/}
 	line=$(head -n 1 $1/$dir_name/run_info.txt)
     # echo $1/$dir_name $line
-	python3 autom_spike_n_superpos.py ../../data/laser/pyloric/$dir_name $line ;
+    python3 autom_spike_n_superpos.py $1/$dir_name $line ;
+	# python3 autom_spike_n_superpos.py ../../data/laser/pyloric/$dir_name $line ;
 	# python3 autom_spike_n_superpos.py ../../data/laser/single_neuron/$dir_name $line ;
 
 done
