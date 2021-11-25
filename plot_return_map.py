@@ -24,6 +24,7 @@ def read_n_plot(path,title,limit=-1):
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-p", "--path", required=True, help="Path to the file with the spike events")
+ap.add_argument("-et","--event_type",required=False,default='onoff',help="'onoff' for on off events, 'simple' for single events")
 ap.add_argument("-sh", "--show", required=False,default='y', help="Show plot")
 ap.add_argument("-sv", "--save", required=False,default='y', help="Save events")
 
@@ -33,9 +34,9 @@ path_control_pre = path+"_control_pre_events.txt"
 path_laser = path+"_laser_events.txt"
 path_control_pos = path+"_control_pos_events.txt"
 
-
-show= True if args['show']=='y' else False 
-save= True if args['save']=='y' else False 
+onoff = True if args['event_type']=='onoff' else False  
+show = True if args['show']=='y' else False 
+save = True if args['save']=='y' else False 
 
 
 # if(i==1):

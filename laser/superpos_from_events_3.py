@@ -30,7 +30,7 @@ ap.add_argument("-co", "--color", required=False, default=0,
 ap.add_argument("-ex", "--ext", required=False, default='', help="Extension after laser or control.")
 ap.add_argument("-mean","--mean",required=False, default='n',help="When == 'y'. Plot mean of all spikes and not spike per spike.")
 ap.add_argument("-sa", "--save", required=False, default='y', help="Option to save plot file")
-ap.add_argument("-sh", "--show", required=False, default='y', help="Option to show plot file")
+ap.add_argument("-sh", "--show", required=False, default='n', help="Option to show plot file")
 ap.add_argument("-st", "--stats", required=False, default='y', help="Option to save stats pkl file")
 ap.add_argument("-dir", "--dir", required=False, default='y', help="Save stats in new dir")
 args = vars(ap.parse_args())
@@ -196,7 +196,11 @@ plt.tight_layout(rect=[0, 0, 1, 0.95]) #tight with upper title
 if save:
 	if  args['title'] == '':
 		title=''
-	figname=path +"_"+ext+title
+	if args['mean'] == 'y':
+		m = '_mean'
+	else:
+		m = ''
+	figname=path +"_"+ext+title+m + args['rows']
 	plt.savefig(figname+".png")
 	plt.savefig(figname+".eps",format='eps',dpi=1200)
 	plt.savefig(figname+".pdf",format='pdf',dpi=600)

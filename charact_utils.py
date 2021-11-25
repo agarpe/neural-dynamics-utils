@@ -340,7 +340,7 @@ def save_waveforms(data,events,path,width_ms,dt=0.1):
 
 #Read spike events from file as on/off events and returns single value from each event as mean(on/off). 
 
-def read_spike_events(file_name,dataview=True,dt=0.1):
+def read_spike_events(file_name,dataview=True,dt=0.1,onoff=True):
 	if dataview:
 		#changes , by . as separator (for dataview)
 		os.system("sed -i 's/\,/./g' "+file_name)
@@ -357,8 +357,8 @@ def read_spike_events(file_name,dataview=True,dt=0.1):
 
 	# data_n = data_n[:(data_n.shape[0]//1)]
 
-	if(dataview):
-	#Gets spikes as mean from up off events. 
+	if(onoff):
+	#Gets spikes as mean from on off events. 
 		mean_evt_n = to_mean(data_n)
 	else:
 		mean_evt_n = data_n
