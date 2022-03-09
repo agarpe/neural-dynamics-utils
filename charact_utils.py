@@ -521,6 +521,7 @@ def detect_spikes_single_events(data,dt=0.1,tol=0.5):
     spikes_v = []
 
     skiped=0
+    # get max from each onoff.
     for i in range(0,len(event_indices)):
         try:
             on = event_indices[i+skiped]
@@ -532,14 +533,14 @@ def detect_spikes_single_events(data,dt=0.1,tol=0.5):
         index = np.where(data==spk)[0]
         times = time[index[np.where(np.logical_and(index>=on,index <= off))]]
         
-        if(spk < th+2):
+        if(spk < th+0.2):
             # print(times,off-on)
-            skiped=1
+            skiped+=1
         else:
             times = times[0]
             spikes_t.append(times)
             spikes_v.append(spk)
-    print(skiped)
+    print("Spikes skiped %d"%skiped)
 
     return np.array(spikes_t),np.array(spikes_v)
 
@@ -705,7 +706,7 @@ def detect_burst_from_events(spikes,max_isi=0,dt=0.1,tol=0.5):
     print(spikes.shape)
     # m = mean(isis)
     bursts=[spikes[0]] #get first spike
-    print(max_isi)
+    print("MAX ISI", max_isi)
 
     if max_isi > 0:
         ibi= max_isi
@@ -716,9 +717,10 @@ def detect_burst_from_events(spikes,max_isi=0,dt=0.1,tol=0.5):
         ibi = isis[np.where(np.isclose(zscores,zref,atol=0.01))[0][-1]]
     print(ibi)
 
-
+    # for each spike point event, compute distance.
     for i,(s1,s2) in enumerate(zip(spikes[1:-2],spikes[2:])):
-        if s2-s1 > ibi/dt:
+        # print(s2,s1,s2-s1,ibi, ibi/dt)
+        if s2-s1 > ibi:
             bursts.append(s1)
             bursts.append(s2)
     bursts.append(spikes[-1])
