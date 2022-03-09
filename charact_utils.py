@@ -157,18 +157,16 @@ def get_global_color_list():
 
 from sklearn.preprocessing import normalize
 
-
-def plot_intervals_stats(stats, box_ran, norm=False, pos=False):
+# Plot boxplot for given Intervals.
+# stats: dict with interval for each neuron. 
+def plot_intervals_stats(stats, box_ran, norm=False, pos=False, ignored_intervals=["IBI"], title=None):
     keys = sorted(stats.keys())
     intervals = []
     labels = []
 
-    colors_map = {"Period": 'coral', "BD": 'royalblue', "Interval": 'seagreen', "Delay": 'brown'}
+    colors_map = {"Period": 'coral',"Interval": 'seagreen', "BD": 'royalblue',  "Delay": 'brown', "IBI": 'seagreen'}
 
     colors = []
-    # medians = []
-    # means = []
-    # cvs = []
     period_plot = False
 
     for key in keys:
@@ -176,11 +174,11 @@ def plot_intervals_stats(stats, box_ran, norm=False, pos=False):
         for e in reversed(sorted(elem.keys())):
             if(period_plot and e == "Period"):
                 pass
-            elif(e != "IBI"):
+            elif(e not in ignored_intervals):
                 if e == "Period":
                     period_plot = True
                 labels.append(key[1:] + "-" + e)
-                if(norm):
+                if(norm): # normalized data version ***beta***
                     if(pos):
                         # interval = np.absolute(stats[key][e])
                         intervals.append(np.absolute(stats[key][e])/np.linalg.norm(stats[key][e]))
@@ -190,19 +188,14 @@ def plot_intervals_stats(stats, box_ran, norm=False, pos=False):
                         intervals.append(stats[key][e]/np.linalg.norm(stats[key][e]))
                 else:
                     intervals.append(stats[key][e])
-                    # intervals.append(np.std(stats[key][e])/np.mean(stats[key][e])*100)                    
-                    # cvs.append((np.std(stats[key][e]) / np.mean(stats[key][e])) * 100)
-                    # medians.append(statistics.median(stats[key][e]) * 100)
-                    # means.append(np.mean(stats[key][e]) * 100)
+
                 colors.append(colors_map[e])
 
 
     plt.figure(figsize=(33,20))
     bp = plt.boxplot(intervals, showfliers=False, labels=labels, patch_artist=True)
-    # plt.scatter(range(1,len(cvs)+1),cvs)
-    # plt.scatter(range(1,len(cvs)+1),medians)
-    # plt.scatter(range(1,len(cvs)+1),means)
-    # for patch,color in zip(bp['boxes'],sorted_names[10:]):
+
+    # get legend grouping patches by color
     used = []
     legends = []
     for patch, color in zip(bp['boxes'], colors):
@@ -218,20 +211,19 @@ def plot_intervals_stats(stats, box_ran, norm=False, pos=False):
 
     plt.tick_params(axis='both', labelsize=40)
     plt.xticks(rotation=45, ha='right')
+
     if box_ran is not None:
         plt.ylim(box_ran)
+
     plt.ylabel("Time intervals (ms)", fontsize=50)
 
     plt.legend(legends[:,0],legends[:,1], fontsize='x-large', loc='upper center', bbox_to_anchor=(0.75,1))
 
-    # plt.legend(legends[:,0],legends[:,1],fontsize='x-large')
+    if title is None:
+        plt.suptitle("Variability distribution for %d cycles"% len(stats[keys[0]]['Period']))
+    else:
+        plt.suptitle(title)
 
-    # for i,item in enumerate(reversed(sorted(colors_map.keys()))):
-    #     plt.text(15, 35-1*i, item,
- #             backgroundcolor=colors_map[item],
- #             color='black', weight='roman', size='x-small')ç
-
-    plt.suptitle("Variability distribution for %d cycles"% len(stats[keys[0]]['Period']))
     plt.tight_layout()
 
 
