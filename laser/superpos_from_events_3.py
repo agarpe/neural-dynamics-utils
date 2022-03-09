@@ -13,7 +13,7 @@ from superpos_functions import *
 import itertools
 
 # plt.rcParams.update({'font.size': 30})
-plt.rcParams.update({'font.size': 25})
+plt.rcParams.update({'font.size': 15})
 
 
 import argparse
@@ -26,13 +26,13 @@ ap.add_argument("-ti", "--title", required=False, default='', help="Title shown 
 ap.add_argument("-nr", "--rows", required=False, default=2, 
 				help="Number of rows. 2 for single and comparations. 3 for prevs and single subplot with the three of them")
 ap.add_argument("-co", "--color", required=False, default=0, 
-				help="Color type. 0: light blue; red; darkblue. 1: progressive lumniance of light blue; red; darkblue")
+				help="Color type. 0: light blue; red; green. 1: progressive lumniance of light blue; red; darkblue")
 ap.add_argument("-ex", "--ext", required=False, default='', help="Extension after laser or control.")
 ap.add_argument("-mean","--mean",required=False, default='n',help="When == 'y'. Plot mean of all spikes and not spike per spike.")
-ap.add_argument("-sa", "--save", required=False, default='y', help="Option to save plot file")
-ap.add_argument("-sh", "--show", required=False, default='n', help="Option to show plot file")
-ap.add_argument("-st", "--stats", required=False, default='y', help="Option to save stats pkl file")
-ap.add_argument("-dir", "--dir", required=False, default='y', help="Save stats in new dir")
+ap.add_argument("-sa", "--save", required=False, default='y', help="Option to save plot file. 'y' or 'n'; default: y")
+ap.add_argument("-sh", "--show", required=False, default='n', help="Option to show plot file. 'y' or 'n'; default: n")
+ap.add_argument("-st", "--stats", required=False, default='y', help="Option to save stats pkl file. 'y' or 'n'; default: y")
+ap.add_argument("-dir", "--dir", required=False, default='y', help="Save stats in new dir. 'y' or 'n'; default: y")
 args = vars(ap.parse_args())
 
 path = args['path']
@@ -187,10 +187,12 @@ if rows != 2:
 	ax2,ax_fst,ax_last=plot_func(laser_events,color_laser,tit=label1+"-"+label2+"-"+label3,width_ms=width)
 	ax3,ax_fst,ax_last= plot_func(control_pos_events,color_pos,tit=label1+"-"+label2+"-"+label3,width_ms=width)
 
-	set_plot_info([ax1,ax2,ax3],[label1,label2,label3],width,loc="center left")
+	set_plot_info([ax1,ax2,ax3],[label1,label2,label3],width,loc="center right")
 
 
-plt.suptitle(title) #general title
+title = '\n'.join (title.split('\\'))
+
+plt.suptitle(title,wrap=True) #general title
 plt.tight_layout(rect=[0, 0, 1, 0.95]) #tight with upper title
 
 if save:
@@ -202,7 +204,7 @@ if save:
 		m = ''
 	figname=path +"_"+ext+title+m + args['rows']
 	plt.savefig(figname+".png")
-	plt.savefig(figname+".eps",format='eps',dpi=1200)
+	# plt.savefig(figname+".eps",format='eps',dpi=1200)
 	plt.savefig(figname+".pdf",format='pdf',dpi=600)
 if show:
 	plt.show()

@@ -24,6 +24,7 @@ ap.add_argument("-dt", "--time_step", required=False, default=0.001, help="Sampl
 ap.add_argument("-c", "--color", required=False, default="blue", help="Color for plot")
 ap.add_argument("-wt", "--wind_t", required=False, default=10, help="Half window size in ms")
 ap.add_argument("-xl", "--x_lim", required=False, default='', help="Plot xlim values separated by white space")
+ap.add_argument("-nn", "--neu_name", required=False, default='', help="Extension of the events file p.e. for '*_v1_spikes.asc' -nn _v1")
 ap.add_argument("-fl", "--file_limit", required=False, default=-1, help="Limit of files to load")
 ap.add_argument("-sa", "--save", required=False, default='y', help="Option to save plot file")
 ap.add_argument("-sh", "--show", required=False, default='y', help="Option to show plot file")
@@ -38,6 +39,9 @@ title = args['title']
 dt=float(args['time_step'])
 t=float(args['wind_t'])
 lim=int(args['file_limit']) #number of files limit
+
+neu_name = args['neu_name']
+
 show = True if args['show']=='y' else False 
 save = True if args['save']=='y' else False 
 stats = True if args['stats']=='y' else False 
@@ -89,7 +93,7 @@ def get_events(f_data,f_events,ms,dt=0.001):
 if verb:
 	print(path)
 # files = sorted(os.listdir(path))
-files = sorted(glob.glob(path+"*"))
+files = sorted(glob.glob(path+"*[!_spikes].asc"))
 # files.sort(key=os.path.getmtime)
 files = files[:lim]
 
@@ -131,26 +135,38 @@ for i,f in enumerate(files):
 
 		ref = f.find("Euler")
 		if(ref!=-1):
-			f_events = f[:ref]+"spikes_"+f[ref:]
+			f_events = f[:ref]+neu_name+"spikes_"+f[ref:]
 		else:
-			f_events = f[:-4]+"_spikes.asc"
+			f_events = f[:-4]+neu_name+"_spikes.asc"
 
 
 
 		# print(f_events)
 
-		fs=open(f_events)
+		try:
+			fs=open(f_events)
+		except:
+			continue
 		first_line = fs.readline()
 		# index =fs.find(".asc")
 		# ini = fs.rfind("_")
 		fs.close()
+
+		if first_line == '':
+			continue
 
 
 		label = ref_param+"="+first_line
 		print(label)
 		labels.append(label)
 		print(first_line)
-		nValues.append(float(first_line))
+		try:
+			nValues.append(float(first_line))
+		except:
+			print(first_line)
+			print(f_events)
+			nValues.append(float(first_line.split(',')[0]))
+
 
 		try:
 			trial = get_events(f,f_events,ms=t)
@@ -208,7 +224,7 @@ for i,f in enumerate(files):
 # scalarmappaple.set_array(nValues)
 # plt.colorbar(scalarmappaple)
 # # plt.colorbar();
-
+print(len(colors))
 cmap = mcolors.LinearSegmentedColormap.from_list('my_cmap', colors)
 norm = mcolors.Normalize(min(nValues), max(nValues))
 sm = cm.ScalarMappable(cmap=cmap, norm=norm)
@@ -226,7 +242,7 @@ plt.tight_layout()
 
 # print( path+title+".png")
 # plt.savefig(path+title+".png")
-save_name = path+title+"_"+args['color']
+save_name = path+title+neu_name+"_"+args['color']
 print( save_name+".eps")
 plt.savefig(save_name+".eps",format="eps")
 print( save_name+".png")
