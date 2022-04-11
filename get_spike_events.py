@@ -7,13 +7,18 @@ import scipy.stats as stats
 import scipy.signal as signal
 import os
 
+# WARNING CHANGES AFFECTING ELECTRICAL AUTOM
+##### scale default 1
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-p", "--path", required=True, help="Path to the file to analyze")
 ap.add_argument("-e", "--extension", required=True, help="File extension")
 ap.add_argument("-c", "--column", required=False,default=0, help="Column")
-ap.add_argument("-sc", "--scale", required=False, default=10, help="Scale for Volts. Signal*scale")
+ap.add_argument("-sc", "--scale", required=False, default=1, help="Scale for mV. Signal*scale")
+ap.add_argument("-tol", "--tol", required=False, default=0.5, help="threshold detection tolerance")
 ap.add_argument("-dt", "--time_step", required=False, default=0.1, help="Time step")
+ap.add_argument("-ws_l", "--window_size_l", required=False, default=50, help="Window size from peak to left")
+ap.add_argument("-ws_r", "--window_size_r", required=False, default=50, help="Window size from peak to right")
 ap.add_argument("-sh", "--show", required=False,default='y', help="Show plot")
 ap.add_argument("-sv", "--save", required=False,default='y', help="Save events")
 
@@ -22,6 +27,13 @@ args = vars(ap.parse_args())
 path = args['path']
 scale = float(args['scale'])
 dt = float(args['time_step'])
+
+ws_l = int(args['window_size_l'])
+ws_r = int(args['window_size_r'])
+ws = ws_l + ws_r
+
+tol = float(args['tol'])
+print(tol)
 
 show= True if args['show']=='y' else False 
 save= True if args['save']=='y' else False 
@@ -72,10 +84,11 @@ print(type(data))
 # print(data)
 # print(data.shape)
 # data = data +50
-spikes_onoff,th = utils.detect_spikes(data,dt=dt,tol=0.5) #Tolerance for signal in mV
-spikes_single,spikes_single_v = utils.detect_spikes_single_events(data,dt,0.5)
 
-print(type(spikes_single),type(spikes_single_v))
+spikes_onoff,th = utils.detect_spikes(data,dt=dt,tol=tol) #Tolerance for signal in mV
+spikes_single,spikes_single_v = utils.detect_spikes_single_events(data,dt,tol)
+
+# print(type(spikes_single),type(spikes_single_v))
 
 time = np.arange(0,data.shape[0],1)*dt
 
@@ -105,10 +118,13 @@ plt.plot(time,data)
 plt.plot(spikes_onoff,np.ones(spikes_onoff.shape)*th,'.')
 plt.plot(spikes_single,spikes_single_v,'.')
 
+if ext != "":
+	ext = '_' + ext
+
 if show:
 	plt.show()
 else:
-	plt.savefig(path[:-4]+"_"+ext+"_spikes_detected.png")
+	plt.savefig(path[:-4]+ext+"_spikes_detected.png")
 
 print("Number of spikes onoff detected: ",spikes_onoff.shape)
 print("Number of spikes detected: ",spikes_single.shape)
@@ -122,14 +138,14 @@ if save:
 
 	os.system("mkdir -p %s"%path[:indx]+"/events")
 
-	save_path_onoff_events = path[:indx]+"/events"+path[indx:-4]+"_%s_events.txt"%ext
-	save_path_single_events = path[:indx]+"/events"+path[indx:-4]+"_%s_single_events.txt"%ext
-	save_path_waveforms = path[:indx]+"/events"+path[indx:-4]+"_%s_waveform.txt"%ext
+	save_path_onoff_events = path[:indx]+"/events"+path[indx:-4]+"%s_events.txt"%ext
+	save_path_single_events = path[:indx]+"/events"+path[indx:-4]+"%s_single_events.txt"%ext
+	save_path_waveforms = path[:indx]+"/events"+path[indx:-4]+"%s_waveform.txt"%ext
 
 	print("Saving events data at \t\n",save_path_onoff_events)
 	utils.save_events(spikes_onoff,save_path_onoff_events,split=True)
 	print("Saving events data at \t\n",save_path_single_events)
 	utils.save_events(spikes_single,save_path_single_events,split=False)
 	print("Saving waveform data at \t\n",save_path_waveforms)
-	waveforms = utils.save_waveforms(data,spikes_onoff,save_path_waveforms,100)
+	waveforms = utils.save_waveforms(data,spikes_onoff,save_path_waveforms,width_ms_l=ws_l,width_ms_r=ws_r,dt=dt)
 

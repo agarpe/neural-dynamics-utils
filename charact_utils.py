@@ -297,24 +297,75 @@ def save_events(events,file_name,split=False,dataview=False):
         #changes . by , as separator (for dataview)
         os.system("sed -i 's/\./,/g' "+file_name)
 
-def save_waveforms(data,events,path,width_ms,dt=0.1):
+def save_waveforms_from_signal(data, events, path, dt=0.1, width_l=0, width_r=0):
+
+    print(data.shape)
+    print(events.shape)
+
+    max_event = int(max([b-a for a,b in zip(events[:][0], events[:][1])]) // dt)
+
+    print(max_event)
+
+    w_l_points = int(width_l//dt)
+    w_r_points = int(width_r//dt)
+
+    w_size = max_event + w_r_points + w_l_points
+
+    waveforms = np.empty((events.shape[0], w_size),dtype=float)
+    
+    count =0
+    for i,(ini,end) in enumerate(zip(events[:][0],events[:][1])):
+        # indx = np.where(np.isclose(time, event))[0][0] #finds spike time reference
+        ini_points = int(ini / dt) - w_l_points
+        # end_points = int(end / dt)
+        end_points = ini_points +w_l_points + max_event + w_r_points
+
+        # print(w_size, end_points-ini_points)
+        # print(w_size - (end_points-ini_points))
+        try:
+            waveforms[i] = np.append(data[ini_points:end_points], np.zeros(w_size - (end_points-ini_points)))
+        except:
+            count +=1
+
+    print("failed %d spikes"%count)
+    print(waveforms.shape)
+    
+    try:
+        f1 = open(path,'w')
+    except FileNotFoundError:
+        print("Unable to write on the specified path")
+        return
+    except Exception as e:
+        print("Error saving waveforms")
+        print("\t",e)
+        return
+
+    np.savetxt(f1,waveforms,delimiter='\t')
+    f1.close()
+
+    return waveforms
+
+def save_waveforms(data, events, path, width_ms_l, width_ms_r, dt=0.1):
     #TODO fix this, default input, no preprocess here
     events = to_on_off_events(events)
     mean_evt_n = to_mean(events)
     
-    points = int(width_ms /dt)
+    # points = int(width_ms /dt)
+    points_l = int(width_ms_l /dt)
+    points_r = int(width_ms_r /dt)
 
-    waveforms = np.empty((events.shape[0],(points*2)),float)
+    # waveforms = np.empty((events.shape[0],(points*2)),float)
+    waveforms = np.empty((events.shape[0], (points_l+points_r)), float)
 
     time = np.arange(0,data.shape[0],1.0)
-    time *=dt
+    time *= dt
 
     count =0
     for i,event in enumerate(events[:,0]):
-        indx = np.where(np.isclose(time,event))[0][0] #finds spike time reference
+        indx = np.where(np.isclose(time, event))[0][0] #finds spike time reference
 
         try:
-            waveforms[i] =data[indx-points:indx+points]
+            waveforms[i] =data[indx-points_l:indx+points_r]
         except:
             count +=1
 
@@ -337,16 +388,20 @@ def save_waveforms(data,events,path,width_ms,dt=0.1):
     return waveforms
 
 
-def save_waveforms_new(data,events,path,width_ms,dt=0.1,onoff=True,split=True):
+def save_waveforms_new(data,events,path,width_ms=None,width_ms_l=None,width_ms_r=None,dt=0.1,onoff=True,split=True):
     #TODO fix this, default input, no preprocess here
     if split:
         events = to_on_off_events(events)
     if onoff:
         mean_evt_n = to_mean(events)
     
-    points = int(width_ms /dt)
+    # points = int(width_ms /dt)
+    points_l = int(width_ms_l /dt)
+    points_r = int(width_ms_r /dt)
 
-    waveforms = np.empty((events.shape[0],(points*2)),float)
+    # waveforms = np.empty((events.shape[0],(points*2)),float)
+    waveforms = np.empty((events.shape[0], (points_l+points_r)), float)
+
 
     time = np.arange(0,data.shape[0],1.0)
     time *=dt
@@ -463,6 +518,24 @@ def read_model_burst_path(path,dataview=True,scale= 1000):
 def trunc(values, decs=0):
     return np.trunc(values*10**decs)/(10**decs)
 
+
+def get_onoff(data,dt=0.1,th=1):
+    onoff = []
+
+    off = True
+    for i,d in enumerate(data):
+        if(d > th and off):
+            onoff.append(i*dt)
+            off = False
+        elif(d < th and not off):
+            onoff.append(i*dt)
+            off = True
+
+    onoff = np.array(onoff)
+
+    return to_on_off_events(onoff)
+
+
 #############################################################################
 ##############    SPIKES 
 ##############################################################################
@@ -513,28 +586,44 @@ def detect_spikes_single_events(data,dt=0.1,tol=0.5):
     spikes_v = []
 
     skiped=0
+    skiped2=0
     # get max from each onoff.
     for i in range(0,len(event_indices)):
         try:
             on = event_indices[i+skiped]
             off = event_indices[i+1+skiped]
         except IndexError:
+            skiped2 +=1
             continue
+
+        # if(off-on > 100/dt):
+        #     skiped+=1
+        #     continue
 
         spk = max(data[on:off])
         index = np.where(data==spk)[0]
         times = time[index[np.where(np.logical_and(index>=on,index <= off))]]
         
-        if(spk < th+0.2):
-            # print(times,off-on)
-            skiped+=1
-        else:
-            times = times[0]
-            spikes_t.append(times)
-            spikes_v.append(spk)
-    print("Spikes skiped %d"%skiped)
+        # if(spk < th):
+        #     print(spk,th+th*0.05,th)
+        #     # print(times,off-on)
+        #     skiped+=1
+        # else:
+        times = times[0]
+        spikes_t.append(times)
+        spikes_v.append(spk)
 
-    return np.array(spikes_t),np.array(spikes_v)
+    print("Spikes skiped %d"%skiped)
+    print("Spikes skiped by index %d"%skiped2)
+
+    spikes_t = np.array(spikes_t)
+    spikes_v = np.array(spikes_v)
+
+    spikes_t = spikes_t[np.where(spikes_v > th+th*0.1)]
+    spikes_v = spikes_v[np.where(spikes_v > th+th*0.1)]
+
+    # return np.array(spikes_t),np.array(spikes_v)
+    return spikes_t, spikes_v
 
 
 ##spike condition --> mean point init-end event
