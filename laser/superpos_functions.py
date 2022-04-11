@@ -88,7 +88,7 @@ def get_spike_info(df_log,spike,dt,show_durations,spike_i,error_count):
 	#Measure durations:
 	amplitude = get_spike_amplitude(spike,dt)
 
-	if(amplitude > 0.5): #Ignore artefacts
+	if(amplitude > 0.5 and amplitude < 120): #Ignore artefacts
 	# if(amplitude >= 80): #Ignore artefacts
 		df_log['amplitude'].append(amplitude)
 	else:
@@ -136,13 +136,35 @@ def align_spike(spike,width_ms,dt,id_,mode='peak'):
 	# prepare spike
 	try:
 		spike = center(spike,width_ms,dt) #center spike from max
-		# spike = no_drift(spike) #adjust drift
+		spike = no_drift(spike) #adjust drift
 		spike = align_to(spike,mode)
 		return spike
 
 	except:
 		print("skip ",id_)
 		return []
+
+
+# remove invalid spikes from waveforms array
+# error in ms
+def preprocess_spikes(spikes, refs,width_l, width_r=0, error=10):
+
+	print("PREPROCESSING")
+	spikes_copy = np.zeros(spikes.shape)
+
+	ids = []
+	print(spikes_copy.shape)
+	print(refs.shape)
+	for i,(event,ref) in enumerate(zip(spikes,refs)):
+		# print(ref)
+		if ref < error:
+			spikes_copy[i,:] = event[:]
+			ids.append(i)
+		else: 
+			print("Ignoring with stim distance: %d"%(ref))
+
+	return spikes_copy, ids
+
 
 # Description: 
 #	Plots several spike events superpossed. When duration_log is a list, returns info 
@@ -201,17 +223,17 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 
 		#TODO: fix failure when fst or last spikes are ignored 	
 		#Plot first, last or general spike.
-		if(spike_i==0):
-			ax_fst,=plt.plot(time,spike,color=fst_color,linewidth=1.5)
-		elif(spike_i==events.shape[0]-1):
-			ax_last,=plt.plot(time,spike,color=last_color,linewidth=1.5)
-		else:
-			ax,=plt.plot(time,spike,color=color,linewidth=0.1)
+		# if(spike_i==0):
+		# 	ax_fst,=plt.plot(time,spike,color=fst_color,linewidth=1.5)
+		# elif(spike_i==events.shape[0]-1):
+		# 	ax_last,=plt.plot(time,spike,color=last_color,linewidth=1.5)
+		# else:
+		ax,=plt.plot(time,spike,color=color,linewidth=0.5)
 		ploted+=1
 
 	plt.title(tit + " " +str(ploted))
 
-	print(len(events),ploted)
+	# print(len(events),ploted)
 	if count[0] >0:
 		# print([len(df_log[x]) for x in df_log if isinstance(df_log[x], list)])
 		if not error: #In case there is no error allowance the dict is reduced.
@@ -449,7 +471,7 @@ def align_to(spike,mode='peak',dt=0.1,sec_wind=2.0):
 			spike = spike-mn
 			time = indx*dt
 
-			plt.plot(time,mn,'.',color='k') 
+			# plt.plot(time,mn,'.',color='k') 
 			# plt.plot(np.ones(spike[np.where(slopes>0)].shape)*dt,spike[np.where(slopes>0)],'.',color='k') 
 	
 	return spike
