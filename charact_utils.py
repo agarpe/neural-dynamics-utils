@@ -276,9 +276,15 @@ def to_on_off_events(events):
     return events
 
 #Saves events in same file than original data. 
-def save_events(events,file_name,split=False,dataview=False):
+def save_events(events,file_name,split=False,dataview=False,selec=[]):
     if(split):
         events = to_on_off_events(events)
+
+    #TODO: fix selec added to easily remove events...
+    if selec != []:
+        # print(selec)
+        # print(events.shape,len(selec[0]))
+        events = events[selec]
 
     print(events.shape)
         # events = np.array(result)
@@ -345,10 +351,17 @@ def save_waveforms_from_signal(data, events, path, dt=0.1, width_l=0, width_r=0)
 
     return waveforms
 
-def save_waveforms(data, events, path, width_ms_l, width_ms_r, dt=0.1):
+def save_waveforms(data, events, path, width_ms_l, width_ms_r, dt=0.1, selec=[], onoff=True):
     #TODO fix this, default input, no preprocess here
-    events = to_on_off_events(events)
-    mean_evt_n = to_mean(events)
+    if onoff:
+        events = to_on_off_events(events)
+        mean_evt_n = to_mean(events)
+        events = to_mean(events)
+
+    #TODO: fix selec added to easily remove events...
+    if selec != []:
+        events = events[selec]
+        # mean_evt_n = events[selec]
     
     # points = int(width_ms /dt)
     points_l = int(width_ms_l /dt)
@@ -356,13 +369,18 @@ def save_waveforms(data, events, path, width_ms_l, width_ms_r, dt=0.1):
 
     # waveforms = np.empty((events.shape[0],(points*2)),float)
     waveforms = np.empty((events.shape[0], (points_l+points_r)), float)
+    # waveforms = np.empty((mean_evt_n.shape[0], (points_l+points_r)), float)
 
     time = np.arange(0,data.shape[0],1.0)
     time *= dt
-
+    print("Events shape", events.shape)
+    # print("Events shape", mean_evt_n.shape)
     count =0
-    for i,event in enumerate(events[:,0]):
-        indx = np.where(np.isclose(time, event))[0][0] #finds spike time reference
+    # for i,event in enumerate(events[:,0]):
+    for i,event in enumerate(events):
+        # print(event)
+        # print(np.where(np.isclose(time, event)))
+        indx = np.where(np.isclose(time, event,atol=0.1))[0][0] #finds spike time reference
 
         try:
             waveforms[i] =data[indx-points_l:indx+points_r]
@@ -477,7 +495,10 @@ def read_spike_events(file_name,onoff=True,skiprows=0,col=0,dataview=True):
     #Gets spikes as mean from on off events. 
         mean_evt_n = to_mean(data_n)
     else:
-        mean_evt_n = data_n[:,col]
+        try:
+            mean_evt_n = data_n[:,col]
+        except:
+            mean_evt_n = data_n
     
     return mean_evt_n
 
