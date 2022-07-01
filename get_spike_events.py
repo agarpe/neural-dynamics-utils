@@ -19,7 +19,7 @@ ap.add_argument("-tol", "--tol", required=False, default=0.5, help="threshold de
 ap.add_argument("-dt", "--time_step", required=False, default=0.1, help="Time step")
 ap.add_argument("-ws_l", "--window_size_l", required=False, default=50, help="Window size from peak to left")
 ap.add_argument("-ws_r", "--window_size_r", required=False, default=50, help="Window size from peak to right")
-ap.add_argument("-mi", "--max_isi", required=False, default=-1, help="Maximum value for an ISI in ms (p.e. 900ms)")
+ap.add_argument("-mi", "--max_isi", required=False, default=-2, help="Maximum value for an ISI in ms (p.e. 900ms)")
 ap.add_argument("-sh", "--show", required=False,default='y', help="Show plot")
 ap.add_argument("-sv", "--save", required=False,default='y', help="Save events")
 
@@ -94,7 +94,8 @@ spikes_single,spikes_single_v = utils.detect_spikes_single_events(data,dt,tol)
 
 time = np.arange(0,data.shape[0],1)*dt
 
-events = np.where(spikes_single_v > -10)
+# events = np.where(spikes_single_v > -10)
+events = np.where(spikes_single_v > np.median(spikes_single_v)-5)
 spikes_single_v = spikes_single_v[events]
 spikes_single = spikes_single[events]
 
@@ -141,9 +142,12 @@ else:
 	plt.savefig(events_path+path[indx:-4]+ext+"_spikes_detected.png")
 
 
-if max_isi > 0:
+if max_isi > -2:
 	isis = np.array(utils.get_ISI(spikes_single))
 	isis_onoff = np.array(utils.get_ISI(utils.to_mean(utils.to_on_off_events(spikes_onoff))))
+
+	if max_isi == -1:
+		max_isi = np.median(isis) - 100
 
 	reduced_events = spikes_single[np.where(isis < max_isi)]
 	reduced_events_indx = np.where(isis > max_isi)
