@@ -19,6 +19,7 @@ ap.add_argument("-tol", "--tol", required=False, default=0.5, help="threshold de
 ap.add_argument("-dt", "--time_step", required=False, default=0.1, help="Time step")
 ap.add_argument("-ws_l", "--window_size_l", required=False, default=50, help="Window size from peak to left")
 ap.add_argument("-ws_r", "--window_size_r", required=False, default=50, help="Window size from peak to right")
+ap.add_argument("-mi", "--max_isi", required=False, default=-1, help="Maximum value for an ISI in ms (p.e. 900ms)")
 ap.add_argument("-sh", "--show", required=False,default='y', help="Show plot")
 ap.add_argument("-sv", "--save", required=False,default='y', help="Save events")
 
@@ -34,6 +35,8 @@ ws = ws_l + ws_r
 
 tol = float(args['tol'])
 print(tol)
+
+max_isi = float(args['max_isi'])
 
 show= True if args['show']=='y' else False 
 save= True if args['save']=='y' else False 
@@ -59,7 +62,6 @@ data = data*scale #Signal should be in mV
 
 
 print(data.shape)
-print(type(data))
 # data = data.values
 
 
@@ -121,31 +123,75 @@ plt.plot(spikes_single,spikes_single_v,'.')
 if ext != "":
 	ext = '_' + ext
 
+indx=path.rfind("/")
+if indx < 0:
+	print("Error in path, either absolute or starting with ./ path")
+	exit()
+
+events_path = path[:indx]+"/events/"
+
+os.system("mkdir -p %s"%events_path)
+
 if show:
 	plt.show()
 else:
-	plt.savefig(path[:-4]+ext+"_spikes_detected.png")
+	plt.savefig(events_path+path[indx:-4]+ext+"_spikes_detected.png")
+
+
+if max_isi > 0:
+	isis = np.array(utils.get_ISI(spikes_single))
+	isis_onoff = np.array(utils.get_ISI(utils.to_mean(utils.to_on_off_events(spikes_onoff))))
+
+	reduced_events = spikes_single[np.where(isis < max_isi)]
+	reduced_events_indx = np.where(isis > max_isi)
+	reduced_events_indx_onoff = np.where(isis_onoff > max_isi)
+
+	plt.figure(figsize=(20,15))
+	plt.plot(time,data)
+	plt.plot(reduced_events, np.zeros(reduced_events.shape),'x', ms=10)
+	plt.plot(spikes_single, np.zeros(spikes_single.shape),'.')
+
+	if show:
+		plt.show()
+	else:
+		plt.savefig(events_path+path[indx:-4]+ext+"_spikes_detected_reduced.png")
+
+	# spikes_onoff = spikes_onoff[reduced_events_indx]
+	# spikes_single = spikes_single[reduced_events_indx]
+
+else:
+	reduced_events_indx = []
+	reduced_events_indx_onoff = []
+	reduced_events = []
 
 print("Number of spikes onoff detected: ",spikes_onoff.shape)
 print("Number of spikes detected: ",spikes_single.shape)
+print("Removing %d events"%(len(reduced_events)))
+
+if len(reduced_events) > len(spikes_single) * 0.4:
+	print(np.median(isis))
+	print("Aborting: trying to remove %f of spikes"%(len(reduced_events)/len(spikes_single)))
+	print("Median of ISIS: %d"%np.median(isis))
+	exit()
+
 if spikes_onoff.shape[0] > 10000:
 	print("Error: number of spikes over the safety threshold. Possible failure detecting spikes. Events files won't be saved.")
 	exit()
 
-
 if save:
-	indx=path.rfind("/")
 
-	os.system("mkdir -p %s"%path[:indx]+"/events")
+	save_path_onoff_events = events_path + path[indx:-4] + "%s_events.txt"%ext
+	save_path_single_events = events_path + path[indx:-4] + "%s_single_events.txt"%ext
+	save_path_waveforms = events_path + path[indx:-4] + "%s_waveform.txt"%ext
+	save_path_waveforms_single = events_path + path[indx:-4] + "%s_waveform_single.txt"%ext
 
-	save_path_onoff_events = path[:indx]+"/events"+path[indx:-4]+"%s_events.txt"%ext
-	save_path_single_events = path[:indx]+"/events"+path[indx:-4]+"%s_single_events.txt"%ext
-	save_path_waveforms = path[:indx]+"/events"+path[indx:-4]+"%s_waveform.txt"%ext
-
+	#TODO: fix "selec" easy way to remove spikes --> also in charac
 	print("Saving events data at \t\n",save_path_onoff_events)
-	utils.save_events(spikes_onoff,save_path_onoff_events,split=True)
+	utils.save_events(spikes_onoff,save_path_onoff_events,split=True, selec=reduced_events_indx_onoff)
 	print("Saving events data at \t\n",save_path_single_events)
-	utils.save_events(spikes_single,save_path_single_events,split=False)
+	utils.save_events(spikes_single,save_path_single_events,split=False, selec=reduced_events_indx)
 	print("Saving waveform data at \t\n",save_path_waveforms)
-	waveforms = utils.save_waveforms(data,spikes_onoff,save_path_waveforms,width_ms_l=ws_l,width_ms_r=ws_r,dt=dt)
+	waveforms = utils.save_waveforms(data,spikes_onoff,save_path_waveforms,width_ms_l=ws_l,width_ms_r=ws_r,dt=dt, selec=reduced_events_indx_onoff)
+	print("Saving waveform data at \t\n",save_path_waveforms_single)
+	waveforms = utils.save_waveforms(data,spikes_single,save_path_waveforms_single,width_ms_l=ws_l,width_ms_r=ws_r,dt=dt, selec=reduced_events_indx, onoff=False)
 
