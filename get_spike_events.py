@@ -94,6 +94,9 @@ spikes_single,spikes_single_v = utils.detect_spikes_single_events(data,dt,tol)
 
 time = np.arange(0,data.shape[0],1)*dt
 
+events = np.where(spikes_single_v > -10)
+spikes_single_v = spikes_single_v[events]
+spikes_single = spikes_single[events]
 
 # print(spikes_onoff)
 print(spikes_onoff.shape)
