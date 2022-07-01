@@ -67,9 +67,10 @@ time *= dt
 
 max_id = np.argmax(waveforms)
 
-# ini --> difference from max to ini == argmax
+# ini --> difference from max to ini == max index
 # end --> difference from max to end 
-refs = [(np.argmax(waveform)*dt + ws_l, (waveform.size - np.argmax(waveform))*dt + ws_r) for waveform in waveforms.T]
+
+refs = np.array([(np.argmax(waveform)*dt + ws_l, (waveform.size - np.argmax(waveform))*dt + ws_r) for waveform in waveforms])
 # ini_ref = max_id
 # end_ref = waveform.size - max_id
 
@@ -79,12 +80,12 @@ print("Writing waveforms references at",savepath)
 print(np.array(refs).shape)
 np.savetxt(savepath,refs)
 
-
+# print(refs)
 
 # plt.plot(time,signal)
 # plt.plot(events,np.zeros(events.shape),'.')
 # plt.show()
 
-# plt.plot(waveforms.T)
-# plt.plot(refs,np.ones((len(refs),2)),'.','b')
+# plt.plot(np.arange(0,waveforms.shape[1],1)*0.1,waveforms.T)
+# plt.plot(refs,np.ones((refs.shape[0],2)),'.')
 # plt.show()
