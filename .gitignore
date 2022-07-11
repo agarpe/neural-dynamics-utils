@@ -1,2 +1,10 @@
 sdf.m
 invariant_scripts
+*.txt
+*.png
+*.eps
+*.log
+*.asc
+*.mp4
+./laser/pruebas/*
+./laser/pruebas
