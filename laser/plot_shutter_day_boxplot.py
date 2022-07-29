@@ -67,7 +67,13 @@ if read:
 		waveforms, stim = read_data(file, 'laser')
 		durations = get_durs(waveforms)
 		slopes_dep, slopes_rep = get_slopes(waveforms)
-		stim[:,:] *= -1
+
+		print(waveforms.shape, len(stim))
+
+		try:
+			stim[:,:] *= -1
+		except:
+			continue
 
 		print(slopes_dep.shape, slopes_rep.shape, durations.shape)
 
@@ -154,8 +160,15 @@ if lim != np.inf:
 
 df["pulse"] = df["to_on"]-df["to_off"]
 df["pulse"] = pd.to_numeric(df["pulse"])
+
+if args['range'] is not None:
+	cut_range = args['range'].replace('\\','').split(',')
+
+	df.drop(df[df.to_off < int(cut_range[0])].index, inplace=True)
+	df.drop(df[df.to_off > int(cut_range[1])].index, inplace=True)
  
-path_images = path + '/events/images/shutter/' 
+
+path_images = path + '/events/images/shutter/' + str(args['range'].replace('\\','') if args['range'] is not None else '')
 os.system("mkdir -p %s"%path_images)
 
 for metric in ["duration", "depol_slope", "repol_slope"]:
@@ -183,7 +196,7 @@ for metric in ["duration", "depol_slope", "repol_slope"]:
 	ax = plot_boxplot(df,"to_off", metric, cut_range, step_range, df_controls, df_laser)
 
 	if save:
-		savefig(path, path_images,"_%s_boxplot_control_to_off"%metric)
+		savefig(path, path_images,"_%s_boxplot_control_to_off"%(metric))
 
 	## Plot boxplot with control
 	cut_range = args['range']
@@ -191,7 +204,7 @@ for metric in ["duration", "depol_slope", "repol_slope"]:
 	ax = plot_boxplot(df,"to_on", metric, cut_range, step_range, df_controls, df_laser)
 
 	if save:
-		savefig(path, path_images,"_%s_boxplot_control_to_on"%metric)
+		savefig(path, path_images,"_%s_boxplot_control_to_on"%(metric))
 
 
 	## Plot scatter pulse duration
