@@ -261,7 +261,8 @@ for i,f in enumerate(files):
 			color = p_color
 			color.luminance = luminances[i%(len(files))]
 			colors.append(color.hex_l)
-			legend = ''
+			# legend = ''
+			legend = first_line
 
 		color = color.hex_l
 		# color=colormap(normalize(n))
@@ -312,21 +313,22 @@ for i,f in enumerate(files):
 # scalarmappaple.set_array(nValues)
 # plt.colorbar(scalarmappaple)
 # # plt.colorbar();
-print(len(colors))
+# print(len(colors))
 
 
-#TODO WARNING UNCOMMENT FOR BAR!!!!!
-try:
-	cmap = mcolors.LinearSegmentedColormap.from_list('my_cmap', colors)
-	norm = mcolors.Normalize(min(nValues), max(nValues))
-	sm = cm.ScalarMappable(cmap=cmap, norm=norm)
-	sm.set_array([])
-	fig.colorbar(sm)
-except:
-	plt.legend(fontsize=40)
-	pass
-#######################
+# #TODO WARNING UNCOMMENT FOR BAR!!!!!
+# try:
+# 	cmap = mcolors.LinearSegmentedColormap.from_list('my_cmap', colors)
+# 	norm = mcolors.Normalize(min(nValues), max(nValues))
+# 	sm = cm.ScalarMappable(cmap=cmap, norm=norm)
+# 	sm.set_array([])
+# 	fig.colorbar(sm)
+# except:
+# 	plt.legend(fontsize=40)
+# 	pass
+# #######################
 
+plt.legend()
 
 
 
