@@ -88,7 +88,8 @@ def get_spike_info(df_log,spike,dt,show_durations,spike_i,error_count):
 	#Measure durations:
 	amplitude = get_spike_amplitude(spike,dt)
 
-	if(amplitude > 0.5 and amplitude < 120): #Ignore artefacts
+	# if(amplitude > 0.5 and amplitude < 110): #Ignore artefacts
+	if(amplitude > 20 and amplitude < 120): #Ignore artefacts
 	# if(amplitude >= 80): #Ignore artefacts
 		df_log['amplitude'].append(amplitude)
 	else:
@@ -131,13 +132,13 @@ def parse_color(col,n_events=0):
 
 	return col,fst_color,last_color,colors
 
-def align_spike(spike,width_ms,dt,id_,mode='peak'):
+def align_spike(spike,width_ms_l,width_ms_r,dt,id_,mode='ini'):
 
 	# prepare spike
 	try:
-		spike = center(spike,width_ms,dt) #center spike from max
-		spike = no_drift(spike) #adjust drift
-		spike = align_to(spike,mode)
+		spike = center(spike,width_ms_l, width_ms_r,dt) #center spike from max
+		spike = no_drift(spike,dt) #adjust drift
+		spike = align_to(spike,mode, dt)
 		return spike
 
 	except:
@@ -161,7 +162,7 @@ def preprocess_spikes(spikes, refs,width_l, width_r=0, error=10):
 			spikes_copy[i,:] = event[:]
 			ids.append(i)
 		else: 
-			print("Ignoring with stim distance: %d"%(ref))
+			print("Ignoring with stim distance: %f"%(ref))
 
 	return spikes_copy, ids
 
@@ -180,7 +181,7 @@ def preprocess_spikes(spikes, refs,width_l, width_r=0, error=10):
 # 	dt Data adquisition time
 #	duration_log List where info from spikes duration is saved. Ignored when =0. 
 #	show_durations when True detected durations are ploted. 
-def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False,error=False,mode='peak'):
+def plot_events(events,col,tit,width_ms_l=50,width_ms_r=50,dt=0.1,df_log={},show_durations=False,error=False,mode='ini',lw = 0.5):
 	if len(events)==0:
 		print("Error: no events to plot")
 		return plt.plot([]),plt.plot([]),plt.plot([])
@@ -198,7 +199,7 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 		#remove possible nan values:
 		spike = events[spike_i,:][~np.isnan(events[spike_i,:])]
 
-		spike = align_spike(spike, width_ms,dt,spike_i,mode)
+		spike = align_spike(spike, width_ms_l, width_ms_r,dt,spike_i,mode)
 		if spike == []:
 			continue
 
@@ -228,11 +229,13 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 		# elif(spike_i==events.shape[0]-1):
 		# 	ax_last,=plt.plot(time,spike,color=last_color,linewidth=1.5)
 		# else:
-		ax,=plt.plot(time,spike,color=color,linewidth=0.5)
+		ax,=plt.plot(time,spike,color=color,linewidth=lw)
 		ploted+=1
+		# plt.show()
 
 	plt.title(tit + " " +str(ploted))
 
+	#TODO: REVIEW the df reduction ?¿?¿
 	# print(len(events),ploted)
 	if count[0] >0:
 		# print([len(df_log[x]) for x in df_log if isinstance(df_log[x], list)])
@@ -303,7 +306,7 @@ def burst_plot(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False,
 
 	return ax,ax,ax
 
-def plot_events_mean(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False,error=False,mode='peak'):
+def plot_events_mean(events,col,tit,width_ms_l=50,width_ms_r=50,dt=0.1,df_log={},show_durations=False,error=False,mode='peak'):
 	if len(events)==0:
 		print("Error: no events to plot")
 		return plt.plot([]),plt.plot([]),plt.plot([])
@@ -318,7 +321,7 @@ def plot_events_mean(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=
 		#remove possible nan values:
 		spike = events[spike_i,:][~np.isnan(events[spike_i,:])]
 
-		spike = align_spike(spike, width_ms,dt,spike_i,mode)
+		spike = align_spike(spike, width_ms_l, width_ms_r,dt,spike_i,mode)
 		if spike == []:
 			continue
 
@@ -368,15 +371,16 @@ def plot_events_mean(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=
 #	spike voltage values
 #	width_ms milliseconds to save at each side. 
 # 	dt Data adquisition time
-def center(spike,width_ms,dt=0.1):
+def center(spike,width_ms_l, width_ms_r,dt=0.1):
 	spike = spike[~np.isnan(spike)] 
 
 	mx_index = np.argmax(spike) #index of maximum V value (spike)
 
-	width_points = width_ms /dt #Number of points corresponding to the iteration
+	width_points_l = width_ms_l /dt #Number of points corresponding to the iteration
+	width_points_r = width_ms_r /dt #Number of points corresponding to the iteration
 	
-	ini = int(mx_index-width_points) #init as max point - number of points. 
-	end = int(mx_index+width_points) #end as max point + number of points. 
+	ini = int(mx_index-width_points_l) #init as max point - number of points. 
+	end = int(mx_index+width_points_r) #end as max point + number of points. 
 
 	# ###Beta func: Beware in models
 	# if mx_index!=0: #ignore artefacts
@@ -389,7 +393,15 @@ def center(spike,width_ms,dt=0.1):
 	# 		app = np.full(end-spike.shape[0],spike[-1]) #Add events at the end
 	# 		spike = np.insert(spike,spike.shape[0],app) #re-center
 	# 		return center(spike,width_ms,dt)
-	####
+	# ###
+	###Beta func: V2 --> 
+	if mx_index!=0: #ignore artefacts
+		#Adjust window when there are not enough points 
+		if(ini < 0):
+			return [] #re-center
+		if(end > spike.shape[0]):
+			return []
+	###
 
 	return spike[ini:end]
 
@@ -488,6 +500,7 @@ def align_to(spike,mode='peak',dt=0.1,sec_wind=2.0):
 #	(min_thres,max_thres)
 def get_spike_duration(spike,dt,tol=2): 
 	spike = spike[~np.isnan(spike)]
+
 	mx_value = np.max(spike) #maximum V value (spike)
 	mn_value = np.min(spike) #minimum V value (spike)
 
@@ -533,14 +546,37 @@ def get_spike_amplitude(spike,dt):
 # Return:
 #	amplitude
 
+# def get_slope(spike,dt):
+# 	spike = spike[~np.isnan(spike)] 
+# 	mid_ps,th = get_spike_duration(spike,dt)
+# 	indx1 = int(mid_ps[0]/dt) #From ms to point ref
+# 	indx2 = int(mid_ps[1]/dt) #From ms to point ref
+
+# 	slope1 = (spike[indx1]-spike[indx1-1])/dt 
+# 	slope2 = (spike[indx2]-spike[indx2-1])/dt
+
+# 	return (slope1,slope2)
+
 def get_slope(spike,dt):
 	spike = spike[~np.isnan(spike)] 
 	mid_ps,th = get_spike_duration(spike,dt)
-	indx1 = int(mid_ps[0]/dt) #From ms to point ref
-	indx2 = int(mid_ps[1]/dt) #From ms to point ref
+	mx_value = np.max(spike) #maximum V value (spike)
+	t_max = np.argmax(spike) #maximum V value (spike)
 
-	slope1 = (spike[indx1]-spike[indx1-1])/dt 
-	slope2 = (spike[indx2]-spike[indx2-1])/dt
+	t1 = mid_ps[0]-2
+	t2 = mid_ps[1]+2
+
+	indx1 = int(t1/dt) #From ms to point ref
+	indx2 = int(t2/dt) #From ms to point ref
+
+	time = np.arange(spike.size) *dt
+	# plt.plot(time,spike)
+	# plt.plot(t1, 0, '|', markersize=100)
+	# plt.plot(t2, 0, '|', markersize=100)
+	# plt.show()
+
+	slope1 = (spike[indx1]-mx_value)/ (t1 - (t_max*dt))
+	slope2 = (mx_value-spike[indx2])/((t_max*dt) - t2)
 
 	return (slope1,slope2)
 
