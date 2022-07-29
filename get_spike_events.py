@@ -60,6 +60,7 @@ data = df[col]
 #WARNING!!!!!! spikes not detected from RTXI bad scale!
 data = data*scale #Signal should be in mV
 
+# data = data[int(10000//dt):]
 
 print(data.shape)
 # data = data.values
@@ -175,7 +176,7 @@ print("Number of spikes onoff detected: ",spikes_onoff.shape)
 print("Number of spikes detected: ",spikes_single.shape)
 print("Removing %d events"%(len(reduced_events)))
 
-if len(reduced_events) > len(spikes_single) * 0.4:
+if len(reduced_events) > len(spikes_single) * 0.5:
 	print(np.median(isis))
 	print("Aborting: trying to remove %f of spikes"%(len(reduced_events)/len(spikes_single)))
 	print("Median of ISIS: %d"%np.median(isis))
