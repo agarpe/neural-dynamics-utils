@@ -9,12 +9,13 @@ import itertools
 plt.rcParams.update({'font.size': 17})
 
 
-if len(sys.argv) ==6:
+if len(sys.argv) ==7:
 	path = sys.argv[1]
 	width = int(sys.argv[2])
 	label= sys.argv[3]
 	color= sys.argv[4]
 	title=sys.argv[5]
+	scale =int(sys.argv[6])
 	show = True
 else:
 	print("Use1: python3 superpos_from_events.py events_path.txt width label color title")
@@ -32,6 +33,8 @@ n_events = len(events.index)
 
 #Parse to array
 events=events.values
+
+events*=scale
 
 print(events.shape)
 

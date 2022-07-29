@@ -21,7 +21,7 @@ args = vars(ap.parse_args())
 
 path = args['path']
 scale = float(args['scale'])
-tol = 0.005*scale
+tol = 0.5*scale
 # tol = 0.5/scale
 dt = float(args['time_step'])
 max_isi = float(args['misi'])

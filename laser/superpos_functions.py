@@ -5,6 +5,7 @@ import sys
 import os
 from random import randint
 from colour import Color
+from scipy.signal import argrelmax
 
 
 def create_dataframe(dicts,prefixes):
@@ -23,7 +24,7 @@ def create_dataframe(dicts,prefixes):
 
 	return df
 	
-def read_from_events(path,dt =0.1, max_cols = 300, delim="\t",dataview=False):
+def read_from_events(path,dt =0.1, max_cols = 300, delim="\t",dataview=True):
 	#Column names list generation to read files with distinct number of columns in each row. 
 	#Indispensable when events obtained by threshold detection in DataView
 	# dt =0.1
@@ -43,12 +44,22 @@ def read_from_events(path,dt =0.1, max_cols = 300, delim="\t",dataview=False):
 	return events
 
 
-def set_plot_info(axes,labels,width,loc="upper left",xlabel="Time (ms)",ylabel="Voltage (mV)"):
-	if labels != []:
-		plt.legend(axes,labels,loc=loc,prop={'size': 10})
+def set_plot_info(axes,labels,width,loc="upper left",xlabel="Time (ms)",ylabel="Voltage (mV)",xlim='default', ylim=None):
+	# if labels != []:
+	# 	plt.legend(axes,labels,loc=loc,prop={'size': 25})
 	plt.xlabel(xlabel)
 	plt.ylabel(ylabel)
-	plt.xlim(0,width*2)
+
+	# plt.xticks(np.arange(0, width*2, 5))
+	# plt.yticks(np.arange(-100, 5, 5))
+
+	if xlim == 'default':
+		plt.xlim(0,width*2)
+	elif xlim is not None:
+		plt.xlim(xlim)
+	if ylim is not None:
+		plt.ylim(-100, 5)
+
 
 
 
@@ -77,7 +88,7 @@ def get_spike_info(df_log,spike,dt,show_durations,spike_i,error_count):
 	#Measure durations:
 	amplitude = get_spike_amplitude(spike,dt)
 
-	if(amplitude > 0.5): #Ignore artefacts
+	if(amplitude > 0.5 and amplitude < 120): #Ignore artefacts
 	# if(amplitude >= 80): #Ignore artefacts
 		df_log['amplitude'].append(amplitude)
 	else:
@@ -125,13 +136,35 @@ def align_spike(spike,width_ms,dt,id_,mode='peak'):
 	# prepare spike
 	try:
 		spike = center(spike,width_ms,dt) #center spike from max
-		# spike = no_drift(spike) #adjust drift
+		spike = no_drift(spike) #adjust drift
 		spike = align_to(spike,mode)
 		return spike
 
 	except:
 		print("skip ",id_)
 		return []
+
+
+# remove invalid spikes from waveforms array
+# error in ms
+def preprocess_spikes(spikes, refs,width_l, width_r=0, error=10):
+
+	print("PREPROCESSING")
+	spikes_copy = np.zeros(spikes.shape)
+
+	ids = []
+	print(spikes_copy.shape)
+	print(refs.shape)
+	for i,(event,ref) in enumerate(zip(spikes,refs)):
+		# print(ref)
+		if ref < error:
+			spikes_copy[i,:] = event[:]
+			ids.append(i)
+		else: 
+			print("Ignoring with stim distance: %d"%(ref))
+
+	return spikes_copy, ids
+
 
 # Description: 
 #	Plots several spike events superpossed. When duration_log is a list, returns info 
@@ -190,17 +223,17 @@ def plot_events(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 
 		#TODO: fix failure when fst or last spikes are ignored 	
 		#Plot first, last or general spike.
-		if(spike_i==0):
-			ax_fst,=plt.plot(time,spike,color=fst_color,linewidth=1.5)
-		elif(spike_i==events.shape[0]-1):
-			ax_last,=plt.plot(time,spike,color=last_color,linewidth=1.5)
-		else:
-			ax,=plt.plot(time,spike,color=color,linewidth=0.1)
+		# if(spike_i==0):
+		# 	ax_fst,=plt.plot(time,spike,color=fst_color,linewidth=1.5)
+		# elif(spike_i==events.shape[0]-1):
+		# 	ax_last,=plt.plot(time,spike,color=last_color,linewidth=1.5)
+		# else:
+		ax,=plt.plot(time,spike,color=color,linewidth=0.5)
 		ploted+=1
 
 	plt.title(tit + " " +str(ploted))
 
-	print(len(events),ploted)
+	# print(len(events),ploted)
 	if count[0] >0:
 		# print([len(df_log[x]) for x in df_log if isinstance(df_log[x], list)])
 		if not error: #In case there is no error allowance the dict is reduced.
@@ -217,6 +250,40 @@ def simple_plot(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False
 		spike = events[spike_i,:][~np.isnan(events[spike_i,:])]
 
 		spike = no_drift(spike)
+
+		#Calculate time
+		time = np.arange(0,spike.shape[0],1.0) #points to width_ms. 
+		time *= dt
+
+		parse_color(col)
+		try:
+			# col.luminance = luminances[spike_i%(len(events))]
+			# color = col.hex_l
+			color = colors[spike_i]
+			color = color.hex_l
+		except:
+			color = col
+
+		ax,=plt.plot(time,spike,color=color,linewidth=0.1)
+		plt.title(tit)
+
+	return ax,ax,ax
+
+def burst_plot(events,col,tit,width_ms=50,dt=0.1,df_log={},show_durations=False,error=False):
+
+	peaks = np.max(events,axis=1)
+	val = np.mean(peaks[~np.isnan(peaks)])
+	print(val, peaks)
+
+	for spike_i in range(events.shape[0]):
+		#remove possible nan values:
+		spike = events[spike_i,:][~np.isnan(events[spike_i,:])]
+
+		spike = no_drift(spike)
+
+
+		# spike = align_to(spike, mode='ini')
+		# spike = align_to(spike,val)
 
 		#Calculate time
 		time = np.arange(0,spike.shape[0],1.0) #points to width_ms. 
@@ -350,12 +417,17 @@ def no_drift(spike,mode='first_min',dt=0.1):
 # sec_wind window in ms to measure the slope between two points
 
 def align_to(spike,mode='peak',dt=0.1,sec_wind=2.0):
-	mode = 'peak'
+	# mode = 'peak'
 	if(spike.shape[0]!=0):
 		if mode == 'min':
+			indx = np.argmin(spike)
 			mn = np.min(spike)
 		elif mode == 'peak':
+			indx = np.argmax(spike)
 			mn = np.max(spike)
+		elif mode == 'ini':
+			indx = 0
+			mn = spike[0]
 		elif mode == 'first_min':
 			sec_wind = int(sec_wind/dt)
 			slopes = [ (s1-s2)/dt for s1,s2  in zip(spike[:spike.shape[0]//2-1],spike[sec_wind:spike.shape[0]//2-1])]
@@ -381,12 +453,23 @@ def align_to(spike,mode='peak',dt=0.1,sec_wind=2.0):
 			time=time[indx]
 			# mn = spike[0]
 
+		elif mode == 'first_max':
+			indx = argrelmax(spike)[0][0]
+			# plt.plot(fst_max,spike[fst_max])
+			# print(fst_max)
+			mn = spike[indx]
+		
+		elif type(mode) is not str:
+			mn = mode
+			indx = 10
+			
 		else:
 			print("fail")
+			print(type(mode))
 		# mn = np.min(spike)
 		if mn != 0:
 			spike = spike-mn
-			# time = indx*dt
+			time = indx*dt
 
 			# plt.plot(time,mn,'.',color='k') 
 			# plt.plot(np.ones(spike[np.where(slopes>0)].shape)*dt,spike[np.where(slopes>0)],'.',color='k') 
