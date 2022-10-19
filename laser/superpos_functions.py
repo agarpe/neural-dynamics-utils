@@ -498,14 +498,14 @@ def align_to(spike,mode='peak',dt=0.1,sec_wind=2.0):
 # 	tol difference tolerance im mV (lower than 2 fails)
 # Return:
 #	(min_thres,max_thres)
-def get_spike_duration(spike,dt,tol=2): 
+def get_spike_duration(spike,dt,tol=2, thres_val=0.5): 
 	spike = spike[~np.isnan(spike)]
 
 	mx_value = np.max(spike) #maximum V value (spike)
 	mn_value = np.min(spike) #minimum V value (spike)
 
 	#TODO: check with neurons with pos and neg val...
-	th = (mx_value+mn_value)/2 #threshold in the "middle" of the spike.
+	th = (mx_value+mn_value)*thres_val #threshold in the "middle" of the spike.
 
 	#Warning: with a lower tolerance value the threshold detection might fail
 	duration_vals = np.where(np.isclose(spike, th,atol=tol))[0]
@@ -585,9 +585,13 @@ def get_spike_amplitude(spike,dt):
 # 	return (slope1,slope2)
 
 # v3 a few points in the middle
-def get_slope(spike,dt,n_points=10):
+# spike: v values
+# dt: data time step
+# n_points: number of points around position to calculate slope
+# slope_position: where to calculate slope: defalult value, mid of spike.
+def get_slope(spike,dt,n_points=10, slope_position=0.5):
 	spike = spike[~np.isnan(spike)] 
-	mid_ps,th = get_spike_duration(spike,dt)
+	mid_ps,th = get_spike_duration(spike,dt,thres_val=slope_position)
 	indx1 = int(mid_ps[0]/dt) #From ms to point ref
 	indx2 = int(mid_ps[1]/dt) #From ms to point ref
 
