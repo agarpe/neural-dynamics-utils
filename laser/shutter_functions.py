@@ -35,7 +35,8 @@ def get_slopes(waveforms,dt=0.1, width_r=40, width_l=40):
         # plt.show()
         # try:
         slope_dep.append(slope_inc)
-        slope_rep.append(slope_dec)    
+        slope_rep.append(slope_dec)   
+ 
 
         # except:
             # print(vals)
@@ -55,9 +56,9 @@ def get_durs(waveforms, width_r=40, width_l=40):
 
         vals,th = sf.get_spike_duration(spike,dt=0.1,tol=1)
         # plt.plot(spike)
-        # vals = np.array(vals)
-        # plt.plot(vals/0.1,(th,th),'x')
-        # plt.title(str(vals[1]-vals[0]))
+        vals = np.array(vals)
+        plt.plot(vals,(th,th),'.',markersize=20,color='r')
+        plt.title(str(vals[1]-vals[0]))
         # plt.show()
         try:
             durations.append(vals[1]-vals[0])
@@ -119,9 +120,9 @@ def plot_boxplot(df,column, metric, cut_range, step_range, df_controls=None, df_
     df["range"] = pd.cut(df[column], np.arange(cut_range[0], cut_range[1], step_range))
 
     # print(df.describe())
-
-    ax = df.boxplot(column=metric,by='range',figsize=(35,20), showmeans=True, showfliers=False)
-    ax.set_ylabel("Spike %s (ms)"%metric)
+    boxprops = dict(linestyle='-', linewidth=3, color='C0')
+    ax = df.boxplot(column=metric,by='range',figsize=(80,20), showmeans=True, showfliers=False,boxprops=boxprops)
+    ax.set_ylabel("Spike %s"%metric)
     ax.set_xlabel("Time %s event (ms)"%column)
     plt.tight_layout()
 
@@ -150,6 +151,12 @@ def plot_boxplot(df,column, metric, cut_range, step_range, df_controls=None, df_
 # metric e.g. duration
 def plot_scatter(df, column, metric, ylabel, xlabel, df_controls=None, median = True):
     plt.figure(figsize=(20,15))
+
+    colors = plt.cm.tab20(np.linspace(0,1,len(df.groupby("file"))))
+    # colors = plt.cm.get_cmap('Oranges')
+    from cycler import cycler
+    plt.gca().set_prop_cycle(cycler('color', colors))
+
     for name, group in df.groupby("file"):
         fig = plt.plot(group[column], group[metric], marker="o", linestyle="", label=name)
         # print(df_controls.loc[df_controls['file'] == name]["control_duration"])
@@ -187,13 +194,13 @@ def plot_all_scatter(df, metric, save, df_controls, path, path_images):
     #     savefig(path, path_images, "_%s_general_scatter_to_on"%metric)
 
     ## Plot scatter
-    plot_scatter(df, "to_off", metric, "Spike %s (ms)"%metric, "Time from spike to off (ms)", df_controls=df_controls)
+    plot_scatter(df, "to_off", metric, "Spike %s "%metric, "Time from spike to off (ms)", df_controls=df_controls)
 
     if save:
         savefig(path, path_images, "_%s_general_scatter_to_off_control"%metric)
 
     ## Plot scatter on
-    plot_scatter(df, "to_on", metric, "Spike %s (ms)"%metric, "Time from spike to on (ms)", df_controls=df_controls)
+    plot_scatter(df, "to_on", metric, "Spike %s "%metric, "Time from spike to on (ms)", df_controls=df_controls)
 
     if save:
         savefig(path, path_images, "_%s_general_scatter_to_on_control"%metric)
