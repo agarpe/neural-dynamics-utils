@@ -557,30 +557,68 @@ def get_spike_amplitude(spike,dt):
 
 # 	return (slope1,slope2)
 
-def get_slope(spike,dt):
+# # v2 slopes from mid to max
+# def get_slope(spike,dt):
+# 	spike = spike[~np.isnan(spike)] 
+# 	mid_ps,th = get_spike_duration(spike,dt)
+# 	mx_value = np.max(spike) #maximum V value (spike)
+# 	t_max = np.argmax(spike) #maximum V value (spike)
+
+# 	t1 = mid_ps[0]-2
+# 	t2 = mid_ps[1]+2
+
+# 	indx1 = int(t1/dt) #From ms to point ref
+# 	indx2 = int(t2/dt) #From ms to point ref
+
+# 	time = np.arange(spike.size) *dt
+# 	plt.plot(time,spike,color='k')
+# 	plt.plot([t1,t_max*dt], [spike[indx1],mx_value],color='b')
+# 	plt.plot([t2,t_max*dt], [spike[indx2],mx_value],color='b')
+# 	# plt.plot(t_max*dt, mx_value, '|', markersize=100)
+# 	# plt.plot(t1, spike[indx1], '|', markersize=100)
+# 	# plt.plot(t2, spike[indx2], '|', markersize=100)
+# 	# plt.show()
+
+# 	slope1 = (spike[indx1]-mx_value)/ (t1 - (t_max*dt))
+# 	slope2 = (mx_value-spike[indx2])/((t_max*dt) - t2)
+
+# 	return (slope1,slope2)
+
+# v3 a few points in the middle
+def get_slope(spike,dt,n_points=10):
 	spike = spike[~np.isnan(spike)] 
 	mid_ps,th = get_spike_duration(spike,dt)
-	mx_value = np.max(spike) #maximum V value (spike)
-	t_max = np.argmax(spike) #maximum V value (spike)
+	indx1 = int(mid_ps[0]/dt) #From ms to point ref
+	indx2 = int(mid_ps[1]/dt) #From ms to point ref
 
-	t1 = mid_ps[0]-2
-	t2 = mid_ps[1]+2
+	# n_points = int(n_ms /dt)
+	n_ms = n_points*dt
 
-	indx1 = int(t1/dt) #From ms to point ref
-	indx2 = int(t2/dt) #From ms to point ref
+	slope1 = (spike[indx1+n_points]-spike[indx1-n_points])/(n_ms*2) 
+	slope2 = (spike[indx2+n_points]-spike[indx2-n_points])/(n_ms*2)
+
+
+	#plot to test
+	t1 = mid_ps[0]
+	t2 = mid_ps[1]
 
 	time = np.arange(spike.size) *dt
-	# plt.plot(time,spike)
-	# plt.plot(t1, 0, '|', markersize=100)
-	# plt.plot(t2, 0, '|', markersize=100)
+
+	# if slope1 < 7:
+		# print(slope1, slope2)
+
+	plt.plot(time,spike,color='k',alpha=0.2)
+	plt.plot([t1-n_ms,t1+n_ms], [spike[indx1-n_points],spike[indx1+n_points]],color='b',linewidth=1.3)
+	plt.plot([t2-n_ms,t2+n_ms], [spike[indx2-n_points],spike[indx2+n_points]],color='b',linewidth=1.3)
 	# plt.show()
 
-	slope1 = (spike[indx1]-mx_value)/ (t1 - (t_max*dt))
-	slope2 = (mx_value-spike[indx2])/((t_max*dt) - t2)
+	# print(slope1, slope2)
+	# print(n_ms)
+	# print(indx1, indx2)
+	# print(spike[indx1+n_points],spike[indx2+n_points])
+	# exit()
 
 	return (slope1,slope2)
-
-
 
 # Description: 
 # 	Recives spike values and return the increasing and decreasing slope values at the 
