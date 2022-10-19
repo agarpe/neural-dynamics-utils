@@ -7,7 +7,7 @@ import glob
 import superpos_functions as sf
 from shutter_functions import *
 
-plt.rcParams.update({'font.size': 35})
+plt.rcParams.update({'font.size': 25})
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-p", "--path", required=True, help="Path to the file to show stats from")
@@ -57,17 +57,25 @@ if read:
 	controls_dict = {'control_duration': [], 'recovery_duration': [],'control_depol_slope': [], 'recovery_depol_slope': [], 'control_repol_slope': [], 'recovery_repol_slope': [], 'file': []}
 
 	for file in files:
-		file = file[file.rfind('/'):-4]
-		file = path + '/events/' + file
+		file_ext = file[file.rfind('/'):-4]
+		file = path + '/events/' + file_ext
 		print(file)
 
 		if extension == '' and ('depol' not in file and 'repol' not in file and 'slope' not in file):
 			continue
 		# exit()
+		plt.figure()
+		
 		waveforms, stim = read_data(file, 'laser')
 		durations = get_durs(waveforms)
 		slopes_dep, slopes_rep = get_slopes(waveforms)
-
+		plt.title('laser\n'+file_ext)
+		# print("saving ",path+'laser'+file_ext[1:])
+		plt.tight_layout()
+		print(path+"events/images/charact_"+file_ext[1:-4]+'_laser')
+		if save:
+			plt.savefig(path+"events/images/charact_"+file_ext[1:-4]+'_laser')
+		# plt.show()
 		print(waveforms.shape, len(stim))
 
 		try:
@@ -91,8 +99,21 @@ if read:
 
 		day_dict['file'].extend([file]*durations.size)
 
+		plt.figure()
 		control_durations, control_slopes_dep, control_slopes_rep, n = get_metrics_from_file(file, 'control')
+		plt.title('control\n'+file_ext)
+		plt.tight_layout()
+		if save:
+			plt.savefig(path+"events/images/charact_"+file_ext[1:-4]+'_control')
+		
+		plt.figure()
 		recovery_durations, recovery_slopes_dep, recovery_slopes_rep, n = get_metrics_from_file(file, 'recovery')
+		plt.title('recovery\n'+file_ext)
+		plt.tight_layout()
+		if save:
+			plt.savefig(path+"events/images/charact_"+file_ext[1:-4]+'_recovery')
+		# plt.show()
+		
 
 		controls_dict['control_duration'].extend(control_durations.tolist())
 		controls_dict['recovery_duration'].extend(recovery_durations.tolist())
@@ -126,19 +147,26 @@ else:
 	df_controls = pd.read_pickle(path + path[path[:-1].rfind('/'):-1] +"_shutter_controls.pkl")
 # df_laser = pd.read_pickle(path + path[path[:-1].rfind('/'):-1] +"_shutter_laser_continuous.pkl")
 
+# exit()
 #get laser continuous reference
 laser_dict = {'laser_duration': [],'laser_depol_slope': [],'laser_repol_slope': [],'file': []}
+# exit()
 
 files_laser = glob.glob(path+"exp*laser*.asc")
 
 for file in files_laser:
-	file = file[file.rfind('/'):-4]
-	file = path + '/events/' + file
+	file_ext = file[file.rfind('/'):-4]
+	file = path + '/events/' + file_ext
 	# print(file)
 
 	# exit()
 	laser_durations,laser_depol_slope, laser_repol_slope, n = get_metrics_from_file(file, 'laser')
 
+	plt.title('laser\n'+file_ext)
+	# print("saving ",path+'laser'+file_ext[1:])
+	plt.tight_layout()
+	if save:
+		plt.savefig(path+"events/images/charact_"+file_ext[1:-4]+'_laser')
 	laser_dict['laser_duration'].extend(laser_durations.tolist())
 	laser_dict['laser_depol_slope'].extend(laser_depol_slope.tolist())
 	laser_dict['laser_repol_slope'].extend(laser_repol_slope.tolist())
@@ -167,8 +195,10 @@ if args['range'] is not None:
 	df.drop(df[df.to_off < int(cut_range[0])].index, inplace=True)
 	df.drop(df[df.to_off > int(cut_range[1])].index, inplace=True)
  
+ext = "ext"+extension+"_"
 
-path_images = path + '/events/images/shutter/' + str(args['range'].replace('\\','') if args['range'] is not None else '')
+path_own = ext + str(args['range_step']) + str(args['range'].replace('\\','') if args['range'] is not None else '' + "_" + str(step_range))
+path_images = path + '/events/images/shutter/' +path_own +'/'+path_own
 os.system("mkdir -p %s"%path_images)
 
 for metric in ["duration", "depol_slope", "repol_slope"]:
@@ -194,59 +224,59 @@ for metric in ["duration", "depol_slope", "repol_slope"]:
 	cut_range = args['range']
 
 	ax = plot_boxplot(df,"to_off", metric, cut_range, step_range, df_controls, df_laser)
-
+	plt.suptitle(path_images)
 	if save:
 		savefig(path, path_images,"_%s_boxplot_control_to_off"%(metric))
 
-	## Plot boxplot with control
-	cut_range = args['range']
+	# ## Plot boxplot with control to on
+	# cut_range = args['range']
 
-	ax = plot_boxplot(df,"to_on", metric, cut_range, step_range, df_controls, df_laser)
+	# ax = plot_boxplot(df,"to_on", metric, cut_range, step_range, df_controls, df_laser)
 
-	if save:
-		savefig(path, path_images,"_%s_boxplot_control_to_on"%(metric))
+	# if save:
+	# 	savefig(path, path_images,"_%s_boxplot_control_to_on"%(metric))
 
 
-	## Plot scatter pulse duration
-	plot_scatter(df, "pulse", metric, "Spike %s (ms)"%metric, "Pulse duration (ms)", median = False)
+	# ## Plot scatter pulse duration
+	# plot_scatter(df, "pulse", metric, "Spike %s (ms)"%metric, "Pulse duration (ms)", median = False)
 
-	if save:
-		savefig(path, path_images,"_general_scatter_pulse_duration")
+	# if save:
+	# 	savefig(path, path_images,"_general_scatter_pulse_duration")
 
 	## Plot scatter for duration
 	plot_all_scatter(df, metric, save, df_controls, path, path_images)
 	## Plot duration distribution
 
-	# ## Plot duration distribution
-	#################################################
-	fig, axes = plt.subplots(1,2)
-
-	axes[0].hist(df["to_on"]-df["to_off"])
-	axes[1].bar(list(range(len(df.groupby("file")))),df.groupby("file")["pulse"].mean())
-
-	plt.title("Pulse duration distribution")
-
-	if save:
-		savefig(path, path_images, "_pulse_duration")
-
-
+	# # ## Plot duration distribution
 	# #################################################
-	# ## Plot scatter on
-	# #################################################
-	plt.figure(figsize=(20,15))
-	for name, group in df.groupby("file"):
-	    p = plt.plot(group["to_on"], group[metric], marker="o", linestyle="", label=name)
-	    plt.plot(group["to_off"], group[metric], marker="x", linestyle="", label=name, color=plt.gca().lines[-1].get_color())
+	# fig, axes = plt.subplots(1,2)
 
-	plt.legend()
-	plt.ylabel("%s (ms)"%metric)
-	plt.xlabel("Time to event (ms)")
+	# axes[0].hist(df["to_on"]-df["to_off"])
+	# axes[1].bar(list(range(len(df.groupby("file")))),df.groupby("file")["pulse"].mean())
 
-	plt.tight_layout()
+	# plt.title("Pulse duration distribution")
 
-	if save:
-		savefig(path, path_images, "_%s_general_scatter_on_off"%metric)
-	# #################################################
+	# if save:
+	# 	savefig(path, path_images, "_pulse_duration")
+
+
+	# # #################################################
+	# # ## Plot scatter on
+	# # #################################################
+	# plt.figure(figsize=(20,15))
+	# for name, group in df.groupby("file"):
+	#     p = plt.plot(group["to_on"], group[metric], marker="o", linestyle="", label=name)
+	#     plt.plot(group["to_off"], group[metric], marker="x", linestyle="", label=name, color=plt.gca().lines[-1].get_color())
+
+	# plt.legend()
+	# plt.ylabel("%s (ms)"%metric)
+	# plt.xlabel("Time to event (ms)")
+
+	# plt.tight_layout()
+
+	# if save:
+	# 	savefig(path, path_images, "_%s_general_scatter_on_off"%metric)
+	# # #################################################
 
 
 if show:
