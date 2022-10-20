@@ -52,9 +52,12 @@ if read:
 
 
 	# day_dict = {'to_off': np.empty(1),'duration': np.empty(1)}
-	day_dict = {'to_on': [],'to_off': [],'duration': [],'repol_slope': [],'depol_slope': [], 'file': []}
+	# day_dict = {'to_on': [],'to_off': [],'duration': [],'repol_slope': [],'depol_slope': [], 'file': []}
+	day_dict = {'to_on': [],'to_off': [],'duration': [],'repol_slope': [],'depol_slope': [],'repol_slope2': [],'depol_slope2': [], 'file': []}
 
-	controls_dict = {'control_duration': [], 'recovery_duration': [],'control_depol_slope': [], 'recovery_depol_slope': [], 'control_repol_slope': [], 'recovery_repol_slope': [], 'file': []}
+	# controls_dict = {'control_duration': [], 'recovery_duration': [],'control_depol_slope': [], 'recovery_depol_slope': [], 'control_repol_slope': [], 'recovery_repol_slope': [], 'file': []}
+	controls_dict = {'control_duration': [], 'recovery_duration': [],'control_depol_slope': [], 'recovery_depol_slope': [], 'control_repol_slope': [], 'recovery_repol_slope': [],
+	'control_depol_slope2': [], 'recovery_depol_slope2': [], 'control_repol_slope2': [], 'recovery_repol_slope2': [], 'file': []}
 
 	for file in files:
 		file_ext = file[file.rfind('/'):-4]
@@ -69,6 +72,7 @@ if read:
 		waveforms, stim = read_data(file, 'laser')
 		durations = get_durs(waveforms)
 		slopes_dep, slopes_rep = get_slopes(waveforms)
+		slopes_dep2, slopes_rep2 = get_slopes(waveforms, slope_position=0.98)
 		plt.title('laser\n'+file_ext)
 		# print("saving ",path+'laser'+file_ext[1:])
 		plt.tight_layout()
@@ -88,26 +92,33 @@ if read:
 		stim = stim[np.where(durations>2)]
 		slopes_dep = slopes_dep[np.where(durations>2)]
 		slopes_rep = slopes_rep[np.where(durations>2)]
+		slopes_dep2 = slopes_dep2[np.where(durations>2)]
+		slopes_rep2 = slopes_rep2[np.where(durations>2)]
 		durations = durations[np.where(durations>2)]
+
 
 		day_dict['to_on'].extend(stim[:,0].tolist())
 		day_dict['to_off'].extend(stim[:,1].tolist())
 		day_dict['duration'].extend(durations.tolist())
 		day_dict['depol_slope'].extend(slopes_dep.tolist())
 		day_dict['repol_slope'].extend(slopes_rep.tolist())
+		day_dict['depol_slope2'].extend(slopes_dep2.tolist())
+		day_dict['repol_slope2'].extend(slopes_rep2.tolist())
 				
 
 		day_dict['file'].extend([file]*durations.size)
 
 		plt.figure()
-		control_durations, control_slopes_dep, control_slopes_rep, n = get_metrics_from_file(file, 'control')
+		# control_durations, control_slopes_dep, control_slopes_rep, n = get_metrics_from_file(file, 'control')
+		control_durations, control_slopes_dep, control_slopes_rep, control_slopes_dep2, control_slopes_rep2, n = get_metrics_from_file(file, 'control')
 		plt.title('control\n'+file_ext)
 		plt.tight_layout()
 		if save:
 			plt.savefig(path+"events/images/charact_"+file_ext[1:-4]+'_control')
 		
 		plt.figure()
-		recovery_durations, recovery_slopes_dep, recovery_slopes_rep, n = get_metrics_from_file(file, 'recovery')
+		# recovery_durations, recovery_slopes_dep, recovery_slopes_rep, n = get_metrics_from_file(file, 'recovery')
+		recovery_durations, recovery_slopes_dep, recovery_slopes_rep,recovery_slopes_dep2, recovery_slopes_rep2, n = get_metrics_from_file(file, 'recovery')
 		plt.title('recovery\n'+file_ext)
 		plt.tight_layout()
 		if save:
@@ -123,6 +134,12 @@ if read:
 
 		controls_dict['control_repol_slope'].extend(control_slopes_rep.tolist())
 		controls_dict['recovery_repol_slope'].extend(recovery_slopes_rep.tolist())
+
+		controls_dict['control_depol_slope2'].extend(control_slopes_dep.tolist())
+		controls_dict['recovery_depol_slope2'].extend(recovery_slopes_dep.tolist())
+
+		controls_dict['control_repol_slope2'].extend(control_slopes_rep.tolist())
+		controls_dict['recovery_repol_slope2'].extend(recovery_slopes_rep.tolist())
 
 		controls_dict['file'].extend(max([file]*control_durations.size,[file]*recovery_durations.size))
 
@@ -149,7 +166,8 @@ else:
 
 # exit()
 #get laser continuous reference
-laser_dict = {'laser_duration': [],'laser_depol_slope': [],'laser_repol_slope': [],'file': []}
+laser_dict = {'laser_duration': [],'laser_depol_slope': [],'laser_repol_slope': [],
+				'laser_depol_slope2': [],'laser_repol_slope2': [],'file': []}
 # exit()
 
 files_laser = glob.glob(path+"exp*laser*.asc")
@@ -160,7 +178,8 @@ for file in files_laser:
 	# print(file)
 
 	# exit()
-	laser_durations,laser_depol_slope, laser_repol_slope, n = get_metrics_from_file(file, 'laser')
+	# laser_durations,laser_depol_slope, laser_repol_slope, n = get_metrics_from_file(file, 'laser')
+	laser_durations,laser_depol_slope, laser_repol_slope, laser_depol_slope2, laser_repol_slope2, n = get_metrics_from_file(file, 'laser')
 
 	plt.title('laser\n'+file_ext)
 	# print("saving ",path+'laser'+file_ext[1:])
@@ -170,6 +189,8 @@ for file in files_laser:
 	laser_dict['laser_duration'].extend(laser_durations.tolist())
 	laser_dict['laser_depol_slope'].extend(laser_depol_slope.tolist())
 	laser_dict['laser_repol_slope'].extend(laser_repol_slope.tolist())
+	laser_dict['laser_depol_slope2'].extend(laser_depol_slope.tolist())
+	laser_dict['laser_repol_slope2'].extend(laser_repol_slope.tolist())
 
 	laser_dict['file'].extend([file]*laser_durations.size)
 
@@ -201,7 +222,7 @@ path_own = ext + str(args['range_step']) + str(args['range'].replace('\\','') if
 path_images = path + '/events/images/shutter/' +path_own +'/'+path_own
 os.system("mkdir -p %s"%path_images)
 
-for metric in ["duration", "depol_slope", "repol_slope"]:
+for metric in ["duration", "depol_slope", "repol_slope", "depol_slope2", "repol_slope2"]:
 
 	## Plot boxplot
 	# cut_range = args['range']

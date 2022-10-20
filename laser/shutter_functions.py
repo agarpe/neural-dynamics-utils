@@ -12,7 +12,7 @@ def savefig(path, path_images, name):
     plt.savefig(savepath + '.pdf',format='pdf')
 
 
-def get_slopes(waveforms,dt=0.1, width_r=40, width_l=40):
+def get_slopes(waveforms,dt=0.1, width_r=40, width_l=40, slope_position=0.5 ):
 
 
     slope_dep =[]
@@ -26,7 +26,7 @@ def get_slopes(waveforms,dt=0.1, width_r=40, width_l=40):
             continue
 
         # vals,th = sf.get_spike_duration(spike,dt=0.1,tol=1)
-        slope_inc,slope_dec = sf.get_slope(spike,dt)
+        slope_inc,slope_dec = sf.get_slope(spike,dt,slope_position=slope_position)
 
         # plt.plot(spike)
         # vals = np.array(vals)
@@ -36,7 +36,7 @@ def get_slopes(waveforms,dt=0.1, width_r=40, width_l=40):
         # try:
         slope_dep.append(slope_inc)
         slope_rep.append(slope_dec)   
- 
+
 
         # except:
             # print(vals)
@@ -94,6 +94,7 @@ def get_metrics_from_file(path, ctype):
     waveforms, stim = read_data(path, ctype)
     durations = get_durs(waveforms)
     slopes_dep, slopes_rep = get_slopes(waveforms)
+    slopes_dep2, slopes_rep2 = get_slopes(waveforms, slope_position=0.98)
 
     try:
         stim = stim[np.where(durations>2)]
@@ -103,8 +104,10 @@ def get_metrics_from_file(path, ctype):
     durations = durations[np.where(durations>2)]
     slopes_dep = slopes_dep[np.where(durations>2)]
     slopes_rep = slopes_rep[np.where(durations>2)]
+    slopes_dep2 = slopes_dep2[np.where(durations>2)]
+    slopes_rep2 = slopes_rep2[np.where(durations>2)]
 
-    return durations, slopes_dep, slopes_rep, stim
+    return durations, slopes_dep, slopes_rep, slopes_dep2, slopes_rep2, stim
 
 
 def plot_boxplot(df,column, metric, cut_range, step_range, df_controls=None, df_laser=None):
@@ -128,11 +131,12 @@ def plot_boxplot(df,column, metric, cut_range, step_range, df_controls=None, df_
 
     if df_controls is not None and df_laser is not None:
         ticks = ax.get_xticklabels()
-
+        # try:
         ax.boxplot(df_controls["control_%s"%metric][df_controls["control_%s"%metric].notnull()], positions = [-1], showmeans=True, showfliers=False)
         ax.boxplot(df_controls["recovery_%s"%metric][df_controls["recovery_%s"%metric].notnull()], positions = [0], showmeans=True, showfliers=False)
         ax.boxplot(df_laser["laser_%s"%metric][df_laser["laser_%s"%metric].notnull()], positions = [len(ticks)+1], showmeans=True, showfliers=False)
-
+        # except:
+            # return ax
         ticks = ["%s"%t.get_text() for t in ticks] +["control"]+["recovery"] + ["continuous laser"]
 
         n_ticks = ax.get_xticks()
