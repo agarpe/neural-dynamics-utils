@@ -89,23 +89,36 @@ def read_data(path, ctype):
     return waveforms, stim
 
 
-def get_metrics_from_file(path, ctype):
+def get_metrics_from_file(path, ctype, slope_position=0.98, dict_={}, min_dur=2, ext=''):
 
     waveforms, stim = read_data(path, ctype)
     durations = get_durs(waveforms)
     slopes_dep, slopes_rep = get_slopes(waveforms)
-    slopes_dep2, slopes_rep2 = get_slopes(waveforms, slope_position=0.98)
+    slopes_dep2, slopes_rep2 = get_slopes(waveforms, slope_position=slope_position)
 
     try:
-        stim = stim[np.where(durations>2)]
-    except:
+        stim = stim[np.where(durations>min_dur)]
+        stim[:,:] *= -1
+        dict_[ext+'to_on'].extend(stim[:,0].tolist())
+        dict_[ext+'to_off'].extend(stim[:,1].tolist())
+    except Exception as e:
+        print(e)
         pass
 
-    durations = durations[np.where(durations>2)]
-    slopes_dep = slopes_dep[np.where(durations>2)]
-    slopes_rep = slopes_rep[np.where(durations>2)]
-    slopes_dep2 = slopes_dep2[np.where(durations>2)]
-    slopes_rep2 = slopes_rep2[np.where(durations>2)]
+    #Todo: do this in dataframe, not here...
+    durations = durations[np.where(durations>min_dur)]
+    slopes_dep = slopes_dep[np.where(durations>min_dur)]
+    slopes_rep = slopes_rep[np.where(durations>min_dur)]
+    slopes_dep2 = slopes_dep2[np.where(durations>min_dur)]
+    slopes_rep2 = slopes_rep2[np.where(durations>min_dur)]
+
+    dict_[ext+'duration'].extend(durations.tolist())
+    dict_[ext+'depol_slope'].extend(slopes_dep.tolist())
+    dict_[ext+'repol_slope'].extend(slopes_rep.tolist())
+    dict_[ext+'depol_slope2'].extend(slopes_dep2.tolist())
+    dict_[ext+'repol_slope2'].extend(slopes_rep2.tolist())
+    dict_['file'].extend([path]*durations.size)
+    # controls_dict['file'].extend(max([file]*control_durations.size,[file]*recovery_durations.size))
 
     return durations, slopes_dep, slopes_rep, slopes_dep2, slopes_rep2, stim
 
