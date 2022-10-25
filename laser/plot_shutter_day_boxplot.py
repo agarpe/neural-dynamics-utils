@@ -131,7 +131,7 @@ for file in files_laser:
 	bunched_data_laser = get_metrics_from_file(file, 'laser', slope_position=0.99, ext='laser_', dict_=laser_dict)
 
 	plt.title('laser\n'+file_ext)
-	print("saving ",path+'laser'+file_ext[1:])
+	print("saving ",path+'laser_'+file_ext[1:])
 	plt.tight_layout()
 	if save:
 		plt.savefig(path+"events/images/charact_"+file_ext[1:-4]+'_laser')
@@ -164,15 +164,25 @@ path_own = ext + str(args['range_step']) + str(args['range'].replace('\\','') if
 path_images = path + '/events/images/shutter/' +path_own +'/'+path_own
 os.system("mkdir -p %s"%path_images)
 
-for metric in ["duration", "depol_slope", "repol_slope", "depol_slope2", "repol_slope2"]:
+metrics = ["duration", "depol_slope", "repol_slope", "depol_slope2", "repol_slope2"]
+for metric in metrics:
 
-	## Plot boxplot
+	cut_range = args['range']
+
+	plot_boxplot_mean(df,"to_off",metric, cut_range, step_range, df_controls)
+	
+	if save:
+		savefig(path, path_images, "_%s_mean_boxplot_to_off"%metric)
+
+
+	# # Plot boxplot
 	# cut_range = args['range']
 
-	# plot_boxplot(df,"to_off", metric, cut_range, step_range)
+	# plot_boxplot(df,"to_off", 'diff_'+metric, cut_range, step_range)
 
 	# if save:
 	# 	savefig(path, path_images, "_%s_boxplot_to_off"%metric)
+
 
 	# ## Plot boxplot to on
 	# cut_range = args['range']
@@ -190,8 +200,9 @@ for metric in ["duration", "depol_slope", "repol_slope", "depol_slope2", "repol_
 	plt.suptitle(path_images)
 	if save:
 		savefig(path, path_images,"_%s_boxplot_control_to_off"%(metric))
-	plt.show()
-	exit()
+	# plt.show()
+	# continue
+	# exit()
 	# ## Plot boxplot with control to on
 	# cut_range = args['range']
 

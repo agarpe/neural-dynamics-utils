@@ -123,7 +123,7 @@ def get_metrics_from_file(path, ctype, slope_position=0.98, dict_={}, min_dur=2,
     return durations, slopes_dep, slopes_rep, slopes_dep2, slopes_rep2, stim
 
 
-def plot_boxplot(df,column, metric, cut_range, step_range, df_controls=None, df_laser=None):
+def plot_boxplot_mean(df,column, metric, cut_range, step_range, df_controls=None, df_laser=None):
     
     if cut_range is not None:
         cut_range = [int(r.replace('\\','')) for r in cut_range.split(',')]
@@ -135,6 +135,43 @@ def plot_boxplot(df,column, metric, cut_range, step_range, df_controls=None, df_
     # print(df[column])
     df["range"] = pd.cut(df[column], np.arange(cut_range[0], cut_range[1], step_range))
 
+    df_controls['control_'+metric] = pd.to_numeric(df_controls['control_'+metric])
+    durations_control = df_controls[['control_'+metric, 'file']].dropna()
+
+    # def custom_mean(df):
+    #     return df.mean(skipna=False)
+
+    # print(durations_control)
+    # control_means = durations_control[['control_'+metric,'file']].groupby('file').agg({'control_'+metric:custom_mean})
+    control_means = durations_control[['control_'+metric,'file']].groupby('file').mean()
+
+    # print(control_means)
+
+    df["diff_"+metric] = np.nan
+    for i,file in enumerate(control_means.index):
+        df.loc[df['file'] == file, "diff_"+metric] = df.loc[df['file'] == file, metric].apply(lambda x: x - control_means.loc[file]).values
+
+    # print(df.describe())
+    boxprops = dict(linestyle='-', linewidth=3, color='C0')
+    ax = df.boxplot(column='diff_'+metric,by='range',figsize=(80,20), showmeans=True, showfliers=False,boxprops=boxprops)
+    ax.set_ylabel(u"Spike Δ%s"%metric)
+    ax.set_xlabel("Time %s event (ms)"%column)
+    plt.tight_layout()
+
+    return ax
+
+def plot_boxplot(df,column, metric, cut_range, step_range, df_controls=None, df_laser=None):
+    
+    if cut_range is not None:
+        cut_range = [int(r.replace('\\','')) for r in cut_range.split(',')]
+    else:
+        cut_range = [df[column].min(), df[column].max()]
+    # print(cut_range)
+
+    # https://stackoverflow.com/questions/21441259/pandas-groupby-range-of-values
+    # print(df[column])
+    df["range"] = pd.cut(df[column], np.arange(cut_range[0], cut_range[1], step_range))
+   
     # print(df.describe())
     boxprops = dict(linestyle='-', linewidth=3, color='C0')
     ax = df.boxplot(column=metric,by='range',figsize=(80,20), showmeans=True, showfliers=False,boxprops=boxprops)
