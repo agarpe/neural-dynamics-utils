@@ -55,8 +55,14 @@ if read:
 	day_dict = {'to_on': [],'to_off': [],'duration': [],'repol_slope': [],'depol_slope': [],'repol_slope2': [],'depol_slope2': [], 'file': []}
 
 	# controls_dict = {'control_duration': [], 'recovery_duration': [],'control_depol_slope': [], 'recovery_depol_slope': [], 'control_repol_slope': [], 'recovery_repol_slope': [], 'file': []}
-	controls_dict = {'recovery_to_on': [], 'recovery_to_off': [], 'control_to_on': [], 'control_to_off': [], 'control_duration': [], 'recovery_duration': [],'control_depol_slope': [], 'recovery_depol_slope': [], 'control_repol_slope': [], 'recovery_repol_slope': [],
-	'control_depol_slope2': [], 'recovery_depol_slope2': [], 'control_repol_slope2': [], 'recovery_repol_slope2': [], 'file': [], 'stim':[]}
+	controls_dict = {'control_to_on': [], 'control_to_off': [], 'control_duration': [],'control_depol_slope': [], 'control_repol_slope': [],
+	'control_depol_slope2': [], 'control_repol_slope2': [], 'file': [], 'stim':[]}
+	
+	recovery_dict = {'control_to_on': [], 'control_to_off': [], 'control_duration': [],'control_depol_slope': [], 'control_repol_slope': [],
+	'control_depol_slope2': [], 'control_repol_slope2': [], 'file': [], 'stim':[]}
+	
+	# {'recovery_to_on': [], 'recovery_to_off': [], 'control_to_on': [], 'control_to_off': [], 'control_duration': [], 'recovery_duration': [],'control_depol_slope': [], 'recovery_depol_slope': [], 'control_repol_slope': [], 'recovery_repol_slope': [],
+	# 'recovery_depol_slope2': [], 'control_repol_slope2': [], 'recovery_repol_slope2': [], 'file': [], 'stim':[]}
 
 	# files = files[:4]
 
@@ -79,39 +85,47 @@ if read:
 
 		plt.figure()
 		bunched_data_control = get_metrics_from_file(file, 'control', slope_position=0.99, dict_=controls_dict, ext='control_')
+		
+		print(bunched_data_control[0])
+
 		plt.title('control\n'+file_ext)
 		plt.tight_layout()
 		if save:
 			plt.savefig(path+"events/images/charact_"+file_ext[1:-4]+'_control')
 		
 		plt.figure()
-		bunched_data_recovery = get_metrics_from_file(file, 'recovery', slope_position=0.99, dict_=controls_dict, ext='recovery_')
+		bunched_data_recovery = get_metrics_from_file(file, 'recovery', slope_position=0.99, dict_=recovery_dict, ext='control_')
 		plt.title('recovery\n'+file_ext)
 		plt.tight_layout()
 		if save:
 			plt.savefig(path+"events/images/charact_"+file_ext[1:-4]+'_recovery')
 		# plt.show()
-		
+		print(bunched_data_recovery[0])
+	
 	df_controls = pd.DataFrame.from_dict(controls_dict, orient='index')
 	df_controls = df_controls.transpose()
 
-	# print(df_controls.describe())
+	df_recovery = pd.DataFrame.from_dict(recovery_dict, orient='index')
+	df_recovery = df_recovery.transpose()
 
 	df = pd.DataFrame.from_dict(day_dict, orient='index')
 	df = df.transpose()
 
 	# print(df.describe())
 
-	df = df.dropna()
+	# df = df.dropna()
 	print(df.describe())
 
 	df_controls.to_pickle(path + path[path[:-1].rfind('/'):-1] +"_shutter_controls.pkl")
+	df_recovery.to_pickle(path + path[path[:-1].rfind('/'):-1] +"_shutter_recovery.pkl")
 	df.to_pickle(path + path[path[:-1].rfind('/'):-1] +"_shutter_laser.pkl")
 
 else:
 	df = pd.read_pickle(path + path[path[:-1].rfind('/'):-1] +"_shutter_laser.pkl")
 	df_controls = pd.read_pickle(path + path[path[:-1].rfind('/'):-1] +"_shutter_controls.pkl")
+	df_recovery = pd.read_pickle(path + path[path[:-1].rfind('/'):-1] +"_shutter_recovery.pkl")
 # df_laser = pd.read_pickle(path + path[path[:-1].rfind('/'):-1] +"_shutter_laser_continuous.pkl")
+
 
 # exit()
 #get laser continuous reference
@@ -174,6 +188,9 @@ for metric in metrics:
 	if save:
 		savefig(path, path_images, "_%s_mean_boxplot_to_off"%metric)
 
+	plot_boxplot_mean(df,"to_off",metric, cut_range, step_range, df_recovery)
+	
+	exit()
 
 	# # Plot boxplot
 	# cut_range = args['range']

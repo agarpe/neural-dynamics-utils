@@ -118,7 +118,6 @@ def get_metrics_from_file(path, ctype, slope_position=0.98, dict_={}, min_dur=2,
     dict_[ext+'depol_slope2'].extend(slopes_dep2.tolist())
     dict_[ext+'repol_slope2'].extend(slopes_rep2.tolist())
     dict_['file'].extend([path]*durations.size)
-    # controls_dict['file'].extend(max([file]*control_durations.size,[file]*recovery_durations.size))
 
     return durations, slopes_dep, slopes_rep, slopes_dep2, slopes_rep2, stim
 
@@ -136,6 +135,8 @@ def plot_boxplot_mean(df,column, metric, cut_range, step_range, df_controls=None
     df["range"] = pd.cut(df[column], np.arange(cut_range[0], cut_range[1], step_range))
 
     df_controls['control_'+metric] = pd.to_numeric(df_controls['control_'+metric])
+
+    #TODO: FIX por qué nan¿?
     durations_control = df_controls[['control_'+metric, 'file']].dropna()
 
     # def custom_mean(df):
