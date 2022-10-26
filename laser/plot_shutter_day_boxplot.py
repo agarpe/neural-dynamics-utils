@@ -7,6 +7,9 @@ import glob
 import superpos_functions as sf
 from shutter_functions import *
 
+all_metrics = ['to_on','to_off','duration','repol_slope','depol_slope','repol_slope2','depol_slope2', 'file']
+
+
 plt.rcParams.update({'font.size': 25})
 
 ap = argparse.ArgumentParser()
@@ -54,24 +57,12 @@ if read:
 
 	print(files)
 
-	# day_dict = {'to_off': np.empty(1),'duration': np.empty(1)}
-	# day_dict = {'to_on': [],'to_off': [],'duration': [],'repol_slope': [],'depol_slope': [], 'file': []}
-	day_dict = {'to_on': [],'to_off': [],'duration': [],'repol_slope': [],'depol_slope': [],'repol_slope2': [],'depol_slope2': [], 'file': []}
+	day_dict = {m:[] for m in all_metrics}
+	controls_dict = {'control_'+m if m!='file' else m:[]  for m in all_metrics}
+	recovery_dict = {'recovery_'+m if m!='file' else m:[] for m in all_metrics}
+	laser_dict = {'laser_'+m if m!='file' else m:[] for m in all_metrics}
 
-	# controls_dict = {'control_duration': [], 'recovery_duration': [],'control_depol_slope': [], 'recovery_depol_slope': [], 'control_repol_slope': [], 'recovery_repol_slope': [], 'file': []}
-	controls_dict = {'control_to_on': [], 'control_to_off': [], 'control_duration': [],'control_depol_slope': [], 'control_repol_slope': [],
-	'control_depol_slope2': [], 'control_repol_slope2': [], 'file': [], 'stim':[]}
-	
-	recovery_dict = {'recovery_to_on': [], 'recovery_to_off': [], 'recovery_duration': [],'recovery_depol_slope': [], 'recovery_repol_slope': [],
-	'recovery_depol_slope2': [], 'recovery_repol_slope2': [], 'file': [], 'stim':[]}
-	
-	# {'recovery_to_on': [], 'recovery_to_off': [], 'control_to_on': [], 'control_to_off': [], 'control_duration': [], 'recovery_duration': [],'control_depol_slope': [], 'recovery_depol_slope': [], 'control_repol_slope': [], 'recovery_repol_slope': [],
-	# 'recovery_depol_slope2': [], 'control_repol_slope2': [], 'recovery_repol_slope2': [], 'file': [], 'stim':[]}
 
-	# files = files[:4]
-
-	laser_dict = {'laser_to_on':[], 'laser_to_off':[], 'stim':[],'laser_duration': [],'laser_depol_slope': [],'laser_repol_slope': [],
-				'laser_depol_slope2': [],'laser_repol_slope2': [],'file': []}
 	for file in files:
 		file_ext = file[file.rfind('/'):-4]
 		file = path + '/events/' + file_ext
@@ -127,17 +118,17 @@ if read:
 	print(df.describe())
 
 	save_path = path + path[path[:-1].rfind('/'):-1]
-	df_controls.to_pickle(save_path +"_shutter_controls.pkl")
-	df_recovery.to_pickle(save_path +"_shutter_recovery.pkl")
-	df_laser.to_pickle(save_path +"_shutter_laser_continuous.pkl")
-	df.to_pickle(save_path +"_shutter_laser.pkl")
+	df_controls.to_pickle(save_path +"%s_shutter_controls.pkl"%extension)
+	df_recovery.to_pickle(save_path +"%s_shutter_recovery.pkl"%extension)
+	df_laser.to_pickle(save_path +"%s_shutter_laser_continuous.pkl"%extension)
+	df.to_pickle(save_path +"%s_shutter_laser.pkl"%extension)
 
 else:
 	save_path = path + path[path[:-1].rfind('/'):-1]
-	df = pd.read_pickle(save_path +"_shutter_laser.pkl")
-	df_controls = pd.read_pickle(save_path +"_shutter_controls.pkl")
-	df_recovery = pd.read_pickle(save_path +"_shutter_recovery.pkl")
-	df_laser = pd.read_pickle(save_path +"_shutter_laser_continuous.pkl")
+	df = pd.read_pickle(save_path +"%s_shutter_laser.pkl"%extension)
+	df_controls = pd.read_pickle(save_path +"%s_shutter_controls.pkl"%extension)
+	df_recovery = pd.read_pickle(save_path +"%s_shutter_recovery.pkl"%extension)
+	df_laser = pd.read_pickle(save_path +"%s_shutter_laser_continuous.pkl"%extension)
 
 
 if lim != np.inf:
