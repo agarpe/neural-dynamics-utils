@@ -43,12 +43,16 @@ if read:
 	print("Reading from asc")
 	files = glob.glob(path+"exp*%s*.asc"%extension)
 	files.sort(key=os.path.getmtime)
-	print(files)
 
 	if len(files) == 0:
 		print("Files not found for path:", path) 
 		exit() 
 
+	files_laser = glob.glob(path+"exp*laser*.asc")
+
+	files += files_laser
+
+	print(files)
 
 	# day_dict = {'to_off': np.empty(1),'duration': np.empty(1)}
 	# day_dict = {'to_on': [],'to_off': [],'duration': [],'repol_slope': [],'depol_slope': [], 'file': []}
@@ -58,25 +62,32 @@ if read:
 	controls_dict = {'control_to_on': [], 'control_to_off': [], 'control_duration': [],'control_depol_slope': [], 'control_repol_slope': [],
 	'control_depol_slope2': [], 'control_repol_slope2': [], 'file': [], 'stim':[]}
 	
-	recovery_dict = {'control_to_on': [], 'control_to_off': [], 'control_duration': [],'control_depol_slope': [], 'control_repol_slope': [],
-	'control_depol_slope2': [], 'control_repol_slope2': [], 'file': [], 'stim':[]}
+	recovery_dict = {'recovery_to_on': [], 'recovery_to_off': [], 'recovery_duration': [],'recovery_depol_slope': [], 'recovery_repol_slope': [],
+	'recovery_depol_slope2': [], 'recovery_repol_slope2': [], 'file': [], 'stim':[]}
 	
 	# {'recovery_to_on': [], 'recovery_to_off': [], 'control_to_on': [], 'control_to_off': [], 'control_duration': [], 'recovery_duration': [],'control_depol_slope': [], 'recovery_depol_slope': [], 'control_repol_slope': [], 'recovery_repol_slope': [],
 	# 'recovery_depol_slope2': [], 'control_repol_slope2': [], 'recovery_repol_slope2': [], 'file': [], 'stim':[]}
 
 	# files = files[:4]
 
+	laser_dict = {'laser_to_on':[], 'laser_to_off':[], 'stim':[],'laser_duration': [],'laser_depol_slope': [],'laser_repol_slope': [],
+				'laser_depol_slope2': [],'laser_repol_slope2': [],'file': []}
 	for file in files:
 		file_ext = file[file.rfind('/'):-4]
 		file = path + '/events/' + file_ext
 		print(file)
 
-		if extension == '' and ('depol' not in file and 'repol' not in file and 'slope' not in file):
-			continue
-		# exit()
 		plt.figure()
-		bunched_data = get_metrics_from_file(file, 'laser', slope_position=0.98, dict_=day_dict)
-		plt.title('shutter laser\n'+file_ext)
+
+		# if extension == '' and ('depol' not in file and 'repol' not in file and 'slope' not in file):
+		if ('depol' not in file and 'repol' not in file and 'slope' not in file):
+			# continue
+			bunched_data = get_metrics_from_file(file, 'laser', slope_position=0.98, dict_=laser_dict, ext = 'laser_')
+		else:
+			bunched_data = get_metrics_from_file(file, 'laser', slope_position=0.98, dict_=day_dict)
+
+		# exit()
+		plt.title('laser\n'+file_ext)
 		plt.tight_layout()
 		print(path+"events/images/charact_"+file_ext[1:-4]+'_laser')
 		if save:
@@ -86,22 +97,19 @@ if read:
 		plt.figure()
 		bunched_data_control = get_metrics_from_file(file, 'control', slope_position=0.99, dict_=controls_dict, ext='control_')
 		
-		print(bunched_data_control[0])
-
 		plt.title('control\n'+file_ext)
 		plt.tight_layout()
 		if save:
 			plt.savefig(path+"events/images/charact_"+file_ext[1:-4]+'_control')
 		
 		plt.figure()
-		bunched_data_recovery = get_metrics_from_file(file, 'recovery', slope_position=0.99, dict_=recovery_dict, ext='control_')
+		bunched_data_recovery = get_metrics_from_file(file, 'recovery', slope_position=0.99, dict_=recovery_dict, ext='recovery_')
 		plt.title('recovery\n'+file_ext)
 		plt.tight_layout()
 		if save:
 			plt.savefig(path+"events/images/charact_"+file_ext[1:-4]+'_recovery')
 		# plt.show()
-		print(bunched_data_recovery[0])
-	
+
 	df_controls = pd.DataFrame.from_dict(controls_dict, orient='index')
 	df_controls = df_controls.transpose()
 
@@ -111,52 +119,25 @@ if read:
 	df = pd.DataFrame.from_dict(day_dict, orient='index')
 	df = df.transpose()
 
-	# print(df.describe())
+	df_laser = pd.DataFrame.from_dict(laser_dict, orient='index')
+	df_laser = df_laser.transpose()
+
 
 	# df = df.dropna()
 	print(df.describe())
 
-	df_controls.to_pickle(path + path[path[:-1].rfind('/'):-1] +"_shutter_controls.pkl")
-	df_recovery.to_pickle(path + path[path[:-1].rfind('/'):-1] +"_shutter_recovery.pkl")
-	df.to_pickle(path + path[path[:-1].rfind('/'):-1] +"_shutter_laser.pkl")
+	save_path = path + path[path[:-1].rfind('/'):-1]
+	df_controls.to_pickle(save_path +"_shutter_controls.pkl")
+	df_recovery.to_pickle(save_path +"_shutter_recovery.pkl")
+	df_laser.to_pickle(save_path +"_shutter_laser_continuous.pkl")
+	df.to_pickle(save_path +"_shutter_laser.pkl")
 
 else:
-	df = pd.read_pickle(path + path[path[:-1].rfind('/'):-1] +"_shutter_laser.pkl")
-	df_controls = pd.read_pickle(path + path[path[:-1].rfind('/'):-1] +"_shutter_controls.pkl")
-	df_recovery = pd.read_pickle(path + path[path[:-1].rfind('/'):-1] +"_shutter_recovery.pkl")
-# df_laser = pd.read_pickle(path + path[path[:-1].rfind('/'):-1] +"_shutter_laser_continuous.pkl")
-
-
-# exit()
-#get laser continuous reference
-laser_dict = {'laser_to_on':[], 'laser_to_off':[], 'stim':[],'laser_duration': [],'laser_depol_slope': [],'laser_repol_slope': [],
-				'laser_depol_slope2': [],'laser_repol_slope2': [],'file': []}
-# exit()
-
-files_laser = glob.glob(path+"exp*laser*.asc")
-
-for file in files_laser:
-	file_ext = file[file.rfind('/'):-4]
-	file = path + '/events/' + file_ext
-	# print(file)
-
-	# exit()
-	plt.figure()
-	bunched_data_laser = get_metrics_from_file(file, 'laser', slope_position=0.99, ext='laser_', dict_=laser_dict)
-
-	plt.title('laser\n'+file_ext)
-	print("saving ",path+'laser_'+file_ext[1:])
-	plt.tight_layout()
-	if save:
-		plt.savefig(path+"events/images/charact_"+file_ext[1:-4]+'_laser')
-
-df_laser = pd.DataFrame.from_dict(laser_dict, orient='index')
-df_laser = df_laser.transpose()
-
-# df_laser = df_laser.dropna() #Warning: breaks df with the "stim and to_on/off" empty
-# print(df_laser.describe())
-
-df_laser.to_pickle(path + path[path[:-1].rfind('/'):-1] +"_shutter_laser_continuous.pkl")
+	save_path = path + path[path[:-1].rfind('/'):-1]
+	df = pd.read_pickle(save_path +"_shutter_laser.pkl")
+	df_controls = pd.read_pickle(save_path +"_shutter_controls.pkl")
+	df_recovery = pd.read_pickle(save_path +"_shutter_recovery.pkl")
+	df_laser = pd.read_pickle(save_path +"_shutter_laser_continuous.pkl")
 
 
 if lim != np.inf:
@@ -183,14 +164,11 @@ for metric in metrics:
 
 	cut_range = args['range']
 
-	plot_boxplot_mean(df,"to_off",metric, cut_range, step_range, df_controls)
+	plot_boxplot_mean(df,"to_off",metric, cut_range, step_range, df_controls, df_laser, df_recovery)
 	
 	if save:
 		savefig(path, path_images, "_%s_mean_boxplot_to_off"%metric)
 
-	plot_boxplot_mean(df,"to_off",metric, cut_range, step_range, df_recovery)
-	
-	exit()
 
 	# # Plot boxplot
 	# cut_range = args['range']
@@ -213,7 +191,7 @@ for metric in metrics:
 	## Plot boxplot with control
 	cut_range = args['range']
 
-	ax = plot_boxplot(df,"to_off", metric, cut_range, step_range, df_controls, df_laser)
+	ax = plot_boxplot(df,"to_off", metric, cut_range, step_range, df_controls, df_laser, df_recovery)
 	plt.suptitle(path_images)
 	if save:
 		savefig(path, path_images,"_%s_boxplot_control_to_off"%(metric))
@@ -236,7 +214,7 @@ for metric in metrics:
 	# 	savefig(path, path_images,"_general_scatter_pulse_duration")
 
 	## Plot scatter for duration
-	plot_all_scatter(df, metric, save, df_controls, path, path_images)
+	plot_all_scatter(df, metric, save, df_controls, df_recovery, path, path_images)
 	## Plot duration distribution
 
 	# # ## Plot duration distribution

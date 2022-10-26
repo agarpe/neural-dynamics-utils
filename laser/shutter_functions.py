@@ -105,7 +105,7 @@ def get_metrics_from_file(path, ctype, slope_position=0.98, dict_={}, min_dur=2,
         print(e)
         pass
 
-    #Todo: do this in dataframe, not here...
+    #TODO: do this in dataframe, not here...
     durations = durations[np.where(durations>min_dur)]
     slopes_dep = slopes_dep[np.where(durations>min_dur)]
     slopes_rep = slopes_rep[np.where(durations>min_dur)]
@@ -122,7 +122,7 @@ def get_metrics_from_file(path, ctype, slope_position=0.98, dict_={}, min_dur=2,
     return durations, slopes_dep, slopes_rep, slopes_dep2, slopes_rep2, stim
 
 
-def plot_boxplot_mean(df,column, metric, cut_range, step_range, df_controls=None, df_laser=None):
+def plot_boxplot_mean(df,column, metric, cut_range, step_range, df_controls=None, df_laser=None, df_recovery=None):
     
     if cut_range is not None:
         cut_range = [int(r.replace('\\','')) for r in cut_range.split(',')]
@@ -151,17 +151,38 @@ def plot_boxplot_mean(df,column, metric, cut_range, step_range, df_controls=None
     df["diff_"+metric] = np.nan
     for i,file in enumerate(control_means.index):
         df.loc[df['file'] == file, "diff_"+metric] = df.loc[df['file'] == file, metric].apply(lambda x: x - control_means.loc[file]).values
-
+        df_recovery.loc[df_recovery['file'] == file, "diff_"+metric] = df_recovery.loc[df_recovery['file'] == file, 'recovery_'+metric].apply(lambda x: x - control_means.loc[file]).values
+        df_laser.loc[df_laser['file'] == file, "diff_"+metric] = df_laser.loc[df_laser['file'] == file, 'laser_'+metric].apply(lambda x: x - control_means.loc[file]).values
     # print(df.describe())
+
+    print(df_laser[["diff_"+metric,'file']].groupby('file').sum())
+
     boxprops = dict(linestyle='-', linewidth=3, color='C0')
     ax = df.boxplot(column='diff_'+metric,by='range',figsize=(80,20), showmeans=True, showfliers=False,boxprops=boxprops)
     ax.set_ylabel(u"Spike Δ%s"%metric)
     ax.set_xlabel("Time %s event (ms)"%column)
     plt.tight_layout()
 
+    if df_controls is not None and df_laser is not None:
+        ticks = ax.get_xticklabels()
+        # try:
+
+        ax.boxplot(df_recovery["diff_%s"%metric], positions = [0], showmeans=True, showfliers=False)
+        ax.boxplot(df_laser["diff_%s"%metric], positions = [len(ticks)+1], showmeans=True, showfliers=False)
+        # except:
+            # return ax
+        ticks = ["%s"%t.get_text() for t in ticks] +["recovery"] + ["continuous laser"]
+
+        n_ticks = ax.get_xticks()
+
+        ax.set_xticks(n_ticks,ticks)
+        ax.set_xticklabels(ticks)
+
+        plt.tight_layout()
+    
     return ax
 
-def plot_boxplot(df,column, metric, cut_range, step_range, df_controls=None, df_laser=None):
+def plot_boxplot(df,column, metric, cut_range, step_range, df_controls=None, df_laser=None, df_recovery=None):
     
     if cut_range is not None:
         cut_range = [int(r.replace('\\','')) for r in cut_range.split(',')]
@@ -184,7 +205,7 @@ def plot_boxplot(df,column, metric, cut_range, step_range, df_controls=None, df_
         ticks = ax.get_xticklabels()
         # try:
         ax.boxplot(df_controls["control_%s"%metric][df_controls["control_%s"%metric].notnull()], positions = [-1], showmeans=True, showfliers=False)
-        ax.boxplot(df_controls["recovery_%s"%metric][df_controls["recovery_%s"%metric].notnull()], positions = [0], showmeans=True, showfliers=False)
+        ax.boxplot(df_recovery["recovery_%s"%metric][df_recovery["recovery_%s"%metric].notnull()], positions = [0], showmeans=True, showfliers=False)
         ax.boxplot(df_laser["laser_%s"%metric][df_laser["laser_%s"%metric].notnull()], positions = [len(ticks)+1], showmeans=True, showfliers=False)
         # except:
             # return ax
@@ -204,7 +225,7 @@ def plot_boxplot(df,column, metric, cut_range, step_range, df_controls=None, df_
 #df dataframe
 # column e.g. to_off
 # metric e.g. duration
-def plot_scatter(df, column, metric, ylabel, xlabel, df_controls=None, median = True):
+def plot_scatter(df, column, metric, ylabel, xlabel, df_controls=None, df_recovery=None, median = True):
     plt.figure(figsize=(20,15))
 
     colors = plt.cm.tab20(np.linspace(0,1,len(df.groupby("file"))))
@@ -220,7 +241,7 @@ def plot_scatter(df, column, metric, ylabel, xlabel, df_controls=None, median = 
         
         if df_controls is not None:
             control = df_controls.loc[df_controls['file'] == name]["control_duration"]
-            recovery = df_controls.loc[df_controls['file'] == name]["recovery_duration"]
+            recovery = df_recovery.loc[df_controls['file'] == name]["recovery_duration"]
             plt.plot(np.zeros(control.size), control, marker="o", linestyle="", color='k')
             plt.plot(np.zeros(recovery.size)+5, recovery, marker="o", linestyle="", color='k')
         
@@ -234,7 +255,7 @@ def plot_scatter(df, column, metric, ylabel, xlabel, df_controls=None, median = 
     plt.tight_layout()
 
 
-def plot_all_scatter(df, metric, save, df_controls, path, path_images):
+def plot_all_scatter(df, metric, save, df_controls, df_recovery, path, path_images):
 
     # ## Plot scatter
     # plot_scatter(df, "to_off", metric, "Spike %s (ms)"%metric, "Time from spike to off (ms)")
@@ -249,13 +270,13 @@ def plot_all_scatter(df, metric, save, df_controls, path, path_images):
     #     savefig(path, path_images, "_%s_general_scatter_to_on"%metric)
 
     ## Plot scatter
-    plot_scatter(df, "to_off", metric, "Spike %s "%metric, "Time from spike to off (ms)", df_controls=df_controls)
+    plot_scatter(df, "to_off", metric, "Spike %s "%metric, "Time from spike to off (ms)", df_controls=df_controls, df_recovery=df_recovery)
 
     if save:
         savefig(path, path_images, "_%s_general_scatter_to_off_control"%metric)
 
     ## Plot scatter on
-    plot_scatter(df, "to_on", metric, "Spike %s "%metric, "Time from spike to on (ms)", df_controls=df_controls)
+    plot_scatter(df, "to_on", metric, "Spike %s "%metric, "Time from spike to on (ms)", df_controls=df_controls, df_recovery=df_recovery)
 
     if save:
         savefig(path, path_images, "_%s_general_scatter_to_on_control"%metric)
