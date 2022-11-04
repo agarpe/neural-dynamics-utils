@@ -62,6 +62,8 @@ if read:
 	recovery_dict = {'recovery_'+m if m!='file' else m:[] for m in all_metrics}
 	laser_dict = {'laser_'+m if m!='file' else m:[] for m in all_metrics}
 
+	path_images = path+"events/images/"
+	os.system("mkdir -p %s"%path_images)
 
 	for file in files:
 		file_ext = file[file.rfind('/'):-4]
@@ -73,9 +75,9 @@ if read:
 		# if extension == '' and ('depol' not in file and 'repol' not in file and 'slope' not in file):
 		if ('depol' not in file and 'repol' not in file and 'slope' not in file):
 			# continue
-			bunched_data = get_metrics_from_file(file, 'laser', slope_position=0.98, dict_=laser_dict, ext = 'laser_')
+			bunched_data = get_metrics_from_file(file, 'laser', slope_position=0.99, dict_=laser_dict, ext = 'laser_')
 		else:
-			bunched_data = get_metrics_from_file(file, 'laser', slope_position=0.98, dict_=day_dict)
+			bunched_data = get_metrics_from_file(file, 'laser', slope_position=0.99, dict_=day_dict)
 
 		# exit()
 		plt.title('laser\n'+file_ext)
@@ -131,6 +133,21 @@ else:
 	df_laser = pd.read_pickle(save_path +"%s_shutter_laser_continuous.pkl"%extension)
 
 
+df = df.dropna()
+
+df_clean = remove_outliers(df, ['duration'], 3)
+
+print(df.loc[df['file']=='18-10-2022//events//exp14_depol_50ON_5bck', ['duration','repol_slope']])
+print(df_clean.loc[df_clean['file']=='18-10-2022//events//exp14_depol_50ON_5bck', ['duration','repol_slope']])
+
+# for file in df_clean['file']:
+# 	print(df_clean.loc[df_clean['file']==file, 'duration'])
+# 	print(df.loc[df['file']==file, 'duration'])
+
+print(df_clean)
+
+
+
 if lim != np.inf:
 	df.drop(df[df.to_off > lim].index, inplace=True)
 
@@ -147,18 +164,43 @@ if args['range'] is not None:
 ext = "ext"+extension+"_"
 
 path_own = ext + str(args['range_step']) + str(args['range'].replace('\\','') if args['range'] is not None else '' + "_" + str(step_range))
-path_images = path + '/events/images/shutter/' +path_own +'/'+path_own
+path_images = path + '/events/images/shutter/' +path_own +'/'
 os.system("mkdir -p %s"%path_images)
 
 metrics = ["duration", "depol_slope", "repol_slope", "depol_slope2", "repol_slope2"]
+
+
+# Plot boxplot
+cut_range = args['range']
+
+plot_boxplot_combined(df,"to_off", metrics, cut_range, step_range, df_controls, df_laser, df_recovery)
+plt.suptitle(path_images)
+
+if save:
+	savefig(path, path_images, "complete_boxplot_to_off")
+
+# Plot boxplot
+cut_range = args['range']
+
+plot_boxplot_mean_combined(df,"to_off", metrics, cut_range, step_range, df_controls, df_laser, df_recovery)
+plt.suptitle(path_images)
+
+if save:
+	savefig(path, path_images, "complete_boxplot_to_off_mean_diff")
+
+plt.show()
+# exit()
+
+
 for metric in metrics:
 
-	cut_range = args['range']
+	# cut_range = args['range']
 
-	plot_boxplot_mean(df,"to_off",metric, cut_range, step_range, df_controls, df_laser, df_recovery)
+	# plot_boxplot_mean(df,"to_off",metric, cut_range, step_range, df_controls, df_laser, df_recovery)
+	# plt.suptitle(path_images)
 	
-	if save:
-		savefig(path, path_images, "_%s_mean_boxplot_to_off"%metric)
+	# if save:
+	# 	savefig(path, path_images, "_%s_mean_boxplot_to_off"%metric)
 
 
 	# # Plot boxplot
@@ -180,12 +222,12 @@ for metric in metrics:
 
 	#################################################
 	## Plot boxplot with control
-	cut_range = args['range']
+	# cut_range = args['range']
 
-	ax = plot_boxplot(df,"to_off", metric, cut_range, step_range, df_controls, df_laser, df_recovery)
-	plt.suptitle(path_images)
-	if save:
-		savefig(path, path_images,"_%s_boxplot_control_to_off"%(metric))
+	# ax = plot_boxplot(df,"to_off", metric, cut_range, step_range, df_controls, df_laser, df_recovery)
+	# plt.suptitle(path_images)
+	# if save:
+	# 	savefig(path, path_images,"_%s_boxplot_control_to_off"%(metric))
 	# plt.show()
 	# continue
 	# exit()

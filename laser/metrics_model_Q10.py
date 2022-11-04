@@ -65,7 +65,7 @@ def get_waveforms(f,f_events,ms_l=100, ms_r=100):
 		print("Error loading", e)
 		print("Calculating waveforms")
 
-		waveforms = get_events(f,f_events,ms_l, ms_r)
+		waveforms = get_events(f,f_events,ms_r, ms_l)
 		print(waveforms.shape)
 		
 		print("Writing",waveforms_file)
@@ -141,6 +141,10 @@ param_name = args['neu_name']
 
 files = sorted(glob.glob(path+"*[!_spikes].asc"))
 
+if len(files) == 0:
+	print("No files to plot")
+	exit()
+
 # files = files[:5]
 # print(files)
 
@@ -165,7 +169,7 @@ for i,f in enumerate(files):
 
 	save_as_yaml(params, params_path[:-4]+'.yaml')
 
-	waveforms = get_waveforms(f,f_events,ms_l=100, ms_r=100)
+	waveforms = get_waveforms(f,f_events,ms_l=40, ms_r=40)
 	if len(waveforms) == 0:
 		print("Skiping",f)
 		continue
@@ -179,6 +183,8 @@ for i,f in enumerate(files):
 	# for spike in waveforms:
 	# All spikes the same in the model, get middle one
 	dur_refs,th = laser_utils.get_spike_duration(a_waveform, 0.001)
+	# plt.plot(a_waveform)
+	# plt.show()
 	duration = dur_refs[1]-dur_refs[0]
 	print("Duration value:", duration)
 

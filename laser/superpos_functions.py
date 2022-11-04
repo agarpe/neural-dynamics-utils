@@ -5,7 +5,7 @@ import sys
 import os
 from random import randint
 from colour import Color
-from scipy.signal import argrelmax
+from scipy.signal import argrelmax, find_peaks, peak_widths
 
 
 def create_dataframe(dicts,prefixes):
@@ -511,11 +511,84 @@ def get_spike_duration(spike,dt,tol=2, thres_val=0.5):
 	duration_vals = np.where(np.isclose(spike, th,atol=tol))[0]
 	#TODO: tol with 0.1??? 
 
+	# plt.plot(duration_vals,(th,th),'.',markersize=20,color='r')
+
 	if duration_vals.size ==0: #Safety comprobation
 		return (0,0),th
 	else:
 		return (duration_vals[0]*dt,duration_vals[-1]*dt),th
 
+# # Description: 
+# # 	Recives spike values and return the spike duration as a tuple of the time
+# # 	references of two of the values (in ms) matching a threshold in "the middle" of the spike
+# # Parameters:
+# # 	spike voltage values
+# # 	dt time rate
+# # 	tol difference tolerance im mV (lower than 2 fails)
+# # Return:
+# #	(min_thres,max_thres)
+# def get_spike_duration(spike,dt,tol=2, thres_val=0.5, max_dur = 5): 
+# 	spike = spike[~np.isnan(spike)]
+# 	# spike = spike[int(30/dt):-int(30/dt)]
+# 	mx_value = np.max(spike) #maximum V value (spike)
+# 	mn_value = np.min(spike) #minimum V value (spike)
+
+# 	#TODO: check with neurons with pos and neg val...
+# 	th = (mx_value+mn_value)*thres_val #threshold in the "middle" of the spike.
+
+# 	#Warning: with a lower tolerance value the threshold detection might fail
+# 	duration_vals = np.where(np.isclose(spike, th,atol=tol*dt))[0]
+# 	# print(duration_vals)
+# 	# print(abs(duration_vals-np.argmax(spike)*dt))
+# 	# duration_vals = duration_vals[np.where(abs(duration_vals-np.argmax(spike)) > max_dur//dt)]
+# 	#TODO: tol with 0.1??? 
+
+# 	x = spike
+# 	peaks, properties = find_peaks(spike, prominence=1, width=20)
+# 	if len(peaks)>1:
+# 		print(len(spike)//2, peaks)
+# 		print(np.isclose(len(spike)//2, peaks, atol=10))
+# 		peaks = peaks[np.isclose(len(spike)//2, peaks)]
+# 	results_half = peak_widths(x, peaks, rel_height=0.5)
+
+# 	plt.plot(x)
+
+# 	plt.plot(peaks, x[peaks], "x")
+
+# 	plt.hlines(*results_half[1:], color="C2")
+
+# 	print(results_half)
+# 	plt.show()
+# 	# print(points,p_heigths)
+# 	# plt.plot(points, p_heigths['peak_heights'],'|',markersize=20,color='r')
+
+# 	print(properties["left_ips"])
+# 	print(properties["right_ips"])
+# 	print([properties["width_heights"]])
+# 	# plt.plot(x)
+
+# 	# plt.plot(peaks, x[peaks], "x")
+
+# 	# plt.vlines(x=peaks, ymin=x[peaks] - properties["prominences"],
+
+# 	#            ymax = x[peaks], color = "C1")
+
+# 	# plt.hlines(y=properties["width_heights"], xmin=properties["left_ips"],
+
+# 	#            xmax=properties["right_ips"], color = "C1")
+
+# 	# plt.show()
+# 	# plt.plot(duration_vals,[th]*len(duration_vals),'.',markersize=20,color='r')
+# 	plt.plot((properties["left_ips"][-1], properties["right_ips"][0]),[properties["width_heights"]]*2,'.',markersize=20,color='r')
+# 	plt.show()
+# 	# # plt.plot(duration_vals,(th,th),'.',markersize=20,color='r')
+
+# 	# if duration_vals.size ==0: #Safety comprobation
+# 	# 	return (0,0),th
+# 	# else:
+# 	# 	return (duration_vals[0]*dt,duration_vals[-1]*dt),th
+
+# 	return (properties["left_ips"][-1]*dt, properties["right_ips"][0]*dt), properties["width_heights"]
 
 
 
@@ -606,6 +679,7 @@ def get_slope(spike,dt,n_points=10, slope_position=0.5):
 	t1 = mid_ps[0]
 	t2 = mid_ps[1]
 
+
 	time = np.arange(spike.size) *dt
 
 	# if slope1 < 7:
@@ -623,6 +697,52 @@ def get_slope(spike,dt,n_points=10, slope_position=0.5):
 	# exit()
 
 	return (slope1,slope2)
+
+def get_slope2(spike,dt,n_points=10, slope_position=0.8, repol_points=60):
+	spike = spike[~np.isnan(spike)] 
+	mid_ps,th = get_spike_duration(spike,dt,thres_val=slope_position)
+	indx1 = int(mid_ps[0]/dt) #From ms to point ref
+	indx2 = int(mid_ps[1]/dt) #From ms to point ref
+	mx_value = np.max(spike) #maximum V value (spike)
+	t_max = np.argmax(spike) #maximum V value (spike)
+	t2 = mid_ps[1]+2
+	indx2 = int(t2/dt) #From ms to point ref
+
+	# n_points = int(n_ms /dt)
+	n_ms = n_points*dt
+
+	slope1 = (spike[indx1+n_points]-spike[indx1-n_points])/(n_ms*2) 
+	# slope2 = (spike[indx2+n_points]-spike[indx2-n_points])/(n_ms*2)
+
+	slope2 = (mx_value-spike[t_max+repol_points])/((t_max*dt) - (t_max+repol_points)*dt)
+
+	#plot to test
+	t1 = mid_ps[0]
+	t2 = mid_ps[1]
+
+	time = np.arange(spike.size) *dt
+
+	plt.plot(time,spike,color='k',alpha=0.2)
+	plt.plot([t1-n_ms,t1+n_ms], [spike[indx1-n_points],spike[indx1+n_points]],color='b',linewidth=1.3)
+	plt.plot([t_max*dt,(t_max+repol_points)*dt], [mx_value,spike[t_max+repol_points]],color='b',linewidth=1.3)
+	# plt.show()
+	# if slope1 < 7:
+		# print(slope1, slope2)
+
+	# plt.plot(time,spike,color='k',alpha=0.2)
+	# plt.plot([t1-n_ms,t1+n_ms], [spike[indx1-n_points],spike[indx1+n_points]],color='b',linewidth=1.3)
+	# plt.plot([t2-n_ms,t2+n_ms], [spike[indx2-n_points],spike[indx2+n_points]],color='b',linewidth=1.3)
+	# plt.show()
+
+	# print(slope1, slope2)
+	# print(n_ms)
+	# print(indx1, indx2)
+	# print(spike[indx1+n_points],spike[indx2+n_points])
+	# exit()
+
+	return (slope1,slope2)
+
+
 
 # Description: 
 # 	Recives spike values and return the increasing and decreasing slope values at the 
