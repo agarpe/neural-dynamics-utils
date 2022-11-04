@@ -489,35 +489,6 @@ def align_to(spike,mode='peak',dt=0.1,sec_wind=2.0):
 	return spike
 
 
-# Description: 
-# 	Recives spike values and return the spike duration as a tuple of the time
-# 	references of two of the values (in ms) matching a threshold in "the middle" of the spike
-# Parameters:
-# 	spike voltage values
-# 	dt time rate
-# 	tol difference tolerance im mV (lower than 2 fails)
-# Return:
-#	(min_thres,max_thres)
-def get_spike_duration(spike,dt,tol=2, thres_val=0.5): 
-	spike = spike[~np.isnan(spike)]
-
-	mx_value = np.max(spike) #maximum V value (spike)
-	mn_value = np.min(spike) #minimum V value (spike)
-
-	#TODO: check with neurons with pos and neg val...
-	th = (mx_value+mn_value)*thres_val #threshold in the "middle" of the spike.
-
-	#Warning: with a lower tolerance value the threshold detection might fail
-	duration_vals = np.where(np.isclose(spike, th,atol=tol))[0]
-	#TODO: tol with 0.1??? 
-
-	# plt.plot(duration_vals,(th,th),'.',markersize=20,color='r')
-
-	if duration_vals.size ==0: #Safety comprobation
-		return (0,0),th
-	else:
-		return (duration_vals[0]*dt,duration_vals[-1]*dt),th
-
 # # Description: 
 # # 	Recives spike values and return the spike duration as a tuple of the time
 # # 	references of two of the values (in ms) matching a threshold in "the middle" of the spike
@@ -527,9 +498,9 @@ def get_spike_duration(spike,dt,tol=2, thres_val=0.5):
 # # 	tol difference tolerance im mV (lower than 2 fails)
 # # Return:
 # #	(min_thres,max_thres)
-# def get_spike_duration(spike,dt,tol=2, thres_val=0.5, max_dur = 5): 
+# def get_spike_duration(spike,dt,tol=2, thres_val=0.5): 
 # 	spike = spike[~np.isnan(spike)]
-# 	# spike = spike[int(30/dt):-int(30/dt)]
+
 # 	mx_value = np.max(spike) #maximum V value (spike)
 # 	mn_value = np.min(spike) #minimum V value (spike)
 
@@ -537,58 +508,53 @@ def get_spike_duration(spike,dt,tol=2, thres_val=0.5):
 # 	th = (mx_value+mn_value)*thres_val #threshold in the "middle" of the spike.
 
 # 	#Warning: with a lower tolerance value the threshold detection might fail
-# 	duration_vals = np.where(np.isclose(spike, th,atol=tol*dt))[0]
-# 	# print(duration_vals)
-# 	# print(abs(duration_vals-np.argmax(spike)*dt))
-# 	# duration_vals = duration_vals[np.where(abs(duration_vals-np.argmax(spike)) > max_dur//dt)]
+# 	duration_vals = np.where(np.isclose(spike, th,atol=tol))[0]
 # 	#TODO: tol with 0.1??? 
 
-# 	x = spike
-# 	peaks, properties = find_peaks(spike, prominence=1, width=20)
-# 	if len(peaks)>1:
-# 		print(len(spike)//2, peaks)
-# 		print(np.isclose(len(spike)//2, peaks, atol=10))
-# 		peaks = peaks[np.isclose(len(spike)//2, peaks)]
-# 	results_half = peak_widths(x, peaks, rel_height=0.5)
+# 	# plt.plot(duration_vals,(th,th),'.',markersize=20,color='r')
 
-# 	plt.plot(x)
+# 	if duration_vals.size ==0: #Safety comprobation
+# 		return (0,0),th
+# 	else:
+# 		return (duration_vals[0]*dt,duration_vals[-1]*dt),th
 
-# 	plt.plot(peaks, x[peaks], "x")
+# Description: 
+# 	Recives spike values and return the spike duration as a tuple of the time
+# 	references of two of the values (in ms) matching a threshold in "the middle" of the spike
+# Parameters:
+# 	spike voltage values
+# 	dt time rate
+# 	tol difference tolerance im mV (lower than 2 fails) --> DEPRECATED
+# Return:
+#	(min_thres,max_thres)
+def get_spike_duration(spike,dt,tol=2, thres_val=0.5, max_dur = 5): 
+	spike = spike[~np.isnan(spike)]
 
-# 	plt.hlines(*results_half[1:], color="C2")
+	peaks, properties = find_peaks(spike, prominence=1, width=20)
 
-# 	print(results_half)
-# 	plt.show()
-# 	# print(points,p_heigths)
-# 	# plt.plot(points, p_heigths['peak_heights'],'|',markersize=20,color='r')
+	#Warning: this may fail for not centered waveforms	
+	if len(peaks)>1: # in case spike has several peaks, gets mid one.
+		mid_peak = np.isclose(len(spike)//2, peaks, atol=10)
+		peaks = peaks[mid_peak]
+	results_half = peak_widths(spike, peaks, rel_height=thres_val)
 
-# 	print(properties["left_ips"])
-# 	print(properties["right_ips"])
-# 	print([properties["width_heights"]])
-# 	# plt.plot(x)
+	# x=spike
+	# plt.plot(x)
+	# plt.plot(peaks, x[peaks], "x")
+	# plt.hlines(*results_half[1:], color="C2")
+	# plt.show()
 
-# 	# plt.plot(peaks, x[peaks], "x")
 
-# 	# plt.vlines(x=peaks, ymin=x[peaks] - properties["prominences"],
+	duration_vals = np.array([results_half[2][0], results_half[3][0]])
+	th = results_half[1]
 
-# 	#            ymax = x[peaks], color = "C1")
+	# plt.plot(duration_vals,(th,th),'.',markersize=20,color='r')
+	
 
-# 	# plt.hlines(y=properties["width_heights"], xmin=properties["left_ips"],
-
-# 	#            xmax=properties["right_ips"], color = "C1")
-
-# 	# plt.show()
-# 	# plt.plot(duration_vals,[th]*len(duration_vals),'.',markersize=20,color='r')
-# 	plt.plot((properties["left_ips"][-1], properties["right_ips"][0]),[properties["width_heights"]]*2,'.',markersize=20,color='r')
-# 	plt.show()
-# 	# # plt.plot(duration_vals,(th,th),'.',markersize=20,color='r')
-
-# 	# if duration_vals.size ==0: #Safety comprobation
-# 	# 	return (0,0),th
-# 	# else:
-# 	# 	return (duration_vals[0]*dt,duration_vals[-1]*dt),th
-
-# 	return (properties["left_ips"][-1]*dt, properties["right_ips"][0]*dt), properties["width_heights"]
+	if duration_vals.size == 0: #Safety comprobation
+		return (0,0),th
+	else:
+		return (duration_vals[0]*dt,duration_vals[-1]*dt),th
 
 
 
