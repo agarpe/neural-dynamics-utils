@@ -31,7 +31,7 @@ ap.add_argument("-nn", "--neu_name", required=False, default='', help="Extension
 ap.add_argument("-fl", "--file_limit", required=False, default=-1, help="Limit of files to load")
 ap.add_argument("-sa", "--save", required=False, default='y', help="Option to save plot file")
 ap.add_argument("-sh", "--show", required=False, default='y', help="Option to show plot file")
-ap.add_argument("-re", "--reduced", required=False, default='y', help="Option to plot only biggest and smallest")
+ap.add_argument("-re", "--reduced", required=False, default='n', help="Option to plot only biggest and smallest")
 ap.add_argument("-st", "--stats", required=False, default='y', help="Option to save stats pkl file")
 ap.add_argument("-v", "--verbrose", required=False, default='y', help="Option to verbrose process")
 args = vars(ap.parse_args())

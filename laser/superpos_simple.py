@@ -18,7 +18,7 @@ if len(sys.argv) ==7:
 	scale =int(sys.argv[6])
 	show = True
 else:
-	print("Use1: python3 superpos_from_events.py events_path.txt width label color title")
+	print("Use1: python3 superpos_from_events.py events_path.txt width label color title scale")
 	exit()
 
 os.system("sed -i 's/\,/./g' "+path) #changing , to . to read floats not strings
