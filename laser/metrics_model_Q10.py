@@ -26,8 +26,9 @@ def get_events(f_data, f_events, ms_r, ms_l, dt=0.001):
 	try:
 		events = pd.read_csv(f_events, delimiter = " ",skiprows=2,header=None)
 		events = events.values
-	except:
+	except Exception as e:
 		print("Error in file: ",f_events)
+		print(e.args)
 		return np.array([])
 
 	points_r = int(ms_r /dt)
@@ -169,7 +170,7 @@ for i,f in enumerate(files):
 
 	save_as_yaml(params, params_path[:-4]+'.yaml')
 
-	waveforms = get_waveforms(f,f_events,ms_l=40, ms_r=40)
+	waveforms = get_waveforms(f,f_events,ms_l=100, ms_r=100)
 	if len(waveforms) == 0:
 		print("Skiping",f)
 		continue
@@ -177,6 +178,8 @@ for i,f in enumerate(files):
 	#align to the peak
 	waveforms = np.array([w-np.max(w) for w in waveforms])
 	a_waveform = waveforms[len(waveforms)//2]
+
+	print(a_waveform)
 	all_waveforms.append(a_waveform )
 	all_labels.append(params['diff_T'])
 
@@ -194,8 +197,8 @@ for i,f in enumerate(files):
 
 	# durations[params['diff_T']] = duration
 
-	qs['amplitude'] = amplitude
-	qs['duration'] = duration
+	qs['amplitude (mV)'] = amplitude
+	qs['duration (ms)'] = duration
 	try:
 		qs['Q10'] = params['general_Q10']
 	except:
@@ -208,10 +211,18 @@ for i,f in enumerate(files):
 
 	# all_qs[params['diff_T']] = qs
 	all_qs[file_name] = qs
+	# print(all_qs)
+
+# print("\nTHE DataFrame\n")
+
+# print(all_qs)
 
 qs_df = pd.DataFrame.from_dict(all_qs, orient='index')
 print(qs_df)
 
+if qs_df.empty:
+	print("No data to plot")
+	exit()
 
 colors = plt.cm.coolwarm(np.linspace(0,1,qs_df['diff_T'].size))
 # colors = plt.cm.get_cmap('Oranges')
@@ -246,21 +257,21 @@ plt.savefig(path+"shape_zoom.png",dpi=200)
 
 
 
-qs_df.plot.scatter('diff_T','duration',color=colors)
+qs_df.plot.scatter('diff_T','duration (ms)',color=colors)
 plt.xlabel(u"ΔT")
 plt.ylabel("Spike duration (ms)")
 plt.title(title)
 # plt.show()
 plt.savefig(path+"durations_dt.png",dpi=200)
 
-qs_df.plot.scatter('Q10','duration',color=colors)
+qs_df.plot.scatter('Q10','duration (ms)',color=colors)
 plt.xlabel(u"ΔQ10")
 plt.ylabel("Spike duration (ms)")
 plt.title(title)
 # plt.show()
 plt.savefig(path+"durations_dq10.png",dpi=200)
 
-qs_df.plot.scatter('diff_T','amplitude',color=colors)
+qs_df.plot.scatter('diff_T','amplitude (mV)',color=colors)
 plt.xlabel(u"ΔT")
 plt.ylabel("Spike amplitude")
 plt.title(title)
