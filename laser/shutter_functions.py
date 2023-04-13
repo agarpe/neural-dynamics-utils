@@ -5,14 +5,15 @@ import matplotlib.pyplot as plt
 import superpos_functions as sf
 
 
-def savefig(path, path_images, name):
+def savefig(path, path_images, name, format='.png'):
     savepath = path_images + path[path[:-1].rfind('/'):-1] + name
+    # savepath = path_images + 'pruebaaas' + name
     print("Saving fig at",savepath)
-    plt.savefig(savepath + '.png', dpi=200)
-    plt.savefig(savepath + '.pdf',format='pdf')
+    plt.savefig(savepath + 'pruebas' + format, dpi=100, format=format[1:])
+    # plt.savefig(savepath + '.pdf',format='pdf')
 
 
-def get_slopes(waveforms,dt=0.1, width_r=40, width_l=40, slope_position=0.5 ):
+def get_slopes(f_slope, waveforms,dt=0.1, width_r=60, width_l=60, slope_position=0.5):
 
 
     slope_dep =[]
@@ -26,7 +27,7 @@ def get_slopes(waveforms,dt=0.1, width_r=40, width_l=40, slope_position=0.5 ):
             continue
 
         # vals,th = sf.get_spike_duration(spike,dt=0.1,tol=1)
-        slope_inc,slope_dec = sf.get_slope(spike,dt,slope_position=slope_position)
+        slope_inc,slope_dec = f_slope(spike,dt,slope_position=slope_position, plot=True)
 
         # plt.plot(spike)
         # vals = np.array(vals)
@@ -44,7 +45,7 @@ def get_slopes(waveforms,dt=0.1, width_r=40, width_l=40, slope_position=0.5 ):
     # plt.show()
     return np.array(slope_dep), np.array(slope_rep)
 
-def get_durs(waveforms, width_r=40, width_l=40):
+def get_durs(waveforms, width_r=60, width_l=60, max_dur=25):
 
     durations =[]
     for i,spike in enumerate(waveforms):
@@ -54,11 +55,14 @@ def get_durs(waveforms, width_r=40, width_l=40):
             durations.append(0)
             continue
 
+
         vals,th = sf.get_spike_duration(spike,dt=0.1,tol=1)
         # plt.plot(spike)
         vals = np.array(vals)
-        plt.plot(vals,(th,th),'.',markersize=20,color='r')
-        plt.title(str(vals[1]-vals[0]))
+        if (vals[1]-vals[0]) < max_dur:
+
+            plt.plot(vals,(th,th),'.',markersize=20,color='r')
+            plt.title(str(vals[1]-vals[0]))
         # plt.show()
         try:
             durations.append(vals[1]-vals[0])
@@ -69,9 +73,14 @@ def get_durs(waveforms, width_r=40, width_l=40):
     return np.array(durations)
 
 def read_data(path, ctype):
-    waveforms =  sf.read_from_events(path+'_%s_waveform_single.txt'%ctype,max_cols=80/0.1,dt=0.1)
+    try:
+        waveforms =  sf.read_from_events(path+'_%s_waveform_single.txt'%ctype,max_cols=80/0.1,dt=0.1)
+        waveforms = waveforms.values
+    except:
+        waveforms = np.array([])
 
-    waveforms = waveforms.values
+    if ctype == 'control':
+        print(path+'_%s_waveform_single.txt'%ctype)
     print(waveforms.shape)
 
     try:
@@ -88,13 +97,46 @@ def read_data(path, ctype):
 
     return waveforms, stim
 
+def remove_zeros(df, metrics):
+    for metric in metrics:
+        # print(metric)
+        # print('\n',df[metric])
+        if 'repol' in metric:
+            # print(df.loc[df['file'] == '30-03-2023//events//exp9_depol_50ON_130bck'])
+            df.drop(df[df[metric] >= 0].index, inplace=True)
 
-def get_metrics_from_file(path, ctype, slope_position=0.98, dict_={}, min_dur=2, ext=''):
+            # print(df)
+        else:
+            df.drop(df[df[metric] <= 0].index, inplace=True)
+
+
+def remove_outliers(df,columns,n_std):
+    for file in set(df['file']):
+        for col in columns:
+            # print('Working on column: {}'.format(col))
+            data = df.loc[df['file'] == file, col]
+            mean = data.mean()
+            sd = data.std()
+
+            # print(col,file, data.mean(),data.std())
+
+            df.loc[df['file'] == file, col] = df.loc[df['file'] == file,
+                     col].apply(lambda x: x if x <= mean+(n_std*sd) else 0)
+    
+    prev = len(df.index)
+    remove_zeros(df,columns)
+    print("Spikes removed as outliers: ",prev-len(df.index))
+
+    return df
+
+
+def get_metrics_from_file(path, ctype, slope_position=0.98, dict_={}, min_dur=2, ext='', max_dur=25):
 
     waveforms, stim = read_data(path, ctype)
-    durations = get_durs(waveforms)
-    slopes_dep, slopes_rep = get_slopes(waveforms)
-    slopes_dep2, slopes_rep2 = get_slopes(waveforms, slope_position=slope_position)
+    durations = get_durs(waveforms, max_dur =max_dur)
+    slopes_dep, slopes_rep = get_slopes(sf.get_slope, waveforms)
+    # slopes_dep2, slopes_rep2 = get_slopes(sf.get_slope2, waveforms, slope_position=slope_position)
+    slopes_dep2, slopes_rep2 = get_slopes(sf.get_slope2, waveforms)
 
     try:
         stim = stim[np.where(durations>min_dur)]
@@ -112,6 +154,13 @@ def get_metrics_from_file(path, ctype, slope_position=0.98, dict_={}, min_dur=2,
     slopes_dep2 = slopes_dep2[np.where(durations>min_dur)]
     slopes_rep2 = slopes_rep2[np.where(durations>min_dur)]
 
+
+    durations = durations[np.where(durations<max_dur)]
+    slopes_dep = slopes_dep[np.where(durations<max_dur)]
+    slopes_rep = slopes_rep[np.where(durations<max_dur)]
+    slopes_dep2 = slopes_dep2[np.where(durations<max_dur)]
+    slopes_rep2 = slopes_rep2[np.where(durations<max_dur)]
+
     dict_[ext+'duration'].extend(durations.tolist())
     dict_[ext+'depol_slope'].extend(slopes_dep.tolist())
     dict_[ext+'repol_slope'].extend(slopes_rep.tolist())
@@ -124,57 +173,57 @@ def get_metrics_from_file(path, ctype, slope_position=0.98, dict_={}, min_dur=2,
 
 def plot_boxplot_mean(df,column, metric, cut_range, step_range, df_controls=None, df_laser=None, df_recovery=None):
     
-    if cut_range is not None:
-        cut_range = [int(r.replace('\\','')) for r in cut_range.split(',')]
-    else:
-        cut_range = [df[column].min(), df[column].max()]
-    # print(cut_range)
+    # if cut_range is not None:
+    #     cut_range = [int(r.replace('\\','')) for r in cut_range.split(',')]
+    # else:
+    #     cut_range = [df[column].min(), df[column].max()]
+    # # print(cut_range)
 
-    # https://stackoverflow.com/questions/21441259/pandas-groupby-range-of-values
-    # print(df[column])
-    df["range"] = pd.cut(df[column], np.arange(cut_range[0], cut_range[1], step_range))
+    # # https://stackoverflow.com/questions/21441259/pandas-groupby-range-of-values
+    # # print(df[column])
+    # df["range"] = pd.cut(df[column], np.arange(cut_range[0], cut_range[1], step_range))
+    set_range(df, cut_range, column, step_range)
 
-    df_controls['control_'+metric] = pd.to_numeric(df_controls['control_'+metric])
+    # df_controls['control_'+metric] = pd.to_numeric(df_controls['control_'+metric])
 
-    #TODO: FIX por qué nan¿?
-    durations_control = df_controls[['control_'+metric, 'file']].dropna()
+    # #TODO: FIX por qué nan¿?
+    # durations_control = df_controls[['control_'+metric, 'file']].dropna()
 
-    # def custom_mean(df):
-    #     return df.mean(skipna=False)
+    # # def custom_mean(df):
+    # #     return df.mean(skipna=False)
 
-    # print(durations_control)
-    # control_means = durations_control[['control_'+metric,'file']].groupby('file').agg({'control_'+metric:custom_mean})
-    control_means = durations_control[['control_'+metric,'file']].groupby('file').mean()
+    # # print(durations_control)
+    # # control_means = durations_control[['control_'+metric,'file']].groupby('file').agg({'control_'+metric:custom_mean})
+    # control_means = durations_control[['control_'+metric,'file']].groupby('file').mean()
 
-    # print(control_means)
-
-    df["diff_"+metric] = np.nan
-    for i,file in enumerate(control_means.index):
-        df.loc[df['file'] == file, "diff_"+metric] = df.loc[df['file'] == file, metric].apply(lambda x: x - control_means.loc[file]).values
-        df_recovery.loc[df_recovery['file'] == file, "diff_"+metric] = df_recovery.loc[df_recovery['file'] == file, 'recovery_'+metric].apply(lambda x: x - control_means.loc[file]).values
-        df_laser.loc[df_laser['file'] == file, "diff_"+metric] = df_laser.loc[df_laser['file'] == file, 'laser_'+metric].apply(lambda x: x - control_means.loc[file]).values
-    # print(df.describe())
-
-    print(df_laser[["diff_"+metric,'file']].groupby('file').sum())
+    # df["diff_"+metric] = np.nan
+    # for i,file in enumerate(control_means.index):
+    #     df.loc[df['file'] == file, "diff_"+metric] = df.loc[df['file'] == file, metric].apply(lambda x: x - control_means.loc[file]).values
+    #     df_recovery.loc[df_recovery['file'] == file, "diff_"+metric] = df_recovery.loc[df_recovery['file'] == file, 'recovery_'+metric].apply(lambda x: x - control_means.loc[file]).values
+    #     df_laser.loc[df_laser['file'] == file, "diff_"+metric] = df_laser.loc[df_laser['file'] == file, 'laser_'+metric].apply(lambda x: x - control_means.loc[file]).values
 
     boxprops = dict(linestyle='-', linewidth=3, color='C0')
-    ax = df.boxplot(column='diff_'+metric,by='range',figsize=(80,20), showmeans=True, showfliers=False,boxprops=boxprops)
-    ax.set_ylabel(u"Spike Δ%s"%metric)
+    ax = df.boxplot(column='diff_'+metric,by='range',figsize=(50,20), showmeans=True, showfliers=False,boxprops=boxprops)
+    ax.set_ylabel(u"Δ Spike %s"%metric)
     ax.set_xlabel("Time %s event (ms)"%column)
     plt.tight_layout()
 
-    if df_controls is not None and df_laser is not None:
+    if df_recovery is not None and df_laser is not None:
         ticks = ax.get_xticklabels()
         # try:
 
-        ax.boxplot(df_recovery["diff_%s"%metric], positions = [0], showmeans=True, showfliers=False)
-        ax.boxplot(df_laser["diff_%s"%metric], positions = [len(ticks)+1], showmeans=True, showfliers=False)
+        ax.boxplot(df_recovery["diff_%s"%metric], boxprops=dict(linestyle='-', linewidth=3, color='olivedrab'),
+         positions = [0], showmeans=True, showfliers=False)
+        ax.boxplot(df_laser["diff_%s"%metric], boxprops=dict(linestyle='-', linewidth=3, color='firebrick'),
+         positions = [len(ticks)+1], showmeans=True, showfliers=False)
         # except:
             # return ax
         ticks = ["%s"%t.get_text() for t in ticks] +["recovery"] + ["continuous laser"]
 
         n_ticks = ax.get_xticks()
 
+        # print(n_ticks)
+        # print(ticks)
         ax.set_xticks(n_ticks,ticks)
         ax.set_xticklabels(ticks)
 
@@ -182,8 +231,8 @@ def plot_boxplot_mean(df,column, metric, cut_range, step_range, df_controls=None
     
     return ax
 
-def plot_boxplot(df,column, metric, cut_range, step_range, df_controls=None, df_laser=None, df_recovery=None):
-    
+def set_range(df, cut_range, column, step_range):
+
     if cut_range is not None:
         cut_range = [int(r.replace('\\','')) for r in cut_range.split(',')]
     else:
@@ -192,13 +241,186 @@ def plot_boxplot(df,column, metric, cut_range, step_range, df_controls=None, df_
 
     # https://stackoverflow.com/questions/21441259/pandas-groupby-range-of-values
     # print(df[column])
-    df["range"] = pd.cut(df[column], np.arange(cut_range[0], cut_range[1], step_range))
+    df.loc[:,"range"] = pd.cut(df[column], np.arange(cut_range[0], cut_range[1], step_range))
+
+
+
+def plot_boxplot_mean_combined(df,column, metrics, cut_range, step_range, df_controls=None, df_laser=None, df_recovery=None):
+    
+    # if cut_range is not None:
+    #     cut_range = [int(r.replace('\\','')) for r in cut_range.split(',')]
+    # else:
+    #     cut_range = [df[column].min(), df[column].max()]
+    # # print(cut_range)
+
+    # # https://stackoverflow.com/questions/21441259/pandas-groupby-range-of-values
+    # # print(df[column])
+    # df["range"] = pd.cut(df[column], np.arange(cut_range[0], cut_range[1], step_range))
+
+    set_range(df, cut_range, column, step_range)
+
+    # for metric in metrics:
+    #     df_controls.loc[:,'control_'+metric] = pd.to_numeric(df_controls['control_'+metric])
+
+    #     # durations_control = df_controls[['control_'+metric, 'file']]
+
+    #     control_means = df_controls[['control_'+metric,'file']].groupby('file').mean()
+
+    # # print(control_means)
+
+    #     df["diff_"+metric] = np.nan
+    #     for i,file in enumerate(control_means.index):
+    #         df.loc[df['file'] == file, "diff_"+metric] = df.loc[df['file'] == file, metric].apply(lambda x: x - control_means.loc[file]).values
+    #         df_recovery.loc[df_recovery['file'] == file, "diff_"+metric] = df_recovery.loc[df_recovery['file'] == file, 'recovery_'+metric].apply(lambda x: x - control_means.loc[file]).values
+    #         df_laser.loc[df_laser['file'] == file, "diff_"+metric] = df_laser.loc[df_laser['file'] == file, 'laser_'+metric].apply(lambda x: x - control_means.loc[file]).values
+    # print(df.describe())
+
+    diff_metrics = ['diff_'+metric for metric in metrics]
+    boxprops = dict(linestyle='-', linewidth=3, color='C0')
+
+    axs = df.boxplot(column=diff_metrics,by='range',figsize=(30,40), showmeans=True, showfliers=False,boxprops=boxprops, layout=(len(metrics),1))
+    for ax,m in zip(axs,metrics):
+        ax.set_ylabel(u"Δ Spike %s"%metric)
+        ax.set_xlabel("Time %s event (ms)"%column)
+        ax.set_title("")
+    plt.tight_layout()
+
+    if df_controls is not None and df_laser is not None:
+        n_range_ticks = len(df[['range','to_off']].groupby('range').sum())
+        print(n_range_ticks)
+        for ax,metric in zip(axs,diff_metrics):
+
+            ticks = ax.get_xticklabels()
+            # try:
+            ax.boxplot(df_recovery[metric][df_recovery[metric].notnull()],
+             positions = [0], showmeans=True, showfliers=False, boxprops=dict(linestyle='-', linewidth=3, color='olivedrab'))
+            ax.boxplot(df_laser[metric][df_laser[metric].notnull()],
+             positions = [n_range_ticks+1], showmeans=True, showfliers=False, boxprops=dict(linestyle='-', linewidth=3, color='firebrick'))
+            # except:
+                # return ax
+
+            ticks = ["%s"%t.get_text() for t in ticks] + ["recovery"] + ["continuous laser"]
+            n_ticks = ax.get_xticks()
+
+        n_ticks = list(range(n_range_ticks+1)) + [0 , n_range_ticks+1]
+
+        n_ticks *= len(diff_metrics)
+
+        print(n_ticks)
+        print(ticks)
+        ax.set_xticks(n_ticks,ticks)
+        ax.set_xticklabels(ticks)
+
+        plt.tight_layout()
+
+    for ax,metric in zip(axs, diff_metrics):
+        max_ = max(df_recovery[metric].max(),df_laser[metric].max())
+        min_ = min(df_recovery[metric].max(),df_laser[metric].max())
+        ax.set_ylim(min_,max_)
+
+    plt.set_sharey(False)
+
+
+
+    # if df_controls is not None and df_laser is not None:
+    #     ticks = ax.get_xticklabels()
+    #     # try:
+
+    #     ax.boxplot(df_recovery["diff_%s"%metric], positions = [0], showmeans=True, showfliers=False)
+    #     ax.boxplot(df_laser["diff_%s"%metric], positions = [len(ticks)+1], showmeans=True, showfliers=False)
+    #     # except:
+    #         # return ax
+    #     ticks = ["%s"%t.get_text() for t in ticks] +["recovery"] + ["continuous laser"]
+
+    #     n_ticks = ax.get_xticks()
+
+    #     print(n_ticks)
+    #     print(ticks)
+    #     ax.set_xticks(n_ticks,ticks)
+    #     ax.set_xticklabels(ticks)
+
+    #     plt.tight_layout()
+    
+    return ax
+
+
+
+def plot_boxplot_combined(df,column, metrics, cut_range, step_range, df_controls=None, df_laser=None, df_recovery=None):
+
+    # if cut_range is not None:
+    #     cut_range = [int(r.replace('\\','')) for r in cut_range.split(',')]
+    # else:
+    #     cut_range = [df[column].min(), df[column].max()]
+    # # print(cut_range)
+
+    # # https://stackoverflow.com/questions/21441259/pandas-groupby-range-of-values
+    # # print(df[column])
+    # df["range"] = pd.cut(df[column], np.arange(cut_range[0], cut_range[1], step_range))
+    set_range(df, cut_range, column, step_range)
    
     # print(df.describe())
     boxprops = dict(linestyle='-', linewidth=3, color='C0')
-    ax = df.boxplot(column=metric,by='range',figsize=(80,20), showmeans=True, showfliers=False,boxprops=boxprops)
+    axs = df.boxplot(column=metrics,by='range',figsize=(30,40), showmeans=True, showfliers=False,boxprops=boxprops, layout=(len(metrics),1))
+    for ax,m in zip(axs,metrics):
+        ax.set_ylabel("Spike %s"%m)
+        ax.set_xlabel("Time %s event (ms)"%column)
+        ax.set_title("")
+
+    plt.tight_layout()
+
+
+    if df_controls is not None and df_laser is not None:
+        n_range_ticks = len(df[['range','to_off']].groupby('range').sum())
+        # print(n_range_ticks)
+        for ax,metric in zip(axs,metrics):
+
+            ticks = ax.get_xticklabels()
+            # try:
+            ax.boxplot(df_controls["control_%s"%metric][df_controls["control_%s"%metric].notnull()], positions = [-1], showmeans=True, showfliers=False)
+            ax.boxplot(df_recovery["recovery_%s"%metric][df_recovery["recovery_%s"%metric].notnull()], positions = [0], showmeans=True, showfliers=False)
+            ax.boxplot(df_laser["laser_%s"%metric][df_laser["laser_%s"%metric].notnull()], positions = [n_range_ticks+1], showmeans=True, showfliers=False)
+            # except:
+                # return ax
+
+            ticks = ["%s"%t.get_text() for t in ticks] +["control"]+["recovery"] + ["continuous laser"]
+            n_ticks = ax.get_xticks()
+
+        n_ticks = list(range(n_range_ticks+1)) + [-1, 0 ,n_range_ticks+1]
+
+        n_ticks *= len(metrics)
+
+        # print(n_ticks)
+        # print(ticks)
+        ax.set_xticks(n_ticks,ticks)
+        ax.set_xticklabels(ticks)
+
+        plt.tight_layout()
+    
+    # plt.xticks(rotation=45, ha='right')
+
+    return ax
+
+
+def plot_boxplot(df,column, metric, cut_range, step_range, df_controls=None, df_laser=None, df_recovery=None):
+    
+    # if cut_range is not None:
+    #     cut_range = [int(r.replace('\\','')) for r in cut_range.split(',')]
+    # else:
+    #     cut_range = [df[column].min(), df[column].max()]
+    # # print(cut_range)
+
+    # # https://stackoverflow.com/questions/21441259/pandas-groupby-range-of-values
+    # # print(df[column])
+    # df["range"] = pd.cut(df[column], np.arange(cut_range[0], cut_range[1], step_range))
+   
+    set_range(df, cut_range, column, step_range)
+
+    # print(df.describe())
+    boxprops = dict(linestyle='-', linewidth=3, color='C0')
+    ax = df.boxplot(column=metric,by='range',figsize=(40,20), showmeans=True, showfliers=False,boxprops=boxprops)
     ax.set_ylabel("Spike %s"%metric)
     ax.set_xlabel("Time %s event (ms)"%column)
+
     plt.tight_layout()
 
     if df_controls is not None and df_laser is not None:
@@ -240,8 +462,8 @@ def plot_scatter(df, column, metric, ylabel, xlabel, df_controls=None, df_recove
             plt.plot(group[column].median(), group[metric].median(), marker="o", markersize=15, color=fig[-1].get_color(), label= name+' median')
         
         if df_controls is not None:
-            control = df_controls.loc[df_controls['file'] == name]["control_duration"]
-            recovery = df_recovery.loc[df_controls['file'] == name]["recovery_duration"]
+            control = df_controls.loc[df_controls['file'] == name]["control_"+metric]
+            recovery = df_recovery.loc[df_recovery['file'] == name]["recovery_"+metric]
             plt.plot(np.zeros(control.size), control, marker="o", linestyle="", color='k')
             plt.plot(np.zeros(recovery.size)+5, recovery, marker="o", linestyle="", color='k')
         
@@ -280,3 +502,95 @@ def plot_all_scatter(df, metric, save, df_controls, df_recovery, path, path_imag
 
     if save:
         savefig(path, path_images, "_%s_general_scatter_to_on_control"%metric)
+
+
+
+def add_norm_diff(df, metric, df_controls=None, df_laser=None, df_recovery=None, norm=True):
+
+    df_controls.loc[:,'control_'+metric] = pd.to_numeric(df_controls['control_'+metric])
+
+    #TODO: FIX por qué nan¿?
+    metric_control = df_controls[['control_'+metric, 'file']].dropna()
+    df_laser.loc[:,'laser_'+metric]= pd.to_numeric(df_laser['laser_'+metric])
+    metric_laser = df_laser[['laser_'+metric, 'file']].dropna()
+
+    control_means = metric_control[['control_'+metric,'file']].groupby('file').mean()
+    laser_means = metric_laser[['laser_'+metric,'file']].groupby('file').mean()
+
+    # laser_mean = laser_means.mean().values
+    # kwargs = {"diff_"+metric : lambda x: np.nan}
+    # df = df.assign(**kwargs)
+    # df_laser = df_laser.assign(**kwargs)
+    # df_recovery = df_recovery.assign(**kwargs)
+
+    df.loc[:, "diff_"+metric] = np.nan
+    df_laser.loc[:, "diff_"+metric] = np.nan
+    df_recovery.loc[:, "diff_"+metric] = np.nan
+
+    for i,file in enumerate(control_means.index):
+        day = file[file.rfind('/')+1:file.find('-202')+5]
+        # laser_mean = laser_means[laser_means.index.str.contains(day)].mean().values
+        # laser_mean = metric_laser.loc[df_laser['file'].str.contains(day),['laser_'+metric]].mean().values[0]
+        # control_mean = control_means.loc[file]
+        
+
+        laser_mean = metric_laser.loc[df_laser['file'].str.contains(day),['laser_'+metric]].mean().values[0]
+        control_mean = metric_control.loc[(df_controls['file'].str.contains('exp1')&df_controls['file'].str.contains(day)),['control_'+metric]].mean().values[0]
+        # print(control_mean)
+        # print(laser_mean)
+        
+
+
+        # if 'depol' in metric:
+        #     _max = laser_mean
+        #     _min = control_mean
+        # else:
+            # _max = control_mean
+            # _min = laser_mean
+
+        # _max = control_mean
+        # _min = laser_mean
+
+        _max = laser_mean
+        _min = control_mean
+
+        if not norm:
+            # f = lambda x: abs(x - control_mean)
+            f = lambda x: abs(x) - abs(control_mean)
+        else:
+            # f = lambda x: (x - _min)/(_max-_min)
+            f = lambda x: (abs(x) - abs(_min))/(abs(_max)-abs(_min))
+
+        df.loc[df['file'] == file, "diff_"+metric] = df.loc[df['file'] == file, metric].apply(f).values
+        df_recovery.loc[df_recovery['file'] == file, "diff_"+metric] = df_recovery.loc[df_recovery['file'] == file, 'recovery_'+metric].apply(f).values
+        df_laser.loc[df_laser['file'] == file, "diff_"+metric] = df_laser.loc[df_laser['file'] == file, 'laser_'+metric].apply(f).values
+    
+
+def remove_axes(ax):
+   ax.spines['top'].set_visible(False)
+   ax.spines['right'].set_visible(False)
+
+
+def plot_mean_error(df, column, metric, cut_range, step_range, df_laser=None, ax=None):
+
+    set_range(df, cut_range, column, step_range)
+
+    if 'diff_'+metric not in df:
+        raise Exception("Diff metrics for diff_%s not generated in dataframe"%metric)
+
+    df.loc[:,'diff_'+metric] = pd.to_numeric(df['diff_'+metric])
+    group_of_ranges = df.groupby(['range'])['diff_'+metric]
+
+    groups = [str(name) for name,unused_df in group_of_ranges]
+
+    ax.errorbar(groups, group_of_ranges.mean(), yerr=group_of_ranges.sem().values.flatten(), fmt=' ', marker='o', markersize=20, linewidth=4)
+
+    if df_laser is not None:
+        # print(df_laser['diff_'+metric])
+        ax.errorbar([-1], df_laser['diff_'+metric].mean(), fmt=' ', marker='o', markersize=20, linewidth=4)
+
+    # plt.ylabel(u"Δ Spike %s"%metric)
+    ax.set_xlabel("Time %s event (ms)"%column)
+    # ax.set_ylabel("Normalized change. min=control; max=laser")
+    remove_axes(ax)
+    # return fig, ax
