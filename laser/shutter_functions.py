@@ -173,34 +173,7 @@ def get_metrics_from_file(path, ctype, slope_position=0.98, dict_={}, min_dur=2,
 
 def plot_boxplot_mean(df,column, metric, cut_range, step_range, df_controls=None, df_laser=None, df_recovery=None):
     
-    # if cut_range is not None:
-    #     cut_range = [int(r.replace('\\','')) for r in cut_range.split(',')]
-    # else:
-    #     cut_range = [df[column].min(), df[column].max()]
-    # # print(cut_range)
-
-    # # https://stackoverflow.com/questions/21441259/pandas-groupby-range-of-values
-    # # print(df[column])
-    # df["range"] = pd.cut(df[column], np.arange(cut_range[0], cut_range[1], step_range))
     set_range(df, cut_range, column, step_range)
-
-    # df_controls['control_'+metric] = pd.to_numeric(df_controls['control_'+metric])
-
-    # #TODO: FIX por qué nan¿?
-    # durations_control = df_controls[['control_'+metric, 'file']].dropna()
-
-    # # def custom_mean(df):
-    # #     return df.mean(skipna=False)
-
-    # # print(durations_control)
-    # # control_means = durations_control[['control_'+metric,'file']].groupby('file').agg({'control_'+metric:custom_mean})
-    # control_means = durations_control[['control_'+metric,'file']].groupby('file').mean()
-
-    # df["diff_"+metric] = np.nan
-    # for i,file in enumerate(control_means.index):
-    #     df.loc[df['file'] == file, "diff_"+metric] = df.loc[df['file'] == file, metric].apply(lambda x: x - control_means.loc[file]).values
-    #     df_recovery.loc[df_recovery['file'] == file, "diff_"+metric] = df_recovery.loc[df_recovery['file'] == file, 'recovery_'+metric].apply(lambda x: x - control_means.loc[file]).values
-    #     df_laser.loc[df_laser['file'] == file, "diff_"+metric] = df_laser.loc[df_laser['file'] == file, 'laser_'+metric].apply(lambda x: x - control_means.loc[file]).values
 
     boxprops = dict(linestyle='-', linewidth=3, color='C0')
     ax = df.boxplot(column='diff_'+metric,by='range',figsize=(50,20), showmeans=True, showfliers=False,boxprops=boxprops)
@@ -247,33 +220,7 @@ def set_range(df, cut_range, column, step_range):
 
 def plot_boxplot_mean_combined(df,column, metrics, cut_range, step_range, df_controls=None, df_laser=None, df_recovery=None):
     
-    # if cut_range is not None:
-    #     cut_range = [int(r.replace('\\','')) for r in cut_range.split(',')]
-    # else:
-    #     cut_range = [df[column].min(), df[column].max()]
-    # # print(cut_range)
-
-    # # https://stackoverflow.com/questions/21441259/pandas-groupby-range-of-values
-    # # print(df[column])
-    # df["range"] = pd.cut(df[column], np.arange(cut_range[0], cut_range[1], step_range))
-
     set_range(df, cut_range, column, step_range)
-
-    # for metric in metrics:
-    #     df_controls.loc[:,'control_'+metric] = pd.to_numeric(df_controls['control_'+metric])
-
-    #     # durations_control = df_controls[['control_'+metric, 'file']]
-
-    #     control_means = df_controls[['control_'+metric,'file']].groupby('file').mean()
-
-    # # print(control_means)
-
-    #     df["diff_"+metric] = np.nan
-    #     for i,file in enumerate(control_means.index):
-    #         df.loc[df['file'] == file, "diff_"+metric] = df.loc[df['file'] == file, metric].apply(lambda x: x - control_means.loc[file]).values
-    #         df_recovery.loc[df_recovery['file'] == file, "diff_"+metric] = df_recovery.loc[df_recovery['file'] == file, 'recovery_'+metric].apply(lambda x: x - control_means.loc[file]).values
-    #         df_laser.loc[df_laser['file'] == file, "diff_"+metric] = df_laser.loc[df_laser['file'] == file, 'laser_'+metric].apply(lambda x: x - control_means.loc[file]).values
-    # print(df.describe())
 
     diff_metrics = ['diff_'+metric for metric in metrics]
     boxprops = dict(linestyle='-', linewidth=3, color='C0')
@@ -347,18 +294,8 @@ def plot_boxplot_mean_combined(df,column, metrics, cut_range, step_range, df_con
 
 def plot_boxplot_combined(df,column, metrics, cut_range, step_range, df_controls=None, df_laser=None, df_recovery=None):
 
-    # if cut_range is not None:
-    #     cut_range = [int(r.replace('\\','')) for r in cut_range.split(',')]
-    # else:
-    #     cut_range = [df[column].min(), df[column].max()]
-    # # print(cut_range)
-
-    # # https://stackoverflow.com/questions/21441259/pandas-groupby-range-of-values
-    # # print(df[column])
-    # df["range"] = pd.cut(df[column], np.arange(cut_range[0], cut_range[1], step_range))
     set_range(df, cut_range, column, step_range)
    
-    # print(df.describe())
     boxprops = dict(linestyle='-', linewidth=3, color='C0')
     axs = df.boxplot(column=metrics,by='range',figsize=(30,40), showmeans=True, showfliers=False,boxprops=boxprops, layout=(len(metrics),1))
     for ax,m in zip(axs,metrics):
@@ -402,20 +339,9 @@ def plot_boxplot_combined(df,column, metrics, cut_range, step_range, df_controls
 
 
 def plot_boxplot(df,column, metric, cut_range, step_range, df_controls=None, df_laser=None, df_recovery=None):
-    
-    # if cut_range is not None:
-    #     cut_range = [int(r.replace('\\','')) for r in cut_range.split(',')]
-    # else:
-    #     cut_range = [df[column].min(), df[column].max()]
-    # # print(cut_range)
-
-    # # https://stackoverflow.com/questions/21441259/pandas-groupby-range-of-values
-    # # print(df[column])
-    # df["range"] = pd.cut(df[column], np.arange(cut_range[0], cut_range[1], step_range))
    
     set_range(df, cut_range, column, step_range)
 
-    # print(df.describe())
     boxprops = dict(linestyle='-', linewidth=3, color='C0')
     ax = df.boxplot(column=metric,by='range',figsize=(40,20), showmeans=True, showfliers=False,boxprops=boxprops)
     ax.set_ylabel("Spike %s"%metric)
@@ -517,11 +443,6 @@ def add_norm_diff(df, metric, df_controls=None, df_laser=None, df_recovery=None,
     control_means = metric_control[['control_'+metric,'file']].groupby('file').mean()
     laser_means = metric_laser[['laser_'+metric,'file']].groupby('file').mean()
 
-    # laser_mean = laser_means.mean().values
-    # kwargs = {"diff_"+metric : lambda x: np.nan}
-    # df = df.assign(**kwargs)
-    # df_laser = df_laser.assign(**kwargs)
-    # df_recovery = df_recovery.assign(**kwargs)
 
     df.loc[:, "diff_"+metric] = np.nan
     df_laser.loc[:, "diff_"+metric] = np.nan
