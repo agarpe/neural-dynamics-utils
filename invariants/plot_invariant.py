@@ -3,12 +3,18 @@ import sys
 sys.path.append("../")
 sys.path.append("~/Workspace/scripts/")
 
+import os
+
+directory = os.path.expanduser('~/Workspace/scripts/')
+sys.path.append(directory)
+
+
 from charact_utils import *
 from invariant_functions import *
 import pandas as pd
 import argparse
 
-plt.rcParams.update({'font.size': 37})
+plt.rcParams.update({'font.size': 17})
 plt.rcParams['figure.dpi'] = 300
 
 # fig_format = 'eps'
@@ -21,7 +27,7 @@ ap.add_argument("-n1", "--neuron1", required=True, help="Neuron representing pha
 ap.add_argument("-n2", "--neuron2", required=True, help="Neuron representing phase2")
 ap.add_argument("-n3", "--neuron3", required=False, default=None, help="Neuron representing phase3")
 ap.add_argument("-l", "--labels", required=False, default="N1,N2,N3", help="Neurons labels e.g. N1,N3  or  N1,N2,N3")
-ap.add_argument("-il", "--interval_lim", required=False, default=1000000, help="Duration limit for the intervals (ms)")
+ap.add_argument("-il", "--interval_lim", required=False, default=100000000000, help="Duration limit for the intervals (ms)")
 ap.add_argument("-ff", "--fig_format", required=False, default='eps', help="Figure output format")
 # ap.add_argument("-ti", "--title", required=True, help="Title of the resulting plot")
 ap.add_argument("-sa", "--save", required=False, default='y', help="Option to save plot file")
@@ -57,7 +63,7 @@ else:
 
 
 print(len(N1_data), len(N2_data), len(N3_data))
-# N1_data, N2_data, N3_data = fix_length(N1_data, N2_data, N3_data)
+N1_data, N2_data, N3_data = fix_length(N1_data, N2_data, N3_data)
 
 
 N1_data = trunc(N1_data, decs=2)
@@ -121,15 +127,15 @@ N2N3, N3N2 = analyse_pair(N2N3, N3N2, labels[1], labels[2], stats, index)
 # ran_x = (0,90)
 # ran_y = (0,90)
 # box_ran = (-0.95,70)
-plot_intervals_stats(stats, box_ran=None)
+plot_intervals_stats(stats, box_ran=None, ignored_intervals=[])
 
 #
 if save:
     # plt.savefig("./results_invariant_tests/images/"+file_name+"_boxplot.png")
     plt.savefig(path + file_name + "_boxplot." + fig_format, format=fig_format)
 # 
-# if show:
-#     plt.show()
+if show:
+    plt.show()
 
 
 # ####################################
@@ -161,7 +167,7 @@ ran_y = False
 
 try:
     # dur_intervals = [N1_interv[DUR][:-1], N2_interv[DUR][:-1], N3_interv[DUR][:-1]]
-    dur_intervals = [N1_interv[DUR], N1_interv[DUR], N3_interv[DUR]]
+    dur_intervals = [N1_interv[DUR], N2_interv[DUR], N3_interv[DUR]]
     if labels is None:
         labels = ['N1', 'N2', 'N3']
 except:
@@ -172,8 +178,9 @@ except:
 
 output = path + file_name + "_durations." + fig_format
 
-plot_correlations(period, dur_intervals, labels, "Period (ms)", " Burst Duration (ms)", color='royalblue', save=output, fig_format=fig_format)
+# plot_correlations(period, dur_intervals, labels, "Period (ms)", " Burst Duration (ms)", color='royalblue', save=output, fig_format=fig_format)
 
+# plt.show()
 
 try:
     # pair_intervals = [N1N2[INTERVAL][:-1], N2N1[INTERVAL], N1N3[INTERVAL][:-1], N3N1[INTERVAL], N2N3[INTERVAL][:-1], N3N2[INTERVAL]]
@@ -194,8 +201,9 @@ except:
 
 output = path + file_name + "_intervals." + fig_format
 
-plot_correlations(period, pair_intervals, labels, "Period (ms)", " interval (ms)", color='seagreen', save=output, fig_format=fig_format)
+# plot_correlations(period, pair_intervals, labels, "Period (ms)", " interval (ms)", color='seagreen', save=output, fig_format=fig_format)
 
+# plt.show()
 
 try:
     # pair_intervals = [N1N2[DELAY][:-1], N2N1[DELAY], N1N3[DELAY][:-1], N3N1[DELAY], N2N3[DELAY][:-1], N3N2[DELAY]]
@@ -215,7 +223,42 @@ except:
 
 output = path + file_name + "_delays." + fig_format
 
-plot_correlations(period, pair_intervals, labels, "Period (ms)", " delay (ms)", color='brown', save=output, fig_format=fig_format)
+# plot_correlations(period, pair_intervals, labels, "Period (ms)", " delay (ms)", color='brown', save=output, fig_format=fig_format)
+# 
+
+
+# Pair plot
+import seaborn as sns
+
+# Convert the stats dict to a DataFrame with the correct labels
+# print(stats)
+intervals_dict = {}
+
+for key1, inner_dict in stats.items():
+    for key2, value in inner_dict.items():
+        new_key = f"{key1[1:]}-{key2}"
+        intervals_dict[new_key] = value
+
+intervals_df = pd.DataFrame(intervals_dict)
+
+
+
+#change font 
+
+# sns.set(rc={'figure.figsize':(60, 60)})
+
+# sns.set(font_scale=20)
+
+
+pair_plot = sns.pairplot(intervals_df)
+
+plt.savefig(path+file_name+'_pairplot.pdf', format='pdf')
+# plt.savefig(path+file_name+'_pairplot.png', format='png', dpi=300)
+
+# plt.show()
+
+
+
 
 
 if show:
