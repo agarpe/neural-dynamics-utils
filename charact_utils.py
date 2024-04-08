@@ -15,6 +15,41 @@ import scipy.stats as stats
 ##############    PLOT 
 ##############################################################################
 
+
+def close_all_figs():
+    import matplotlib.pyplot as plt
+    figs = list(map(plt.figure, plt.get_fignums()))
+
+    for fig in figs:
+        # print(fig)
+        plt.close(fig)
+
+        
+def deshare_axis_dataframe(axes, colors):
+
+    for axi in axes:
+        for ax in axi:
+            for i,color in enumerate(colors):
+                ax.findobj(matplotlib.patches.Patch)[i].set_facecolor(color)
+            grouper = ax.get_shared_y_axes()
+            shared_ys = [a for a in grouper]
+            for ax_list in shared_ys:
+                for ax2 in ax_list:
+                    grouper.remove(ax2)
+
+            ##setting limits:
+            ax.axis('auto')
+            ax.relim()      #<-- maybe not necessary
+
+            ##adjusting tick positions:
+            ax.yaxis.set_major_locator(AutoLocator())
+            ax.yaxis.set_minor_locator(AutoMinorLocator())
+
+            ##making tick labels visible:    
+            plt.setp(ax.get_yticklabels(), visible=True)
+
+
+
 ##Plots isi and zoom in by xlim and y lim 
 def plot_return_map(ISI,title,xlim=(10,50),ylim=(10,50),outliers=1):
     plt.title(title+" ("+str(len(ISI))+")")
@@ -159,7 +194,7 @@ from sklearn.preprocessing import normalize
 
 # Plot boxplot for given Intervals.
 # stats: dict with interval for each neuron. 
-def plot_intervals_stats(stats, box_ran, norm=False, pos=False, ignored_intervals=["IBI"], title=None):
+def plot_intervals_stats(stats, box_ran, norm=False, pos=False, ignored_intervals=["IBI"], title=None, figsize=(20,17)):
     keys = sorted(stats.keys())
     intervals = []
     labels = []
@@ -178,21 +213,21 @@ def plot_intervals_stats(stats, box_ran, norm=False, pos=False, ignored_interval
                 if e == "Period":
                     period_plot = True
                 labels.append(key[1:] + "-" + e)
-                if(norm): # normalized data version ***beta***
-                    if(pos):
-                        # interval = np.absolute(stats[key][e])
-                        intervals.append(np.absolute(stats[key][e])/np.linalg.norm(stats[key][e]))
-                        # plt.plot()
-                        # plt.show()
-                    else:
-                        intervals.append(stats[key][e]/np.linalg.norm(stats[key][e]))
-                else:
-                    intervals.append(stats[key][e])
+                # if(norm): # normalized data version ***beta***
+                #     if(pos):
+                #         # interval = np.absolute(stats[key][e])
+                #         intervals.append(np.absolute(stats[key][e])/np.linalg.norm(stats[key][e]))
+                #         # plt.plot()
+                #         # plt.show()
+                #     else:
+                #         intervals.append(stats[key][e]/np.linalg.norm(stats[key][e]))
+                # else:
+                intervals.append(stats[key][e])
 
                 colors.append(colors_map[e])
 
 
-    plt.figure(figsize=(33,20))
+    plt.figure(figsize=figsize)
     bp = plt.boxplot(intervals, showfliers=False, labels=labels, patch_artist=True)
 
     # get legend grouping patches by color
@@ -200,6 +235,7 @@ def plot_intervals_stats(stats, box_ran, norm=False, pos=False, ignored_interval
     legends = []
     for patch, color in zip(bp['boxes'], colors):
         patch.set_facecolor(color)
+        patch.set_alpha(0.8)
         if(color not in used):
             used.append(color)
             legends.append([patch, list(colors_map.keys())[list(colors_map.values()).index(color)]])
@@ -209,15 +245,15 @@ def plot_intervals_stats(stats, box_ran, norm=False, pos=False, ignored_interval
 
     legends = np.array(legends)
 
-    plt.tick_params(axis='both', labelsize=40)
+    plt.tick_params(axis='both', labelsize=23)
     plt.xticks(rotation=45, ha='right')
 
     if box_ran is not None:
         plt.ylim(box_ran)
 
-    plt.ylabel("Time intervals (ms)", fontsize=50)
+    plt.ylabel("Time intervals (ms)", fontsize=20)
 
-    plt.legend(legends[:,0],legends[:,1], fontsize='x-large', loc='upper center', bbox_to_anchor=(0.75,1))
+    plt.legend(legends[:,0],legends[:,1], fontsize='x-large', loc='best', bbox_to_anchor=(0.75,1))
 
     if title is None:
         plt.suptitle("Variability distribution for %d cycles"% len(stats[keys[0]]['Period']))
