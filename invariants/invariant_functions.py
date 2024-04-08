@@ -37,11 +37,12 @@ def plot_corr(ax,x,y,title1,title2,ran_x,ran_y,show=True,color='b',text_pos_y=0,
 
 def plot_correlations(x_data, ys_data, neu_labels, x_label, y_label, ran_x = False, ran_y = False, color='b',save=None, fig_format='png'):
     cols = len(ys_data)
-    rows = cols//3 + 1 
-    # print(rows,cols)
+    rows = (cols + 2) // 3  # Calculate the number of rows
+    print(rows, cols)
 
-    cols = len(ys_data)//rows
-    # print(rows,cols)
+    cols = (cols + rows - 1) // rows  # Calculate the number of columns
+    print(rows, cols)
+        
     fig, axes = plt.subplots(nrows=rows, ncols=cols, sharex=True, sharey=True, num=1, clear=True)
 
 

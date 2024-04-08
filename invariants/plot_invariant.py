@@ -158,8 +158,6 @@ if save:
 if show:
     plt.show()
 
-exit()
-
 
 # ####################################
 # ########  CORRELATIONS  ############
@@ -200,8 +198,8 @@ except:
     #     labels = ['N1', 'N2']
 
 output = path + file_name + "_durations." + fig_format
-
-# plot_correlations(period, dur_intervals, labels, "Period (ms)", " Burst Duration (ms)", color='royalblue', save=output, fig_format=fig_format)
+# 
+plot_correlations(period, dur_intervals, labels, "Period (ms)", " Burst Duration (ms)", color='royalblue', save=output, fig_format=fig_format)
 
 # plt.show()
 
@@ -224,7 +222,7 @@ except:
 
 output = path + file_name + "_intervals." + fig_format
 
-# plot_correlations(period, pair_intervals, labels, "Period (ms)", " interval (ms)", color='seagreen', save=output, fig_format=fig_format)
+plot_correlations(period, pair_intervals, labels, "Period (ms)", " interval (ms)", color='seagreen', save=output, fig_format=fig_format)
 
 # plt.show()
 
@@ -246,7 +244,7 @@ except:
 
 output = path + file_name + "_delays." + fig_format
 
-# plot_correlations(period, pair_intervals, labels, "Period (ms)", " delay (ms)", color='brown', save=output, fig_format=fig_format)
+plot_correlations(period, pair_intervals, labels, "Period (ms)", " delay (ms)", color='brown', save=output, fig_format=fig_format)
 # 
 
 
