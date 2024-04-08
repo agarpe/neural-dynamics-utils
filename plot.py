@@ -1,22 +1,23 @@
-# Developed by Alicia Garrido Peña (2020)
+# Developed by Alicia Garrido Peña (2023)
 #
-# Plotting tools for Lymnaea CPG Simulator Model. 
+# Plotting script for signals
 #
-# Implementation of the Lymnaea feeding CPG originally proposed by Vavoulis et al. (2007). Dynamic control of a central pattern generator circuit: A computational model of the snail feeding network. European Journal of Neuroscience, 25(9), 2805–2818. https://doi.org/10.1111/j.1460-9568.2007.05517.x
-# and used in study of dynamical invaraiants in Alicia Garrido-Peña, Irene Elices and Pablo Varona (2020). Characterization of interval variability in the sequential activity of a central pattern generator model. Neurocomputing 2020.
-#
-# Please, if you use this implementation cite the two papers above in your work. 
+# 
 ############################################################################################
-
-
-import numpy as np
-import matplotlib.pyplot as plt
-plt.rcParams.update({'font.size': 50})
 
 import sys
 import os
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
+
+plt.rcParams.update({'font.size': 50})
+
+headers = []
+reduced_headers = []
+if len(sys.argv) >3:
+	reduced_headers = sys.argv[3].split()
 if len(sys.argv) >2:
 	path = sys.argv[1]
 	file_name = sys.argv[2]
@@ -28,59 +29,113 @@ print("Ploting file from ",file_name)
 
 path = path+file_name
 
+if headers == []:
+	f = open(path)
+	f.readline()
+	headers = f.readline().split()
+	print(headers)
+	try:
+		headers.remove('#')
+	except:
+		pass
+	f.close()
 
-f = open(path)
-headers = f.readline().split()
 print(headers)
-f.close()
+data = pd.read_csv(path, delimiter = " ", dtype=np.float64,names=headers,skiprows=2,low_memory=False)
 
-data = pd.read_csv(path, delimiter = " ", names=headers,skiprows=1,low_memory=False)
+if len(reduced_headers) >0:
+	rows = len(reduced_headers)
+else:
+	rows = data.shape[1]
+	reduced_headers = headers
 
-rows = data.shape[1]
+# colors = ['teal', 'lightsalmon', 'skyblue', 'darkseagreen','maroon','teal', 'brown', 'blue', 'green','maroon']
+colors = ['teal', 'lightsalmon', 'darkseagreen','maroon','teal', 'brown', 'blue', 'green','maroon']
+colors = ['teal','cornflowerblue', 'darkblue', 'teal','teal']
 
-colors = ['teal', 'lightsalmon', 'skyblue', 'darkseagreen','maroon','teal', 'brown', 'blue', 'green','maroon']
+colors = plt.cm.tab20(np.linspace(0,1,len(headers)))
 
-# plt.figure(figsize=(30,30))
-# for i in range(1,rows):
-# 	if(i==1):
-# 		ax1 = plt.subplot(rows,1,i)
-# 	else:	
-# 		plt.subplot(rows,1,i,sharex=ax1)
+ini = 1
+if 't' not in headers:
+	data['t'] = np.arange(data[headers[0]].size)*0.1
+	ini = 0
 
-# 	if(i==rows-1):
-# 		plt.xlabel("Time (ms)")
 
-# 	if(headers[i]=='c'):
-# 		plt.ylabel("Current", multialignment='center')	
-# 	else:
-# 		plt.ylabel("Voltage\n(mV)", multialignment='center')
-# 	plt.plot(data['t'],data[headers[i]],color=colors[i-1])
-
-# 	plt.title(headers[i])
-
-# plt.tight_layout()
-
-# # plt.savefig("./images/"+file_name[:-3]+"eps",format='eps')
+# data[reduced_headers].plot()
 # plt.show()
 
 
+data = data[['t']+reduced_headers].values.T
+fig,axes = plt.subplots(nrows=len(reduced_headers),sharex=True,figsize=(30,30))
+for i,d in enumerate(data[1:]):
+	# plt.plot(data['t'],d)
+	axes[i].plot(data[0], d, color = colors[i])
 
+
+# plt.xlim(37000,38700) # 22-02
+# plt.xlim(61600,62700) #depol 15h30m59s_Trial7_10-05-2022_depol.asc
+# plt.show()
+
+# plt.savefig("./images/"+file_name[:-4]+'.pdf',format='pdf')
+plt.show()
+exit()
+
+# rows = 
 plt.figure(figsize=(30,30))
-for i in range(1,rows):
+for i in range(ini,rows):
+	if(i==ini):
+		ax1 = plt.subplot(rows-1,1,i+1-ini)
+	else:	
+		plt.subplot(rows-1,1,i,sharex=ax1)
+
+	if(i==rows-1):
+		plt.xlabel("Time (ms)")
+
+	if(headers[i]=='c'):
+		plt.ylabel("Current", multialignment='center')	
+	else:
+		print(reduced_headers[i])
+		print(data[reduced_headers[i]])
+		plt.ylabel("Voltage\n(mV)", multialignment='center')
+	plt.plot(data['t'],data[reduced_headers[i]],color=colors[i-1])
+
+	plt.title(reduced_headers[i])
+
+plt.tight_layout()
+plt.show()
+# plt.xlim(0,10000)
+# plt.savefig("./images/"+file_name[:-3]+"eps",format='eps')
+# plt.show()
+
+# print(data)
+# print(data.shape)
+
+# data[60000:][:100000]
+
+plt.figure(figsize=(30,10))
+for i in range(ini,rows):
 	# if(i==1):
 	# 	ax1 = plt.subplot(rows,1,i)
 	# else:	
 	# 	plt.subplot(rows,1,i,sharex=ax1)
 
+	if reduced_headers[i] == 'SO' or reduced_headers[i] == 'c':
+		continue
 	if(i==rows-1):
 		plt.xlabel("Time (ms)")
 
-	if(headers[i]!='c' and headers[i]!='SO'):
+	if(reduced_headers[i]!='c' and reduced_headers[i]!='SO'):
 		plt.ylabel("Voltage\n(mV)", multialignment='center')
-		plt.plot(data['t'],data[headers[i]],color=colors[i-1])
+		try:
+			plt.plot(data['t'],data[reduced_headers[i]],color=colors[i-1],label=reduced_headers[i],linewidth=2)
+		except:
+			plt.plot(data[reduced_headers[i]],color=colors[i-1],label=reduced_headers[i],linewidth=2)
 
-	plt.title(headers[i])
+	plt.title(reduced_headers[i])
 
+# plt.xlim(6000,10000)
+
+# plt.legend()
 plt.tight_layout()
 
 # plt.savefig("./images/"+file_name[:-3]+"eps",format='eps')
