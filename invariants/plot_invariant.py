@@ -20,35 +20,52 @@ plt.rcParams['figure.dpi'] = 300
 # fig_format = 'eps'
 
 ap = argparse.ArgumentParser()
-ap.add_argument("-p", "--path", required=True, help="Patern path of events files")
-ap.add_argument("-pf", "--prefix", required=True, help="File prefix")
-ap.add_argument("-dt", "--sampling", required=True, help="Time step sampling value in ms")
-ap.add_argument("-n1", "--neuron1", required=True, help="Neuron representing phase1")
-ap.add_argument("-n2", "--neuron2", required=True, help="Neuron representing phase2")
-ap.add_argument("-n3", "--neuron3", required=False, default=None, help="Neuron representing phase3")
-ap.add_argument("-l", "--labels", required=False, default="N1,N2,N3", help="Neurons labels e.g. N1,N3  or  N1,N2,N3")
-ap.add_argument("-il", "--interval_lim", required=False, default=100000000000, help="Duration limit for the intervals (ms)")
-ap.add_argument("-ff", "--fig_format", required=False, default='eps', help="Figure output format")
-# ap.add_argument("-ti", "--title", required=True, help="Title of the resulting plot")
+ap.add_argument("-cp", "--configpath", required=True, help="Path of config file")
 ap.add_argument("-sa", "--save", required=False, default='y', help="Option to save plot file")
 ap.add_argument("-sh", "--show", required=False, default='y', help="Option to show plot file")
+
 args = vars(ap.parse_args())
 
+import configparser
+Config = configparser.ConfigParser()
+config_path = args['configpath']
 
-path = args['path']
-n1 = args['neuron1']
-n2 = args['neuron2']
-n3 = args['neuron3']
-interval_lim = int(args['interval_lim'])
+print('Trying to read config file from %s' % config_path)
+if Config.read(config_path) == []:
+    print("Error: No config data found")
+    exit()
 
-fig_format = args['fig_format']
 
-labels = args['labels'].split(',')
+# Get config parameters
+parent_config = os.path.dirname(config_path)
+print(parent_config)
+path = Config.get('signal values', 'path')
+path = parent_config + path
+
+n1 = Config.get('signal values', 'n1')
+n2 = Config.get('signal values', 'n2')
+n3 = Config.get('signal values', 'n3')
+
+dt = Config.getfloat('signal values', 'dt')
+
+ini_rang = Config.getint('burst selection', 'ini_rang')
+interval_lim = Config.getint('burst selection', 'end_rang')
+
+
+file_name = Config.get('output', 'output_path')
+fig_format = Config.get('output', 'fig_format')
+
+labels = Config.get('output', 'labels').split(',')
 if len(labels) < 3:
     labels += ['']
+
 print(labels)
 
-file_name = args['prefix']
+try:
+    color = Config.get('plot', 'color')
+    print("Color: ", color)
+except:
+    pass
 
 show = True if args['show'] == 'y' else False
 save = True if args['save'] == 'y' else False
@@ -56,14 +73,14 @@ save = True if args['save'] == 'y' else False
 N1_data = read_bursts_events(path + n1)
 N2_data = read_bursts_events(path + n2)
 
-if n3 is not None:
+if n3 != '':
     N3_data = read_bursts_events(path + n3)
 else:
     N3_data = np.array([])
 
 
 print(len(N1_data), len(N2_data), len(N3_data))
-N1_data, N2_data, N3_data = fix_length(N1_data, N2_data, N3_data)
+# N1_data, N2_data, N3_data = fix_length(N1_data, N2_data, N3_data)
 
 
 N1_data = trunc(N1_data, decs=2)
@@ -129,10 +146,12 @@ N2N3, N3N2 = analyse_pair(N2N3, N3N2, labels[1], labels[2], stats, index)
 # box_ran = (-0.95,70)
 plot_intervals_stats(stats, box_ran=None, ignored_intervals=[])
 
-#
+output_path = path + file_name
+os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
 if save:
     # plt.savefig("./results_invariant_tests/images/"+file_name+"_boxplot.png")
-    plt.savefig(path + file_name + "_boxplot." + fig_format, format=fig_format)
+    plt.savefig(output_path + "_boxplot." + fig_format, format=fig_format)
 # 
 if show:
     plt.show()
@@ -252,7 +271,7 @@ intervals_df = pd.DataFrame(intervals_dict)
 
 pair_plot = sns.pairplot(intervals_df)
 
-plt.savefig(path+file_name+'_pairplot.pdf', format='pdf')
+plt.savefig(output_path+'_pairplot.pdf', format='pdf')
 # plt.savefig(path+file_name+'_pairplot.png', format='png', dpi=300)
 
 # plt.show()
