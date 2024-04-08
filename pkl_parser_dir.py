@@ -3,14 +3,21 @@ import glob
 import sys
 
 
-path = sys.argv[1]
+i_path = sys.argv[1]
 
-paths = glob.glob(path)
+print(i_path)
+paths = glob.glob(i_path+'/*')
 
 print(paths)
 
 for path in paths:
 	print(path)
-	cmd = "python3 ~/Workspace/scripts/pkl_parser.py %s"%path
-	os.system(cmd)
-	print(cmd)
+	# if 'info' in path or 'pkl':
+	# 	continue
+
+	if '.asc' in path: 
+		print(path)
+		cmd = "python3 ~/Workspace/scripts/pkl_parser.py %s"%path
+		print(cmd)
+		os.system(cmd)
+		# break

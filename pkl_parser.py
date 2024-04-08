@@ -12,7 +12,7 @@ except Exception as e:
 	exit()
 
 try:
-	pkl_name = name[:-4]+'.pkl'
+	pkl_name = name[:-4] + '.pkl'
 	with open(pkl_name,'wb') as f:
 		pkl.dump(data, f)
 except Exception as e:
@@ -21,8 +21,9 @@ except Exception as e:
 
 print("File %s created"%pkl_name)
 
+
 print("Testing file just created:",pkl_name)
-with open(pkl_name,'rb') as f_waveforms:
-	waveforms = pkl.load(f_waveforms)
-print(waveforms.shape)
-print(waveforms)
+with open(pkl_name,'rb') as f2:
+	data2 = pkl.load(f2)
+print(data2.shape)
+# print(waveforms)
