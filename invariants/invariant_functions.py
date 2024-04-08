@@ -88,6 +88,8 @@ def plot_intervals(inis,ends):
 # Plot boxplot for given Intervals.
 # stats: dict with interval for each neuron. 
 def plot_intervals_stats(stats, box_ran, norm=False, pos=False, ignored_intervals=["IBI"], title=None, figsize=(20,17), vert=False):
+    if not vert:
+        figsize = (figsize[1], figsize[0])
     keys = sorted(stats.keys())
     intervals = []
     labels = []
@@ -118,10 +120,9 @@ def plot_intervals_stats(stats, box_ran, norm=False, pos=False, ignored_interval
                 intervals.append(stats[key][e])
 
                 colors.append(colors_map[e])
-
-
+    
     plt.figure(figsize=figsize)
-    bp = plt.boxplot(intervals, showfliers=False, labels=labels, patch_artist=True)
+    bp = plt.boxplot(intervals, showfliers=False, labels=labels, patch_artist=True, vert=vert)
 
     # get legend grouping patches by color
     used = []
@@ -139,12 +140,19 @@ def plot_intervals_stats(stats, box_ran, norm=False, pos=False, ignored_interval
     legends = np.array(legends)
 
     plt.tick_params(axis='both', labelsize=23)
-    plt.xticks(rotation=45, ha='right')
+    if vert:
+        plt.xticks(rotation=45, ha='right')
 
     if box_ran is not None:
-        plt.ylim(box_ran)
+        if vert:
+            plt.ylim(box_ran)
+        else:
+            plt.xlim(box_ran)
 
-    plt.ylabel("Time intervals (ms)", fontsize=20)
+    if vert:
+        plt.ylabel("Time intervals (ms)", fontsize=20)
+    else:
+        plt.xlabel("Time intervals (ms)", fontsize=20)
 
     plt.legend(legends[:,0],legends[:,1], fontsize='x-large', loc='best', bbox_to_anchor=(0.75,1))
 
@@ -154,5 +162,3 @@ def plot_intervals_stats(stats, box_ran, norm=False, pos=False, ignored_interval
         plt.suptitle(title)
 
     plt.tight_layout()
-
-

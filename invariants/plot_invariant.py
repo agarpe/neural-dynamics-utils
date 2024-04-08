@@ -144,7 +144,9 @@ N2N3, N3N2 = analyse_pair(N2N3, N3N2, labels[1], labels[2], stats, index)
 # ran_x = (0,90)
 # ran_y = (0,90)
 # box_ran = (-0.95,70)
-plot_intervals_stats(stats, box_ran=None, ignored_intervals=[])
+
+# vert True generates horizontal boxplot. 
+plot_intervals_stats(stats, box_ran=None, ignored_intervals=[], vert=False)
 
 output_path = path + file_name
 os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -155,6 +157,8 @@ if save:
 # 
 if show:
     plt.show()
+
+exit()
 
 
 # ####################################
