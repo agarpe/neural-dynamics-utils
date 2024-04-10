@@ -1,5 +1,5 @@
 from charact_utils import *
-
+import plot_utils as pu
 
 
 #text_pos inverts 
@@ -52,8 +52,10 @@ def plot_correlations(x_data, ys_data, neu_labels, x_label, y_label, ran_x = Fal
             ax = axes[i]
 
         plot_corr(ax, x_data, interval, x_label, neu_label + y_label, ran_x, ran_y, False, color=color)
+        pu.remove_axes(ax)
 
     plt.tight_layout()
+
 
     if save is not None:
         plt.savefig(save, format=fig_format)
