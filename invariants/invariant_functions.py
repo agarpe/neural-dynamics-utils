@@ -35,16 +35,13 @@ def plot_corr(ax,x,y,title1,title2,ran_x,ran_y,show=True,color='b',text_pos_y=0,
 
 
 
-def plot_correlations(x_data, ys_data, neu_labels, x_label, y_label, ran_x = False, ran_y = False, color='b',save=None, fig_format='png'):
+def plot_correlations(x_data, ys_data, neu_labels, x_label, y_label, ran_x = False, ran_y = False, color='b',save=None, fig_format='png', figscale=(5, 5)):
     cols = len(ys_data)
     rows = (cols + 2) // 3  # Calculate the number of rows
-    print(rows, cols)
-
     cols = (cols + rows - 1) // rows  # Calculate the number of columns
-    print(rows, cols)
-        
-    fig, axes = plt.subplots(nrows=rows, ncols=cols, sharex=True, sharey=True, num=1, clear=True)
-
+    
+    figsize = (figscale[0]*cols, figscale[1]*rows)      
+    fig, axes = plt.subplots(figsize=figsize, nrows=rows, ncols=cols, sharex=True, sharey=True, clear=True)
 
     for i,(interval,neu_label) in enumerate(zip(ys_data,neu_labels)):
         print(neu_label)
@@ -60,9 +57,6 @@ def plot_correlations(x_data, ys_data, neu_labels, x_label, y_label, ran_x = Fal
 
     if save is not None:
         plt.savefig(save, format=fig_format)
-
-
-
 
 
 
