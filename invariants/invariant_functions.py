@@ -35,7 +35,7 @@ def plot_corr(ax,x,y,title1,title2,ran_x,ran_y,show=True,color='b',text_pos_y=0,
 
 
 
-def plot_correlations(x_data, ys_data, neu_labels, x_label, y_label, ran_x = False, ran_y = False, color='b',save=None, fig_format='png', figscale=(5, 5)):
+def plot_correlations(x_data, ys_data, neu_labels, x_label, y_label, ran_x = False, ran_y = False, color='b',save=None, fig_format='png', figscale=(6, 6)):
     cols = len(ys_data)
     rows = (cols + 2) // 3  # Calculate the number of rows
     cols = (cols + rows - 1) // rows  # Calculate the number of columns
@@ -84,7 +84,7 @@ def plot_intervals(inis,ends):
 
 # Plot boxplot for given Intervals.
 # stats: dict with interval for each neuron. 
-def plot_intervals_stats(stats, box_ran, norm=False, pos=False, ignored_intervals=["IBI"], title=None, figsize=(20,17), vert=False):
+def plot_intervals_stats(stats, box_ran, norm=False, pos=False, ignored_intervals=["IBI"], title=None, figsize=(30,15), vert=False):
     if not vert:
         figsize = (figsize[1], figsize[0])
     keys = sorted(stats.keys())
@@ -157,5 +157,7 @@ def plot_intervals_stats(stats, box_ran, norm=False, pos=False, ignored_interval
         plt.suptitle("Variability distribution for %d cycles"% len(stats[keys[0]]['Period']))
     else:
         plt.suptitle(title)
+
+    pu.remove_axes(plt.gca())
 
     plt.tight_layout()
