@@ -47,7 +47,13 @@ def FIR(neuron_signal, is_lowpass, cutoff, sampling_rate = 10000):
 
 def get_peaks(neuron_signal, threshold, min_distance):
 
-	peaks, _ = signal.find_peaks(neuron_signal, height=threshold, distance=min_distance)
+
+    # Calculate range of the signal
+    signal_range = abs(signal_max - signal_min)
+
+    # Calculate the absolute threshold
+    absolute_threshold = (percentage / 100) * signal_range
+	peaks, _ = signal.find_peaks(neuron_signal, height=absolute_threshold, distance=min_distance)
 
 	# plt.figure(figsize=(10, 6))
 	# plt.plot(neuron_signal, label='neuron signal', color='b')
