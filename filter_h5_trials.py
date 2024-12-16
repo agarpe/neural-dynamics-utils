@@ -21,9 +21,14 @@ def filter_trials(input_file, output_file, trials_to_keep):
             if not found:
                 print(f"Warning: Trial {trial} not found in the input file.")
 
-# Example usage
-input_file = 'data-test/Exp1.h5'
-output_file = 'data-test/STG-PD-extra.h5'
-trials_to_keep = ['Trial1', 'Trial2']
 
-filter_trials(input_file, output_file, trials_to_keep)
+
+# Example usage
+input_file = 'data-test/STG-PD-extra.h5'
+output_file = 'data-test/STG-PD-extra-small.h5'
+trials_to_keep = ['Trial1', 'Trial2']
+def main():
+
+    filter_trials(input_file, output_file, trials_to_keep)
+
+main()
