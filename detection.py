@@ -1,12 +1,15 @@
 import numpy as np
 import scipy.signal as signal
 import matplotlib.pyplot as plt
+import h5py
+import pandas as pd
+import configparser
+import numpy as np
 
-
-file_path = '/media/pablo/External NVME/Recordings/11-12-24/Exp1/17h31m16s_Trial1_Exp1.asc'
-data = np.loadtxt(file_path)
-PD1 = data[:,1]
-Extra = data[:,0]
+# file_path = '/media/pablo/External NVME/Recordings/11-12-24/Exp1/17h31m16s_Trial1_Exp1.asc'
+# data = np.loadtxt(file_path)
+# PD1 = data[:,1]
+# Extra = data[:,0]
 
 
 def FIR(neuron_signal, is_lowpass, cutoff, sampling_rate = 10000):
@@ -116,24 +119,132 @@ def detect_bursts_from_spikes(spike_indices, min_spikes=3, min_spike_dist=100, m
     return filtered_bursts
 
 
-# Example usage:
-spike_indices = np.array([50, 51, 52, 120, 121, 122, 300, 301, 320, 330, 350])  # Pre-detected spike indices
+# Reads h5 file with data trials
+# Input: h5_file_path: path to the file
+#        trials: String with trials separated by whitespace e.g. "1 2 5 7"
+#        headers: label to each column in the dataframe
+def read_h5File(h5_file_path, trials=None, headers=''):
+    # Step 2: Read the H5 file
+    with h5py.File(h5_file_path, 'r') as f:
+        print("H5 file structure:")
+        f.visit(print)  # Print dataset structure
 
-# Detect bursts with parameters:
-bursts = detect_bursts_from_spikes(spike_indices, min_spikes=3, min_spike_dist=10, max_spike_dist=50, min_burst_dist=100)
+        all_dataframes = []
 
-# Print detected bursts
-print("Detected Bursts:")
-for i, burst in enumerate(bursts):
-    print(f"Burst {i + 1}: {burst}")
+        n_trial = 1
+
+        while 1:
+            
+            #TODO when trials has a value it always need this break
+            if n_trial == 30:
+                print("Safety break n trial was %d"%n_trial)
+                break
+
+            # print(f"Trying Trial {n_trial}...")
+
+            try:
+                if trials is not None and n_trial not in trials:
+                    n_trial+=1
+                    continue
+
+                print(f"Processing Trial {n_trial}...")
+                trial = f"Trial{n_trial}"
+                struct = f'/{trial}/Synchronous Data/Channel Data'
+
+                dset = f[struct]  # Get trial data
+                data = dset[()]  # Get "values"
+
+                # Assuming columns are defined or available from elsewhere
+                columns = range(data.shape[1])  # Replace with specific column indices if needed
+
+                # Extract signal and store with trial label
+                signal = data[:, columns]
+                df_trial = pd.DataFrame(signal, columns=[f"Col{i}" for i in columns])
+                df_trial['Trial'] = n_trial  # Add trial identifier
+                all_dataframes.append(df_trial)
+
+            except KeyError as e:
+                if 'Channel Data' in e.args[0]:
+                    print("Skiping Trial %d"%n_trial)
+                    n_trial+=1
+                    continue
+                else:
+                    print("No trials left. %d files generated"%n_trial)
+                    break
+            except Exception as e:
+                print(f"Error processing Trial {n_trial}: {e}")
+                continue
+
+            n_trial+=1
+            
+        # Combine all trial data into a single DataFrame
+        df = pd.concat(all_dataframes, axis=0, ignore_index=True)
+
+    return df
 
 
 
-filtered_PD1 = FIR(PD1, False, 100, 10000)
-PD1_spikes = get_peaks(filtered_PD1, 0.001, 100)
+def main(h5_file_path, config_file_path):
+     # Step 1: Read the config file
+    config = configparser.ConfigParser()
+    config.read(config_file_path)
 
-LP_spikes = get_peaks(Extra, 0.08, 100)
+    # Parse recording parameters
+    sampling_rate = float(config['Recording']['sampling_rate'])  # in seconds
+    max_spike_duration = float(config['Recording']['max_spike_duration'])  # in milliseconds
 
-print(detect_bursts_from_spikes(PD1_spikes))
+    # # Display config content for debugging
+    # print("Config file contents:")
+    # for section in config.sections():
+    #     print(f"[{section}]")
+    #     for key, value in config[section].items():
+    #         print(f"{key} = {value}")
 
+    # Convert max spike duration to samples
+    max_spike_samples = max_spike_duration / (sampling_rate)
+
+    try:
+        trials = config['Recording']['trials']
+        trials = tuple([int(trial) for trial in trials.split()])
+    except:
+        trials = None
+
+    data = read_h5File(h5_file_path, trials)
+
+    # Step 3: Provide information about the DataFrame
+    print("\nDataFrame Information:")
+    print(data.info())
+    print("\nDataFrame Head:")
+    print(data.head())
+
+    
+
+
+# Replace with the paths to your H5 file and config file
+h5_file_path = 'data-test/STG-PD-extra.h5'
+config_file_path = 'data-test/STG-PD-extra.ini'
+
+
+main(h5_file_path, config_file_path)
+
+
+# # Example usage:
+# spike_indices = np.array([50, 51, 52, 120, 121, 122, 300, 301, 320, 330, 350])  # Pre-detected spike indices
+
+# # Detect bursts with parameters:
+# bursts = detect_bursts_from_spikes(spike_indices, min_spikes=3, min_spike_dist=10, max_spike_dist=50, min_burst_dist=100)
+
+# # Print detected bursts
+# print("Detected Bursts:")
+# for i, burst in enumerate(bursts):
+#     print(f"Burst {i + 1}: {burst}")
+
+
+
+# filtered_PD1 = FIR(PD1, False, 100, 10000)
+# PD1_spikes = get_peaks(filtered_PD1, 0.001, 100)
+
+# LP_spikes = get_peaks(Extra, 0.08, 100)
+
+# print(detect_bursts_from_spikes(PD1_spikes))
 
