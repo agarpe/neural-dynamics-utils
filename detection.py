@@ -49,20 +49,20 @@ def get_peaks(neuron_signal, threshold, min_distance):
 
 	peaks, _ = signal.find_peaks(neuron_signal, height=threshold, distance=min_distance)
 
-	plt.figure(figsize=(10, 6))
-	plt.plot(neuron_signal, label='neuron signal', color='b')
-	plt.scatter(peaks, neuron_signal[peaks], color='r', marker='x', label='Peaks')
+	# plt.figure(figsize=(10, 6))
+	# plt.plot(neuron_signal, label='neuron signal', color='b')
+	# plt.scatter(peaks, neuron_signal[peaks], color='r', marker='x', label='Peaks')
 
-	# Add labels and title
-	plt.title('Signal with Detected Peaks')
-	plt.xlabel('Time [s]')
-	plt.ylabel('Amplitude')
-	plt.grid(True)
-	plt.legend()
+	# # Add labels and title
+	# plt.title('Signal with Detected Peaks')
+	# plt.xlabel('Time [s]')
+	# plt.ylabel('Amplitude')
+	# plt.grid(True)
+	# plt.legend()
 
-	# Show the plot
-	plt.tight_layout()
-	plt.show()
+	# # Show the plot
+	# plt.tight_layout()
+	# plt.show()
 	return peaks
 
 def detect_bursts_from_spikes(spike_indices, min_spikes=3, min_spike_dist=100, max_spike_dist=2000, min_burst_dist=4000):
@@ -187,10 +187,6 @@ def main(h5_file_path, config_file_path):
     config = configparser.ConfigParser()
     config.read(config_file_path)
 
-    # Parse recording parameters
-    sampling_rate = float(config['Recording']['sampling_rate'])  # in seconds
-    max_spike_duration = float(config['Recording']['max_spike_duration'])  # in milliseconds
-
     # # Display config content for debugging
     # print("Config file contents:")
     # for section in config.sections():
@@ -198,9 +194,19 @@ def main(h5_file_path, config_file_path):
     #     for key, value in config[section].items():
     #         print(f"{key} = {value}")
 
+
+    # Parse recording parameters
+    sampling_rate = float(config['Recording']['sampling_rate'])  # in seconds
+    max_spike_duration = float(config['Recording']['max_spike_duration'])  # in milliseconds
+
     # Convert max spike duration to samples
     max_spike_samples = max_spike_duration / (sampling_rate)
 
+    try:
+        columns_to_filter = config['Analysis']['columns_to_filter']
+        columns_to_filter = tuple([int(col) for col in columns_to_filter.split()])
+    except:
+        columns_to_filter =()
     try:
         trials = config['Recording']['trials']
         trials = tuple([int(trial) for trial in trials.split()])
@@ -215,6 +221,7 @@ def main(h5_file_path, config_file_path):
     print("\nDataFrame Head:")
     print(df_signal.head())
 
+    #TODO decide if loop all or specify which in config
     for trial_id in df_signal['Trial'].unique():
         trial_data = df_signal[df_signal['Trial'] == trial_id]
         
@@ -223,18 +230,39 @@ def main(h5_file_path, config_file_path):
         n_signals = 1
         
         for i, column in enumerate(trial_data.columns[:-1]):  # Exclude 'Trial' column
+            # if i == 0:
+            #     continue
             fig, ax = plt.subplots(n_signals,figsize=(10, 6))
             ax_i = ax[i] if n_signals > 1 else ax
 
             v_signal = trial_data[column].values # get a neuron signal from a trial
 
+            # if i in columns_to_filter:
+            #     print("Filtering Column %d from Trial %d"%(i, trial_id))
+            #     v_signal = FIR(v_signal, False, 100, 10000)
+
+            # peaks = get_peaks(v_signal, 0.001, 100)
+            peaks = get_peaks(v_signal, 0.08, 100)
+
+            # print(v_signal.max(), v_signal.min(), v_signal.mean())
+            # input()
+
+
+            # LP_spikes = get_peaks(Extra, 0.08, 100)
+
+            # print(detect_bursts_from_spikes(PD1_spikes))
+
+
             # Plot signal and detected peaks
             ax_i.plot(v_signal, label=f"{column}")
+            ax_i.plot(peaks, v_signal[peaks], "x", label=f"{column} peaks")
             ax_i.set_title(f'Detected Events for Trial {trial_id}, Column {column}')
             ax_i.set_xlabel('Index')
             ax_i.set_ylabel('Signal Value')
             ax_i.legend()
             ax_i.grid()
+
+
 
             # Print detected peaks for debugging
             print(f"Trial {trial_id}, Column {column} detected peaks:")
