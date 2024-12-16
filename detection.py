@@ -65,8 +65,6 @@ def get_peaks(neuron_signal, threshold, min_distance):
 	plt.show()
 	return peaks
 
-import numpy as np
-
 def detect_bursts_from_spikes(spike_indices, min_spikes=3, min_spike_dist=100, max_spike_dist=2000, min_burst_dist=4000):
     """
     Detect bursts from pre-detected spike indices based on spike distances and burst characteristics.
@@ -209,15 +207,40 @@ def main(h5_file_path, config_file_path):
     except:
         trials = None
 
-    data = read_h5File(h5_file_path, trials)
+    df_signal = read_h5File(h5_file_path, trials)
 
     # Step 3: Provide information about the DataFrame
     print("\nDataFrame Information:")
-    print(data.info())
+    print(df_signal.info())
     print("\nDataFrame Head:")
-    print(data.head())
+    print(df_signal.head())
 
-    
+    for trial_id in df_signal['Trial'].unique():
+        trial_data = df_signal[df_signal['Trial'] == trial_id]
+        
+        # TODO: decide if 1 or 2 rows per plot
+        # n_signals = len(trial_data.columns[:-1])
+        n_signals = 1
+        
+        for i, column in enumerate(trial_data.columns[:-1]):  # Exclude 'Trial' column
+            fig, ax = plt.subplots(n_signals,figsize=(10, 6))
+            ax_i = ax[i] if n_signals > 1 else ax
+
+            v_signal = trial_data[column].values # get a neuron signal from a trial
+
+            # Plot signal and detected peaks
+            ax_i.plot(v_signal, label=f"{column}")
+            ax_i.set_title(f'Detected Events for Trial {trial_id}, Column {column}')
+            ax_i.set_xlabel('Index')
+            ax_i.set_ylabel('Signal Value')
+            ax_i.legend()
+            ax_i.grid()
+
+            # Print detected peaks for debugging
+            print(f"Trial {trial_id}, Column {column} detected peaks:")
+
+        plt.show()
+
 
 
 # Replace with the paths to your H5 file and config file
