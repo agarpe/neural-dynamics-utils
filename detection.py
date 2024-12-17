@@ -53,7 +53,6 @@ def get_peaks(neuron_signal, percentage_threshold, min_distance):
     # Calculate the absolute threshold with respect to the minimum
     absolute_threshold = min(neuron_signal) + percentage_threshold * signal_range
 
-    print("\n\n",absolute_threshold,"\n\n")
     peaks, _ = signal.find_peaks(neuron_signal, height=absolute_threshold, distance=min_distance, prominence=0.1*signal_range)
 
     plt.figure(figsize=(10, 6))
@@ -230,9 +229,13 @@ def main(h5_file_path, config_file_path):
     except:
         trials = None
 
+
     df_signal = read_h5File(h5_file_path, trials)
 
-    # Step 3: Provide information about the DataFrame
+    # TODO read the rest of input parameters and include in the dataframe
+
+
+    # Provide information about the DataFrame
     print("\nDataFrame Information:")
     print(df_signal.info())
     print("\nDataFrame Head:")
@@ -279,6 +282,8 @@ def main(h5_file_path, config_file_path):
             plt.plot(peaks_time, np.zeros(peaks_time.shape[0]),'x', label=f"{column}")
             # plt.show()
 
+
+            #TODO save with neuron column name
             print(peaks[:10])
             np.savetxt(h5_file_path[:-3]+"_spikes_index-trial%d-col%d.txt"%(trial_id,i), peaks, fmt="%d")
             np.savetxt(h5_file_path[:-3]+"_spikes_time-trial%d-col%d.txt"%(trial_id,i), peaks_time)
