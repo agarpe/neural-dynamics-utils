@@ -5,6 +5,7 @@ import h5py
 import pandas as pd
 import configparser
 import argparse
+import pickle
 
 # file_path = '/media/pablo/External NVME/Recordings/11-12-24/Exp1/17h31m16s_Trial1_Exp1.asc'
 # data = np.loadtxt(file_path)
@@ -282,6 +283,14 @@ def main(h5_file_path, config_file_path):
             np.savetxt(h5_file_path[:-3]+"_spikes_index-trial%d-col%d.txt"%(trial_id,i), peaks, fmt="%d")
             np.savetxt(h5_file_path[:-3]+"_spikes_time-trial%d-col%d.txt"%(trial_id,i), peaks_time)
             
+            # Save peaks and peaks_time as .pkl
+            with open(h5_file_path[:-3] + "_spikes_index-trial%d-col%d.pkl" % (trial_id, i), 'wb') as f:
+                pickle.dump(peaks.astype(int), f)  # Save peaks as integers
+            with open(h5_file_path[:-3] + "_spikes_time-trial%d-col%d.pkl" % (trial_id, i), 'wb') as f:
+                pickle.dump(peaks_time, f)  # Save peaks_time (as floats by default)
+
+
+
         # plt.show()
 
 # This if ensures that main will not be called when this script is imported by other library
