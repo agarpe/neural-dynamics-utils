@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import h5py
 import pandas as pd
 import configparser
-import numpy as np
+import argparse
 
 # file_path = '/media/pablo/External NVME/Recordings/11-12-24/Exp1/17h31m16s_Trial1_Exp1.asc'
 # data = np.loadtxt(file_path)
@@ -246,8 +246,8 @@ def main(h5_file_path, config_file_path):
         n_signals = 1
         
         for i, column in enumerate(trial_data.columns[:-1]):  # Exclude 'Trial' column
-            fig, ax = plt.subplots(n_signals,figsize=(10, 6))
-            ax_i = ax[i] if n_signals > 1 else ax
+            # fig, ax = plt.subplots(n_signals,figsize=(10, 6))
+            # ax_i = ax[i] if n_signals > 1 else ax
 
             v_signal = trial_data[column].values # get a neuron signal from a trial
 
@@ -268,20 +268,52 @@ def main(h5_file_path, config_file_path):
             # ax_i.grid()
 
             # Print detected peaks for debugging
-            print(f"Trial {trial_id}, Column {column} detected peaks:")
+            print(f"Trial {trial_id}, Column {column} detected peaks: {len(peaks)}")
 
+            # save with time dimension            
+            time = np.arange(0,v_signal.shape[0],1)*sampling_rate
+            peaks_time = time[peaks]
+
+            plt.plot(time, v_signal, label=f"{column}")
+            plt.plot(peaks_time, np.zeros(peaks_time.shape[0]),'x', label=f"{column}")
+            # plt.show()
+
+            np.savetxt(h5_file_path[:-3]+"_spikes_index-trial%d-col%d.txt"%(trial_id,i), peaks)
+            np.savetxt(h5_file_path[:-3]+"_spikes_time-trial%d-col%d.txt"%(trial_id,i), peaks_time)
+            
         # plt.show()
 
+# This if ensures that main will not be called when this script is imported by other library
+if __name__ == "__main__":
+    # Create the argument parser
+    parser = argparse.ArgumentParser(description="Process an H5 file and a config file.")
+
+    # Define the arguments
+    parser.add_argument(
+        "h5_file_path",
+        type=str,
+        help="Path to the H5 file."
+    )
+    parser.add_argument(
+        "config_file_path",
+        type=str,
+        help="Path to the config (INI) file."
+    )
+
+    # Parse the arguments
+    args = parser.parse_args()
+
+    # Call main with the parsed arguments
+    main(args.h5_file_path, args.config_file_path)
 
 
-# Replace with the paths to your H5 file and config file
-h5_file_path = 'data-test/STG-PD-extra.h5'
-config_file_path = 'data-test/STG-PD-extra.ini'
+# Example of use:
+# python3 detection.py data-test/STG-PD-extra.h5 data-test/STG-PD-extra.ini
 
 
-main(h5_file_path, config_file_path)
 
 
+# OLD code:
 # # Example usage:
 # spike_indices = np.array([50, 51, 52, 120, 121, 122, 300, 301, 320, 330, 350])  # Pre-detected spike indices
 
