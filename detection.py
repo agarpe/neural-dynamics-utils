@@ -278,7 +278,8 @@ def main(h5_file_path, config_file_path):
             plt.plot(peaks_time, np.zeros(peaks_time.shape[0]),'x', label=f"{column}")
             # plt.show()
 
-            np.savetxt(h5_file_path[:-3]+"_spikes_index-trial%d-col%d.txt"%(trial_id,i), peaks)
+            print(peaks[:10])
+            np.savetxt(h5_file_path[:-3]+"_spikes_index-trial%d-col%d.txt"%(trial_id,i), peaks, fmt="%d")
             np.savetxt(h5_file_path[:-3]+"_spikes_time-trial%d-col%d.txt"%(trial_id,i), peaks_time)
             
         # plt.show()
