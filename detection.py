@@ -55,20 +55,20 @@ def get_peaks(neuron_signal, percentage_threshold, min_distance):
 
     peaks, _ = signal.find_peaks(neuron_signal, height=absolute_threshold, distance=min_distance, prominence=0.1*signal_range)
 
-    plt.figure(figsize=(10, 6))
-    plt.plot(neuron_signal, label='neuron signal', color='b')
-    plt.scatter(peaks, neuron_signal[peaks], color='r', marker='x', label='Peaks')
-    plt.hlines(y=absolute_threshold, xmin=0, xmax=len(neuron_signal)-1, color='g', linestyle='--', label='Threshold')
-    # Add labels and title
-    plt.title('Signal with Detected Peaks')
-    plt.xlabel('Time [s]')
-    plt.ylabel('Amplitude')
-    plt.grid(True)
-    plt.legend()
+    # plt.figure(figsize=(10, 6))
+    # plt.plot(neuron_signal, label='neuron signal', color='b')
+    # plt.scatter(peaks, neuron_signal[peaks], color='r', marker='x', label='Peaks')
+    # plt.hlines(y=absolute_threshold, xmin=0, xmax=len(neuron_signal)-1, color='g', linestyle='--', label='Threshold')
+    # # Add labels and title
+    # plt.title('Signal with Detected Peaks')
+    # plt.xlabel('Time [s]')
+    # plt.ylabel('Amplitude')
+    # plt.grid(True)
+    # plt.legend()
 
-    # Show the plot
-    plt.tight_layout()
-    plt.show()
+    # # Show the plot
+    # plt.tight_layout()
+    # plt.show()
     return peaks
 
 def detect_bursts_from_spikes(spike_indices, min_spikes=3, min_spike_dist=100, max_spike_dist=2000, min_burst_dist=4000):
@@ -193,23 +193,15 @@ def main(h5_file_path, config_file_path):
     config = configparser.ConfigParser()
     config.read(config_file_path)
 
-    # # Display config content for debugging
-    # print("Config file contents:")
-    # for section in config.sections():
-    #     print(f"[{section}]")
-    #     for key, value in config[section].items():
-    #         print(f"{key} = {value}")
-
-
     # Parse recording parameters
     sampling_rate = float(config['Recording']['sampling_rate'])  # in seconds
     max_spike_duration = float(config['Recording']['max_spike_duration'])  # in milliseconds
 
     # Convert max spike duration to samples
-    max_spike_samples = max_spike_duration / (sampling_rate)
+    max_spike_samples = max_spike_duration / sampling_rate
+
     try:
         percentage_thresholds = config['Spike detection']['threshold']
-        print(percentage_thresholds)
         percentage_thresholds = tuple([float(thres) for thres in percentage_thresholds.split()])
     except Exception as e:
         print("Error: No percentage threshold for spike detection in Config file or incorrect format")
@@ -220,19 +212,32 @@ def main(h5_file_path, config_file_path):
         columns_to_filter = config['Analysis']['column_to_filter']
         columns_to_filter = tuple([int(col) for col in columns_to_filter.split()])
     except Exception as e:
-        print("Warning:",e.args)
-        columns_to_filter =()
+        print("Warning:", e.args)
+        columns_to_filter = ()
 
     try:
-        trials = config['Recording']['trials']
+        trials = config['Input']['trials']
         trials = tuple([int(trial) for trial in trials.split()])
     except:
         trials = None
 
-
     df_signal = read_h5File(h5_file_path, trials)
 
-    # TODO read the rest of input parameters and include in the dataframe
+    # Parse additional input parameters from the config file
+    trial_types = config['Input']['type'].strip('"').split()
+    column_names = config['Input']['column_names'].strip('"').split()
+
+    # Update column names in the dataframe
+    df_signal.columns = column_names + ['Trial']
+
+    # Map trial numbers to trial types
+    trial_type_mapping = dict(zip(trials, trial_types))
+
+    # Add a new column for trial type
+    df_signal['Type'] = df_signal['Trial'].map(trial_type_mapping)
+
+    print(df_signal)
+
 
 
     # Provide information about the DataFrame
@@ -249,11 +254,14 @@ def main(h5_file_path, config_file_path):
         # n_signals = len(trial_data.columns[:-1])
         n_signals = 1
         
-        for i, column in enumerate(trial_data.columns[:-1]):  # Exclude 'Trial' column
+        for i, column in enumerate(trial_data.columns[:-2]):  # Exclude 'Trial' and 'Type' column
             # fig, ax = plt.subplots(n_signals,figsize=(10, 6))
             # ax_i = ax[i] if n_signals > 1 else ax
 
+
             v_signal = trial_data[column].values # get a neuron signal from a trial
+
+            trial_type = df_signal.loc[df_signal['Trial'] == trial_id, 'Type'].iloc[0]
 
             if i in columns_to_filter:
                 print("Filtering Column %d from Trial %d"%(i, trial_id))
@@ -278,20 +286,20 @@ def main(h5_file_path, config_file_path):
             time = np.arange(0,v_signal.shape[0],1)*sampling_rate
             peaks_time = time[peaks]
 
-            plt.plot(time, v_signal, label=f"{column}")
-            plt.plot(peaks_time, np.zeros(peaks_time.shape[0]),'x', label=f"{column}")
+            # plt.plot(time, v_signal, label=f"{column}")
+            # plt.plot(peaks_time, np.zeros(peaks_time.shape[0]),'x', label=f"{column}")
             # plt.show()
 
 
             #TODO save with neuron column name
             print(peaks[:10])
-            np.savetxt(h5_file_path[:-3]+"_spikes_index-trial%d-col%d.txt"%(trial_id,i), peaks, fmt="%d")
-            np.savetxt(h5_file_path[:-3]+"_spikes_time-trial%d-col%d.txt"%(trial_id,i), peaks_time)
+            np.savetxt(h5_file_path[:-3]+"_spikes_index-trial%d-%s-%s.txt"%(trial_id, column, trial_type), peaks, fmt="%d")
+            np.savetxt(h5_file_path[:-3]+"_spikes_time-trial%d-%s-%s.txt"%(trial_id, column, trial_type), peaks_time)
             
             # Save peaks and peaks_time as .pkl
-            with open(h5_file_path[:-3] + "_spikes_index-trial%d-col%d.pkl" % (trial_id, i), 'wb') as f:
+            with open(h5_file_path[:-3] + "_spikes_index-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
                 pickle.dump(peaks.astype(int), f)  # Save peaks as integers
-            with open(h5_file_path[:-3] + "_spikes_time-trial%d-col%d.pkl" % (trial_id, i), 'wb') as f:
+            with open(h5_file_path[:-3] + "_spikes_time-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
                 pickle.dump(peaks_time, f)  # Save peaks_time (as floats by default)
 
 
