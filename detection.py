@@ -70,7 +70,7 @@ def get_peaks(neuron_signal, percentage_threshold, min_distance):
     # plt.tight_layout()
     # plt.show()
     return peaks
-
+# Function to detect bursts
 def detect_bursts_from_spikes(spike_indices, min_spikes=3, min_spike_dist=100, max_spike_dist=2000, min_burst_dist=4000):
     """
     Detect bursts from pre-detected spike indices based on spike distances and burst characteristics.
@@ -92,11 +92,13 @@ def detect_bursts_from_spikes(spike_indices, min_spikes=3, min_spike_dist=100, m
     for i in range(1, len(spike_indices)):
         # Check the distance between consecutive spikes
         spike_distance = spike_indices[i] - spike_indices[i - 1]
-        
+
         # If the distance is within the burst limits, add spike to the current burst
         if min_spike_dist <= spike_distance <= max_spike_dist:
-            current_burst.append(spike_indices[i - 1])
-        
+            if not current_burst:
+                current_burst.append(spike_indices[i - 1])  # Add the previous spike if starting a new burst
+            current_burst.append(spike_indices[i])
+
         # If the distance exceeds the maximum allowed between spikes, finalize the current burst
         else:
             if len(current_burst) >= min_spikes:
@@ -121,6 +123,33 @@ def detect_bursts_from_spikes(spike_indices, min_spikes=3, min_spike_dist=100, m
             last_burst_end = burst_end  # Update the last burst end position
 
     return filtered_bursts
+
+
+# Helper function for plotting
+def plot_signal_with_peaks_and_bursts(v_signal, time, peaks, peaks_time, bursts):
+    plt.figure(figsize=(15, 6))
+
+    # Plot the full signal
+    plt.plot(time, v_signal, label='Signal', color='blue', linewidth=1)
+    
+    # Highlight detected peaks
+    plt.scatter(peaks_time, v_signal[peaks], color='red', label='Detected Peaks', zorder=5)
+
+    # Highlight bursts
+    for burst in bursts:
+        burst_start_time = time[burst[0]]
+        burst_end_time = time[burst[-1]]
+        burst_indices_time = time[burst]
+        plt.scatter(burst_indices_time, v_signal[burst], color='orange', zorder=6, label='Burst' if burst == bursts[0] else "")
+        plt.axvspan(burst_start_time, burst_end_time, color='yellow', alpha=0.2, zorder=0)
+
+    plt.title("Signal with Detected Peaks and Bursts")
+    plt.xlabel("Time")
+    plt.ylabel("Signal Amplitude")
+    plt.legend()
+    plt.grid()
+    plt.show()
+
 
 
 # Reads h5 file with data trials
@@ -238,6 +267,8 @@ def main(h5_file_path, config_file_path):
 
     print(df_signal)
 
+    print("Saving Data frame")
+    df_signal.to_pickle(h5_file_path[:-3] +'_data.pkl')
 
 
     # Provide information about the DataFrame
@@ -289,10 +320,29 @@ def main(h5_file_path, config_file_path):
             # plt.plot(time, v_signal, label=f"{column}")
             # plt.plot(peaks_time, np.zeros(peaks_time.shape[0]),'x', label=f"{column}")
             # plt.show()
+            
+            bursts = detect_bursts_from_spikes(peaks, min_spikes=3, min_spike_dist=100, max_spike_dist=2000, min_burst_dist=4000)
+
+            # Plot the signal, peaks, and bursts
+            plot_signal_with_peaks_and_bursts(v_signal, time, peaks, peaks_time, bursts)
 
 
-            #TODO save with neuron column name
-            print(peaks[:10])
+            # Save burst start and end indices and times
+            burst_start_end_indices = [(burst[0], burst[-1]) for burst in bursts]  # Start and end indices of each burst
+            burst_start_end_times = [(time[burst[0]], time[burst[-1]]) for burst in bursts]  # Start and end times of each burst
+
+            # Save as .txt files
+            np.savetxt(h5_file_path[:-3] + "_bursts_index-trial%d-%s-%s.txt" % (trial_id, column, trial_type),
+                    burst_start_end_indices, fmt="%d", header="Burst Start Index, Burst End Index")
+            np.savetxt(h5_file_path[:-3] + "_bursts_time-trial%d-%s-%s.txt" % (trial_id, column, trial_type),
+                    burst_start_end_times, fmt="%.6f", header="Burst Start Time, Burst End Time")
+
+            # Save as .pkl files
+            with open(h5_file_path[:-3] + "_bursts_index-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
+                pickle.dump(burst_start_end_indices, f)  # Save burst indices as tuples
+            with open(h5_file_path[:-3] + "_bursts_time-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
+                pickle.dump(burst_start_end_times, f)  # Save burst times as tuples
+
             np.savetxt(h5_file_path[:-3]+"_spikes_index-trial%d-%s-%s.txt"%(trial_id, column, trial_type), peaks, fmt="%d")
             np.savetxt(h5_file_path[:-3]+"_spikes_time-trial%d-%s-%s.txt"%(trial_id, column, trial_type), peaks_time)
             
