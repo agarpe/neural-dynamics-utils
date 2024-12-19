@@ -330,6 +330,15 @@ def main(h5_file_path, config_file_path):
             # Save burst start and end indices and times
             burst_start_end_indices = [(burst[0], burst[-1]) for burst in bursts]  # Start and end indices of each burst
             burst_start_end_times = [(time[burst[0]], time[burst[-1]]) for burst in bursts]  # Start and end times of each burst
+            
+            if len(bursts) != 0:
+                burst_waveforms = [v_signal[burst[0]-2000:2000+burst[1]] for burst in burst_start_end_indices]
+                min_length = min(w.shape[0] for w in burst_waveforms)
+                trimmed_waveforms = np.array([w[:min_length] for w in burst_waveforms])
+                
+                # Save peaks and peaks_time as .pkl
+                with open(h5_file_path[:-3] + "_waveform-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
+                    pickle.dump(trimmed_waveforms, f)  # Save peaks as integers
 
             # Save as .txt files
             np.savetxt(h5_file_path[:-3] + "_bursts_index-trial%d-%s-%s.txt" % (trial_id, column, trial_type),
