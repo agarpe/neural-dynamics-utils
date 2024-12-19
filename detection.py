@@ -338,7 +338,7 @@ def main(h5_file_path, config_file_path):
                 
                 # Save peaks and peaks_time as .pkl
                 with open(h5_file_path[:-3] + "_waveform-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
-                    pickle.dump(trimmed_waveforms, f)  # Save peaks as integers
+                    pickle.dump(trimmed_waveforms, f)  # Save waveforms
 
             # Save as .txt files
             np.savetxt(h5_file_path[:-3] + "_bursts_index-trial%d-%s-%s.txt" % (trial_id, column, trial_type),
