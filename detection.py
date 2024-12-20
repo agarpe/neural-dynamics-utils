@@ -53,7 +53,7 @@ def get_peaks(neuron_signal, percentage_threshold, min_distance):
     # Calculate the absolute threshold with respect to the minimum
     absolute_threshold = min(neuron_signal) + percentage_threshold * signal_range
 
-    peaks, _ = signal.find_peaks(neuron_signal, height=absolute_threshold, distance=min_distance, prominence=0.1*signal_range)
+    peaks, _ = signal.find_peaks(neuron_signal, height=absolute_threshold, distance=min_distance, prominence=0.05*signal_range)
 
     # plt.figure(figsize=(10, 6))
     # plt.plot(neuron_signal, label='neuron signal', color='b')
@@ -250,6 +250,9 @@ def main(h5_file_path, config_file_path):
     except:
         trials = None
 
+    min_spike_dist = float(config['Recording']['min_spike_dist'])
+    max_spike_dist = float(config['Recording']['max_spike_dist'])
+
     df_signal = read_h5File(h5_file_path, trials)
 
     # Parse additional input parameters from the config file
@@ -299,7 +302,7 @@ def main(h5_file_path, config_file_path):
                 v_signal = FIR(v_signal, False, 100, 10000)
 
             # TODO: change 100 for config value
-            peaks = get_peaks(v_signal, percentage_thresholds[i], 100)
+            peaks = get_peaks(v_signal, percentage_thresholds[i], min_distance=min_spike_dist)
 
             # # Plot signal and detected peaks
             # ax_i.plot(v_signal, label=f"{column}")
@@ -321,7 +324,7 @@ def main(h5_file_path, config_file_path):
             # plt.plot(peaks_time, np.zeros(peaks_time.shape[0]),'x', label=f"{column}")
             # plt.show()
             
-            bursts = detect_bursts_from_spikes(peaks, min_spikes=3, min_spike_dist=100, max_spike_dist=2000, min_burst_dist=4000)
+            bursts = detect_bursts_from_spikes(peaks, min_spikes=3, min_spike_dist=min_spike_dist, max_spike_dist=max_spike_dist, min_burst_dist=1000)
 
             # Plot the signal, peaks, and bursts
             plot_signal_with_peaks_and_bursts(v_signal, time, peaks, peaks_time, bursts)
@@ -332,13 +335,14 @@ def main(h5_file_path, config_file_path):
             burst_start_end_times = [(time[burst[0]], time[burst[-1]]) for burst in bursts]  # Start and end times of each burst
             
             if len(bursts) != 0:
-                burst_waveforms = [v_signal[burst[0]-2000:2000+burst[1]] for burst in burst_start_end_indices]
-                min_length = min(w.shape[0] for w in burst_waveforms)
-                trimmed_waveforms = np.array([w[:min_length] for w in burst_waveforms])
+                burst_waveforms = [v_signal[burst[0]-1500:1500+burst[1]] for burst in burst_start_end_indices]
+                max_length = max(w.shape[0] for w in burst_waveforms)
+
+                burst_waveforms_padded = np.array([np.pad(w, (0, max_length - w.shape[0]), mode='constant') if w.shape[0] < max_length else w[:max_length] for w in burst_waveforms])
                 
                 # Save peaks and peaks_time as .pkl
                 with open(h5_file_path[:-3] + "_waveform-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
-                    pickle.dump(trimmed_waveforms, f)  # Save waveforms
+                    pickle.dump(burst_waveforms_padded, f)  # Save waveforms
 
             # Save as .txt files
             np.savetxt(h5_file_path[:-3] + "_bursts_index-trial%d-%s-%s.txt" % (trial_id, column, trial_type),
