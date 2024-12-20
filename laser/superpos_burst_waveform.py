@@ -49,21 +49,22 @@ def main(config_file_path):
 
     waveforms = {trial: pkl.load(open(wf, 'rb')) for trial, wf in zip(trials, waveforms_f)}
 
-    print(waveforms)
 
     for i,w in enumerate(waveforms):
         type_for_trial = df[df['Trial'] == w]['Type'].unique()[0]
         print(type_for_trial)
 
-        w_mean = np.mean(waveforms[w], axis=0)
+
         try:
-            w_mean -= w_mean[0]
+            waveform = np.array([w-min(w) for w in waveforms[w]])
+            w_mean = np.mean(waveform, axis=0)
+            # w_mean -= np.max(w_mean)
         except Exception as e:
             print(e.args)
             continue
         
-        # w_mean = waveforms[w]
-
+        
+        plt.plot(waveform.T, color=colors[i], label=type_for_trial, linewidth=0.01) 
         plt.plot(w_mean.T, color=colors[i], label=type_for_trial)
 
     plt.title(title)
