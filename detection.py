@@ -275,7 +275,6 @@ def main(h5_file_path, config_file_path):
     print("\nDataFrame Head:")
     print(df_signal.head())
 
-    #TODO decide if loop all or specify which in config
     for trial_id in df_signal['Trial'].unique():
         trial_data = df_signal[df_signal['Trial'] == trial_id]
         
