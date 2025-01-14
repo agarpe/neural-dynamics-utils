@@ -64,7 +64,7 @@ def get_peaks(neuron_signal, percentage_threshold, min_distance):
     # # Show the plot
     # plt.tight_layout()
     # plt.show()
-    return peaks
+    return peaks, absolute_threshold
 # Function to detect bursts
 def detect_bursts_from_spikes(spike_indices, min_spikes=3, min_spike_dist=100, max_spike_dist=2000, min_burst_dist=4000):
     """
@@ -121,11 +121,14 @@ def detect_bursts_from_spikes(spike_indices, min_spikes=3, min_spike_dist=100, m
 
 
 # Helper function for plotting
-def plot_signal_with_peaks_and_bursts(ax, v_signal, time, peaks, peaks_time, bursts):
+def plot_signal_with_peaks_and_bursts(ax, v_signal, time, peaks, peaks_time, bursts, absolute_threshold):
     # plt.figure(figsize=(15, 6))
 
     # Plot the full signal
     ax.plot(time, v_signal, label='Signal', color='blue', linewidth=1)
+    
+    # Plot threshold
+    ax.hlines(y=absolute_threshold, xmin=0, xmax=time[-1], color='g', linestyle='--', label='Threshold')
     
     # Highlight detected peaks
     ax.scatter(peaks_time, v_signal[peaks], color='red', label='Detected Peaks', zorder=5)
@@ -293,7 +296,7 @@ def main(h5_file_path, config_file_path):
                 print("Filtering Column %d from Trial %d"%(i, trial_id))
                 v_signal = FIR(v_signal, False, 100, 10000)
 
-            peaks = get_peaks(v_signal, percentage_thresholds[i], min_distance=min_spike_dist)
+            peaks, absolute_threshold = get_peaks(v_signal, percentage_thresholds[i], min_distance=min_spike_dist)
 
             # Print detected peaks for debugging
             print(f"Trial {trial_id}, Column {column} detected peaks: {len(peaks)}")
@@ -305,7 +308,7 @@ def main(h5_file_path, config_file_path):
             bursts = detect_bursts_from_spikes(peaks, min_spikes=3, min_spike_dist=min_spike_dist, max_spike_dist=max_spike_dist, min_burst_dist=1000)
 
             # Plot the signal, peaks, and bursts
-            plot_signal_with_peaks_and_bursts(ax_i, v_signal, time, peaks, peaks_time, bursts)
+            plot_signal_with_peaks_and_bursts(ax_i, v_signal, time, peaks, peaks_time, bursts, absolute_threshold)
 
 
             # Save burst start and end indices and times
