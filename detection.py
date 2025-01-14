@@ -374,27 +374,3 @@ if __name__ == "__main__":
 # Example of use:
 # python3 detection.py data-test/STG-PD-extra.h5 data-test/STG-PD-extra.ini
 
-
-
-
-# OLD code:
-# # Example usage:
-# spike_indices = np.array([50, 51, 52, 120, 121, 122, 300, 301, 320, 330, 350])  # Pre-detected spike indices
-
-# # Detect bursts with parameters:
-# bursts = detect_bursts_from_spikes(spike_indices, min_spikes=3, min_spike_dist=10, max_spike_dist=50, min_burst_dist=100)
-
-# # Print detected bursts
-# print("Detected Bursts:")
-# for i, burst in enumerate(bursts):
-#     print(f"Burst {i + 1}: {burst}")
-
-
-
-# filtered_PD1 = FIR(PD1, False, 100, 10000)
-# PD1_spikes = get_peaks(filtered_PD1, 0.001, 100)
-
-# LP_spikes = get_peaks(Extra, 0.08, 100)
-
-# print(detect_bursts_from_spikes(PD1_spikes))
-
