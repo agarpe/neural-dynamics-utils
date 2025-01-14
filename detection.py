@@ -250,6 +250,7 @@ def main(h5_file_path, config_file_path):
 
     min_spike_dist = float(config['Recording']['min_spike_dist'])
     max_spike_dist = float(config['Recording']['max_spike_dist'])
+    min_burst_dist = float(config['Recording']['min_burst_dist'])
 
     df_signal = read_h5File(h5_file_path, trials)
 
@@ -305,7 +306,7 @@ def main(h5_file_path, config_file_path):
             time = np.arange(0,v_signal.shape[0],1)*sampling_rate
             peaks_time = time[peaks]
             
-            bursts = detect_bursts_from_spikes(peaks, min_spikes=3, min_spike_dist=min_spike_dist, max_spike_dist=max_spike_dist, min_burst_dist=1000)
+            bursts = detect_bursts_from_spikes(peaks, min_spikes=3, min_spike_dist=min_spike_dist, max_spike_dist=max_spike_dist, min_burst_dist=min_burst_dist)
 
             # Plot the signal, peaks, and bursts
             plot_signal_with_peaks_and_bursts(ax_i, v_signal, time, peaks, peaks_time, bursts, absolute_threshold)
