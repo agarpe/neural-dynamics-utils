@@ -220,6 +220,10 @@ def main(h5_file_path, config_file_path):
     config = configparser.ConfigParser()
     config.read(config_file_path)
 
+    save = config['Outcome']['save'].lower() == 'y'
+    plot = config['Outcome']['plot'].lower() == 'y'
+    print(save, plot)
+    
     # Parse recording parameters
     sampling_rate = float(config['Recording']['sampling_rate'])  # in seconds
     max_spike_duration = float(config['Recording']['max_spike_duration'])  # in milliseconds
@@ -311,45 +315,46 @@ def main(h5_file_path, config_file_path):
             # Plot the signal, peaks, and bursts
             plot_signal_with_peaks_and_bursts(ax_i, v_signal, time, peaks, peaks_time, bursts, absolute_threshold)
 
+            if save:
+                # Save burst start and end indices and times
+                burst_start_end_indices = [(burst[0], burst[-1]) for burst in bursts]  # Start and end indices of each burst
+                burst_start_end_times = [(time[burst[0]], time[burst[-1]]) for burst in bursts]  # Start and end times of each burst
+                
+                if len(bursts) != 0:
+                    burst_waveforms = [v_signal[burst[0]-1500:1500+burst[1]] for burst in burst_start_end_indices]
+                    max_length = max(w.shape[0] for w in burst_waveforms)
 
-            # Save burst start and end indices and times
-            burst_start_end_indices = [(burst[0], burst[-1]) for burst in bursts]  # Start and end indices of each burst
-            burst_start_end_times = [(time[burst[0]], time[burst[-1]]) for burst in bursts]  # Start and end times of each burst
-            
-            if len(bursts) != 0:
-                burst_waveforms = [v_signal[burst[0]-1500:1500+burst[1]] for burst in burst_start_end_indices]
-                max_length = max(w.shape[0] for w in burst_waveforms)
+                    burst_waveforms_padded = np.array([np.pad(w, (0, max_length - w.shape[0]), mode='constant') if w.shape[0] < max_length else w[:max_length] for w in burst_waveforms])
+                    
+                    # Save peaks and peaks_time as .pkl
+                    with open(h5_file_path[:-3] + "_waveform-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
+                        pickle.dump(burst_waveforms_padded, f)  # Save waveforms
 
-                burst_waveforms_padded = np.array([np.pad(w, (0, max_length - w.shape[0]), mode='constant') if w.shape[0] < max_length else w[:max_length] for w in burst_waveforms])
+                # Save as .txt files
+                np.savetxt(h5_file_path[:-3] + "_bursts_index-trial%d-%s-%s.txt" % (trial_id, column, trial_type),
+                        burst_start_end_indices, fmt="%d", header="Burst Start Index, Burst End Index")
+                np.savetxt(h5_file_path[:-3] + "_bursts_time-trial%d-%s-%s.txt" % (trial_id, column, trial_type),
+                        burst_start_end_times, fmt="%.6f", header="Burst Start Time, Burst End Time")
+
+                # Save as .pkl files
+                with open(h5_file_path[:-3] + "_bursts_index-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
+                    pickle.dump(burst_start_end_indices, f)  # Save burst indices as tuples
+                with open(h5_file_path[:-3] + "_bursts_time-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
+                    pickle.dump(burst_start_end_times, f)  # Save burst times as tuples
+
+                np.savetxt(h5_file_path[:-3]+"_spikes_index-trial%d-%s-%s.txt"%(trial_id, column, trial_type), peaks, fmt="%d")
+                np.savetxt(h5_file_path[:-3]+"_spikes_time-trial%d-%s-%s.txt"%(trial_id, column, trial_type), peaks_time)
                 
                 # Save peaks and peaks_time as .pkl
-                with open(h5_file_path[:-3] + "_waveform-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
-                    pickle.dump(burst_waveforms_padded, f)  # Save waveforms
-
-            # Save as .txt files
-            np.savetxt(h5_file_path[:-3] + "_bursts_index-trial%d-%s-%s.txt" % (trial_id, column, trial_type),
-                    burst_start_end_indices, fmt="%d", header="Burst Start Index, Burst End Index")
-            np.savetxt(h5_file_path[:-3] + "_bursts_time-trial%d-%s-%s.txt" % (trial_id, column, trial_type),
-                    burst_start_end_times, fmt="%.6f", header="Burst Start Time, Burst End Time")
-
-            # Save as .pkl files
-            with open(h5_file_path[:-3] + "_bursts_index-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
-                pickle.dump(burst_start_end_indices, f)  # Save burst indices as tuples
-            with open(h5_file_path[:-3] + "_bursts_time-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
-                pickle.dump(burst_start_end_times, f)  # Save burst times as tuples
-
-            np.savetxt(h5_file_path[:-3]+"_spikes_index-trial%d-%s-%s.txt"%(trial_id, column, trial_type), peaks, fmt="%d")
-            np.savetxt(h5_file_path[:-3]+"_spikes_time-trial%d-%s-%s.txt"%(trial_id, column, trial_type), peaks_time)
-            
-            # Save peaks and peaks_time as .pkl
-            with open(h5_file_path[:-3] + "_spikes_index-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
-                pickle.dump(peaks.astype(int), f)  # Save peaks as integers
-            with open(h5_file_path[:-3] + "_spikes_time-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
-                pickle.dump(peaks_time, f)  # Save peaks_time (as floats by default)
+                with open(h5_file_path[:-3] + "_spikes_index-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
+                    pickle.dump(peaks.astype(int), f)  # Save peaks as integers
+                with open(h5_file_path[:-3] + "_spikes_time-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
+                    pickle.dump(peaks_time, f)  # Save peaks_time (as floats by default)
 
 
-        plt.tight_layout()
-        plt.show()
+        if plot:
+            plt.tight_layout()
+            plt.show()
 
 # This if ensures that main will not be called when this script is imported by other library
 if __name__ == "__main__":
