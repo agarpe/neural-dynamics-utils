@@ -7,11 +7,6 @@ import configparser
 import argparse
 import pickle
 
-# file_path = '/media/pablo/External NVME/Recordings/11-12-24/Exp1/17h31m16s_Trial1_Exp1.asc'
-# data = np.loadtxt(file_path)
-# PD1 = data[:,1]
-# Extra = data[:,0]
-
 
 def FIR(neuron_signal, is_lowpass, cutoff, sampling_rate = 10000):
 
