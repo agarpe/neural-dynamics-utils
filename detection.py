@@ -121,29 +121,29 @@ def detect_bursts_from_spikes(spike_indices, min_spikes=3, min_spike_dist=100, m
 
 
 # Helper function for plotting
-def plot_signal_with_peaks_and_bursts(v_signal, time, peaks, peaks_time, bursts):
-    plt.figure(figsize=(15, 6))
+def plot_signal_with_peaks_and_bursts(ax, v_signal, time, peaks, peaks_time, bursts):
+    # plt.figure(figsize=(15, 6))
 
     # Plot the full signal
-    plt.plot(time, v_signal, label='Signal', color='blue', linewidth=1)
+    ax.plot(time, v_signal, label='Signal', color='blue', linewidth=1)
     
     # Highlight detected peaks
-    plt.scatter(peaks_time, v_signal[peaks], color='red', label='Detected Peaks', zorder=5)
+    ax.scatter(peaks_time, v_signal[peaks], color='red', label='Detected Peaks', zorder=5)
 
     # Highlight bursts
     for burst in bursts:
         burst_start_time = time[burst[0]]
         burst_end_time = time[burst[-1]]
         burst_indices_time = time[burst]
-        plt.scatter(burst_indices_time, v_signal[burst], color='orange', zorder=6, label='Burst' if burst == bursts[0] else "")
-        plt.axvspan(burst_start_time, burst_end_time, color='yellow', alpha=0.2, zorder=0)
+        ax.scatter(burst_indices_time, v_signal[burst], color='orange', zorder=6, label='Burst' if burst == bursts[0] else "")
+        ax.axvspan(burst_start_time, burst_end_time, color='yellow', alpha=0.2, zorder=0)
 
-    plt.title("Signal with Detected Peaks and Bursts")
-    plt.xlabel("Time")
-    plt.ylabel("Signal Amplitude")
+    ax.set_title("Signal with Detected Peaks and Bursts")
+    ax.set_xlabel("Time")
+    ax.set_ylabel("Signal Amplitude")
     plt.legend()
     plt.grid()
-    plt.show()
+    # plt.show()
 
 
 
@@ -278,13 +278,11 @@ def main(h5_file_path, config_file_path):
     for trial_id in df_signal['Trial'].unique():
         trial_data = df_signal[df_signal['Trial'] == trial_id]
         
-        # TODO: decide if 1 or 2 rows per plot
-        # n_signals = len(trial_data.columns[:-1])
-        n_signals = 1
-        
+        n_signals = len(trial_data.columns[:-2])
+
+        fig, ax = plt.subplots(n_signals,figsize=(10, 6))
         for i, column in enumerate(trial_data.columns[:-2]):  # Exclude 'Trial' and 'Type' column
-            # fig, ax = plt.subplots(n_signals,figsize=(10, 6))
-            # ax_i = ax[i] if n_signals > 1 else ax
+            ax_i = ax[i] if n_signals > 1 else ax
 
 
             v_signal = trial_data[column].values # get a neuron signal from a trial
@@ -295,17 +293,7 @@ def main(h5_file_path, config_file_path):
                 print("Filtering Column %d from Trial %d"%(i, trial_id))
                 v_signal = FIR(v_signal, False, 100, 10000)
 
-            # TODO: change 100 for config value
             peaks = get_peaks(v_signal, percentage_thresholds[i], min_distance=min_spike_dist)
-
-            # # Plot signal and detected peaks
-            # ax_i.plot(v_signal, label=f"{column}")
-            # ax_i.plot(peaks, v_signal[peaks], "x", label=f"{column} peaks")
-            # ax_i.set_title(f'Detected Events for Trial {trial_id}, Column {column}')
-            # ax_i.set_xlabel('Index')
-            # ax_i.set_ylabel('Signal Value')
-            # ax_i.legend()
-            # ax_i.grid()
 
             # Print detected peaks for debugging
             print(f"Trial {trial_id}, Column {column} detected peaks: {len(peaks)}")
@@ -313,15 +301,11 @@ def main(h5_file_path, config_file_path):
             # save with time dimension            
             time = np.arange(0,v_signal.shape[0],1)*sampling_rate
             peaks_time = time[peaks]
-
-            # plt.plot(time, v_signal, label=f"{column}")
-            # plt.plot(peaks_time, np.zeros(peaks_time.shape[0]),'x', label=f"{column}")
-            # plt.show()
             
             bursts = detect_bursts_from_spikes(peaks, min_spikes=3, min_spike_dist=min_spike_dist, max_spike_dist=max_spike_dist, min_burst_dist=1000)
 
             # Plot the signal, peaks, and bursts
-            plot_signal_with_peaks_and_bursts(v_signal, time, peaks, peaks_time, bursts)
+            plot_signal_with_peaks_and_bursts(ax_i, v_signal, time, peaks, peaks_time, bursts)
 
 
             # Save burst start and end indices and times
@@ -360,8 +344,8 @@ def main(h5_file_path, config_file_path):
                 pickle.dump(peaks_time, f)  # Save peaks_time (as floats by default)
 
 
-
-        # plt.show()
+        plt.tight_layout()
+        plt.show()
 
 # This if ensures that main will not be called when this script is imported by other library
 if __name__ == "__main__":
