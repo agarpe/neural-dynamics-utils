@@ -390,12 +390,11 @@ def main(h5_file_path, config_file_path):
     if save:
         # Convert extended data to a DataFrame and save it
         df_extended = pd.DataFrame(extended_data)
-        print(list(df_extended.columns.values))
         # Save the extended DataFrame to a CSV or a pickle file
-        extended_csv_path = h5_file_path[:-3] + "_extended_data.csv"
-        df_extended.to_csv(extended_csv_path, index=False)
+        extended_path = h5_file_path[:-3] + "_extended_data.pkl"
+        df_extended.to_pickle(extended_path)
 
-    print(f"Extended DataFrame saved to {extended_csv_path}")
+    print(f"Extended DataFrame saved to {extended_path}")
 
 
 # This if ensures that main will not be called when this script is imported by other library
