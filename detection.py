@@ -283,7 +283,9 @@ def main(h5_file_path, config_file_path):
     print(df_signal.info())
     print("\nDataFrame Head:")
     print(df_signal.head())
-
+    
+    extended_data = []
+    
     for trial_id in df_signal['Trial'].unique():
         # TODO analyze only "trial_selected"
         trial_data = df_signal[df_signal['Trial'] == trial_id]
@@ -317,18 +319,36 @@ def main(h5_file_path, config_file_path):
             # Plot the signal, peaks, and bursts
             plot_signal_with_peaks_and_bursts(ax_i, v_signal, time, peaks, peaks_time, bursts, absolute_threshold)
 
+            # Save burst start and end indices and times
+            burst_start_end_indices = [(burst[0], burst[-1]) for burst in bursts]  # Start and end indices of each burst
+            burst_start_end_times = [(time[burst[0]], time[burst[-1]]) for burst in bursts]  # Start and end times of each burst
+           
+            # calculate waveforms
+            if len(bursts) != 0:
+                # TODO: 1500 hardcoded!!!
+                burst_waveforms = [v_signal[burst[0]-1500:1500+burst[1]] for burst in burst_start_end_indices]
+                max_length = max(w.shape[0] for w in burst_waveforms)
+
+                burst_waveforms_padded = np.array([np.pad(w, (0, max_length - w.shape[0]), mode='constant') if w.shape[0] < max_length else w[:max_length] for w in burst_waveforms])
+                
+            extended_data.append({
+                'Trial': trial_id,
+                'Type': trial_type,
+                'Column_id': i,
+                'Column_name': i,
+                'Time':time,
+                'Signal': v_signal,
+                'Burst_Index': burst_start_end_indices,
+                'Burst_Time': burst_start_end_times,
+                'Peaks_Indices': peaks.tolist(),
+                'Peaks_Times': peaks_time.tolist(),
+                'Waveforms':burst_waveforms_padded
+            })
+
+
             if save: # TODO reduce options of saving
-                # Save burst start and end indices and times
-                burst_start_end_indices = [(burst[0], burst[-1]) for burst in bursts]  # Start and end indices of each burst
-                burst_start_end_times = [(time[burst[0]], time[burst[-1]]) for burst in bursts]  # Start and end times of each burst
                 
                 if len(bursts) != 0:
-                    # TODO: 1500 hardcoded!!!
-                    burst_waveforms = [v_signal[burst[0]-1500:1500+burst[1]] for burst in burst_start_end_indices]
-                    max_length = max(w.shape[0] for w in burst_waveforms)
-
-                    burst_waveforms_padded = np.array([np.pad(w, (0, max_length - w.shape[0]), mode='constant') if w.shape[0] < max_length else w[:max_length] for w in burst_waveforms])
-                    
                     # Save peaks and peaks_time as .pkl
                     with open(h5_file_path[:-3] + "_waveform-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
                         pickle.dump(burst_waveforms_padded, f)  # Save waveforms
@@ -360,6 +380,15 @@ def main(h5_file_path, config_file_path):
             plt.show()
 
 
+    if save:
+        # Convert extended data to a DataFrame and save it
+        df_extended = pd.DataFrame(extended_data)
+        print(list(df_extended.columns.values))
+        # Save the extended DataFrame to a CSV or a pickle file
+        extended_csv_path = h5_file_path[:-3] + "_extended_data.csv"
+        df_extended.to_csv(extended_csv_path, index=False)
+
+    print(f"Extended DataFrame saved to {extended_csv_path}")
 
 
 # This if ensures that main will not be called when this script is imported by other library
