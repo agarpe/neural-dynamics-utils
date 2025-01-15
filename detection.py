@@ -217,6 +217,38 @@ def read_h5File(h5_file_path, trials=None, headers=''):
 
     return df
 
+def save_data(data):
+    trial_id = data['Trial']
+    column = data['Column_name']
+    trial_type = data['Type']
+    h5_file_path = data['OPath']
+
+    if len(data['Bursts_Index']) != 0:
+        # Save waveforms .pkl
+        with open(h5_file_path[:-3] + "_waveform-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
+            pickle.dump(data['Waveforms'], f)  # Save waveforms
+
+    # Save as .txt files
+    np.savetxt(h5_file_path[:-3] + "_bursts_index-trial%d-%s-%s.txt" % (trial_id, column, trial_type),
+            data['Bursts_Index'], fmt="%d", header="Burst Start Index, Burst End Index")
+    np.savetxt(h5_file_path[:-3] + "_bursts_time-trial%d-%s-%s.txt" % (trial_id, column, trial_type),
+            data['Bursts_Times'], fmt="%.6f", header="Burst Start Time, Burst End Time")
+
+    # Save as .pkl files
+    with open(h5_file_path[:-3] + "_bursts_index-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
+        pickle.dump(data['Bursts_Index'], f)  # Save burst indices as tuples
+    with open(h5_file_path[:-3] + "_bursts_time-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
+        pickle.dump(data['Bursts_Times'], f)  # Save burst times as tuples
+
+    # Save peaks and peaks_time as .txt
+    np.savetxt(h5_file_path[:-3]+"_spikes_index-trial%d-%s-%s.txt"%(trial_id, column, trial_type), data['Peaks_Index'], fmt="%d")
+    np.savetxt(h5_file_path[:-3]+"_spikes_time-trial%d-%s-%s.txt"%(trial_id, column, trial_type), data['Peaks_Times'])
+    
+    # Save peaks and peaks_time as .pkl
+    with open(h5_file_path[:-3] + "_spikes_index-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
+        pickle.dump(data['Peaks_Index'].astype(int), f)  # Save peaks as integers
+    with open(h5_file_path[:-3] + "_spikes_time-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
+        pickle.dump(data['Peaks_Times'], f)  # Save peaks_time (as floats by default)
 
 
 def main(h5_file_path, config_file_path):
@@ -338,42 +370,17 @@ def main(h5_file_path, config_file_path):
                 'Column_name': i,
                 'Time':time,
                 'Signal': v_signal,
-                'Burst_Index': burst_start_end_indices,
-                'Burst_Time': burst_start_end_times,
-                'Peaks_Indices': peaks.tolist(),
-                'Peaks_Times': peaks_time.tolist(),
-                'Waveforms':burst_waveforms_padded
+                'Bursts_Index': burst_start_end_indices,
+                'Bursts_Times': burst_start_end_times,
+                'Peaks_Index': peaks,
+                'Peaks_Times': peaks_time,
+                'Waveforms':burst_waveforms_padded,
+                'OPath': h5_file_path
             })
 
 
             if save: # TODO reduce options of saving
-                
-                if len(bursts) != 0:
-                    # Save peaks and peaks_time as .pkl
-                    with open(h5_file_path[:-3] + "_waveform-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
-                        pickle.dump(burst_waveforms_padded, f)  # Save waveforms
-
-                # Save as .txt files
-                np.savetxt(h5_file_path[:-3] + "_bursts_index-trial%d-%s-%s.txt" % (trial_id, column, trial_type),
-                        burst_start_end_indices, fmt="%d", header="Burst Start Index, Burst End Index")
-                np.savetxt(h5_file_path[:-3] + "_bursts_time-trial%d-%s-%s.txt" % (trial_id, column, trial_type),
-                        burst_start_end_times, fmt="%.6f", header="Burst Start Time, Burst End Time")
-
-                # Save as .pkl files
-                with open(h5_file_path[:-3] + "_bursts_index-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
-                    pickle.dump(burst_start_end_indices, f)  # Save burst indices as tuples
-                with open(h5_file_path[:-3] + "_bursts_time-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
-                    pickle.dump(burst_start_end_times, f)  # Save burst times as tuples
-
-                np.savetxt(h5_file_path[:-3]+"_spikes_index-trial%d-%s-%s.txt"%(trial_id, column, trial_type), peaks, fmt="%d")
-                np.savetxt(h5_file_path[:-3]+"_spikes_time-trial%d-%s-%s.txt"%(trial_id, column, trial_type), peaks_time)
-                
-                # Save peaks and peaks_time as .pkl
-                with open(h5_file_path[:-3] + "_spikes_index-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
-                    pickle.dump(peaks.astype(int), f)  # Save peaks as integers
-                with open(h5_file_path[:-3] + "_spikes_time-trial%d-%s-%s.pkl" % (trial_id, column, trial_type), 'wb') as f:
-                    pickle.dump(peaks_time, f)  # Save peaks_time (as floats by default)
-
+                save_data(extended_data[-1])
 
         if plot:
             plt.tight_layout()
