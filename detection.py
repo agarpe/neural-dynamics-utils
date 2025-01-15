@@ -51,20 +51,6 @@ def get_peaks(neuron_signal, percentage_threshold, min_distance_ms, sampling_rat
 
     peaks, _ = signal.find_peaks(neuron_signal, height=absolute_threshold, distance=min_distance, prominence=0.05*signal_range)
 
-    # plt.figure(figsize=(10, 6))
-    # plt.plot(neuron_signal, label='neuron signal', color='b')
-    # plt.scatter(peaks, neuron_signal[peaks], color='r', marker='x', label='Peaks')
-    # plt.hlines(y=absolute_threshold, xmin=0, xmax=len(neuron_signal)-1, color='g', linestyle='--', label='Threshold')
-    # # Add labels and title
-    # plt.title('Signal with Detected Peaks')
-    # plt.xlabel('Time [s]')
-    # plt.ylabel('Amplitude')
-    # plt.grid(True)
-    # plt.legend()
-
-    # # Show the plot
-    # plt.tight_layout()
-    # plt.show()
     return peaks, absolute_threshold
 
 def detect_bursts_from_spikes(
