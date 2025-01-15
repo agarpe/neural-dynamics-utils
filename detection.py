@@ -44,6 +44,7 @@ def FIR(neuron_signal, is_lowpass, cutoff, sampling_rate = 10000):
 def get_peaks(neuron_signal, percentage_threshold, min_distance_ms, sampling_rate):
     min_distance = min_distance_ms / sampling_rate
     # Calculate range of the signal
+    # TODO  control outliers
     signal_range = abs(max(neuron_signal) - min(neuron_signal))
 
     # Calculate the absolute threshold with respect to the minimum
@@ -284,6 +285,7 @@ def main(h5_file_path, config_file_path):
     print(df_signal.head())
 
     for trial_id in df_signal['Trial'].unique():
+        # TODO analyze only "trial_selected"
         trial_data = df_signal[df_signal['Trial'] == trial_id]
         
         n_signals = len(trial_data.columns[:-2])
@@ -310,7 +312,7 @@ def main(h5_file_path, config_file_path):
             time = np.arange(0,v_signal.shape[0],1)*sampling_rate
             peaks_time = time[peaks]
             
-            bursts = detect_bursts_from_spikes(peaks, sampling_rate, min_spikes=3, min_spike_dist=min_spike_dist, max_spike_dist=max_spike_dist, min_burst_dist=min_burst_dist)
+            bursts = detect_bursts_from_spikes(peaks, sampling_rate, min_spikes=2, min_spike_dist=min_spike_dist, max_spike_dist=max_spike_dist, min_burst_dist=min_burst_dist)
 
             # Plot the signal, peaks, and bursts
             plot_signal_with_peaks_and_bursts(ax_i, v_signal, time, peaks, peaks_time, bursts, absolute_threshold)
@@ -321,6 +323,7 @@ def main(h5_file_path, config_file_path):
                 burst_start_end_times = [(time[burst[0]], time[burst[-1]]) for burst in bursts]  # Start and end times of each burst
                 
                 if len(bursts) != 0:
+                    # TODO: 1500 hardcoded!!!
                     burst_waveforms = [v_signal[burst[0]-1500:1500+burst[1]] for burst in burst_start_end_indices]
                     max_length = max(w.shape[0] for w in burst_waveforms)
 
@@ -356,6 +359,9 @@ def main(h5_file_path, config_file_path):
             plt.tight_layout()
             plt.show()
 
+
+
+
 # This if ensures that main will not be called when this script is imported by other library
 if __name__ == "__main__":
     # Create the argument parser
@@ -378,9 +384,6 @@ if __name__ == "__main__":
 
     # Call main with the parsed arguments
     main(args.h5_file_path, args.config_file_path)
-
-    # Not recomended: set path hardcoded
-    # main(data-test/STG-PD-extra.h5, data-test/STG-PD-extra.ini)
 
 
 # Example of use:
