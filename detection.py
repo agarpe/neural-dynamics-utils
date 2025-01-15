@@ -41,7 +41,8 @@ def FIR(neuron_signal, is_lowpass, cutoff, sampling_rate = 10000):
 
 	return signal_filtered
 
-def get_peaks(neuron_signal, percentage_threshold, min_distance):
+def get_peaks(neuron_signal, percentage_threshold, min_distance_ms, sampling_rate):
+    min_distance = min_distance_ms / sampling_rate
     # Calculate range of the signal
     signal_range = abs(max(neuron_signal) - min(neuron_signal))
 
@@ -65,21 +66,37 @@ def get_peaks(neuron_signal, percentage_threshold, min_distance):
     # plt.tight_layout()
     # plt.show()
     return peaks, absolute_threshold
-# Function to detect bursts
-def detect_bursts_from_spikes(spike_indices, min_spikes=3, min_spike_dist=100, max_spike_dist=2000, min_burst_dist=4000):
+
+def detect_bursts_from_spikes(
+    spike_indices, 
+    sampling_rate,  # Firing rate in Hz
+    min_spikes=3, 
+    min_spike_dist=1, 
+    max_spike_dist=20, 
+    min_burst_dist=40
+):
     """
     Detect bursts from pre-detected spike indices based on spike distances and burst characteristics.
 
     Parameters:
     - spike_indices: List or array of spike indices (already detected spikes).
+    - firing_rate: Firing rate of the signal in Hz.
     - min_spikes: Minimum number of spikes to consider a burst.
-    - min_spike_dist: Minimum distance between spikes within a burst.
-    - max_spike_dist: Maximum distance between spikes within a burst.
-    - min_burst_dist: Minimum distance between bursts.
+    - min_spike_dist: Minimum distance (in ms) between spikes within a burst.
+    - max_spike_dist: Maximum distance (in ms) between spikes within a burst.
+    - min_burst_dist: Minimum distance (in ms) between bursts.
 
     Returns:
     - bursts: List of bursts, each burst is a list of spike indices.
     """
+    # Convert time in ms to "points" based on the firing rate
+    ms_to_points = lambda ms: int(ms / sampling_rate)
+    
+    min_spike_dist = ms_to_points(min_spike_dist)
+    max_spike_dist = ms_to_points(max_spike_dist)
+    min_burst_dist = ms_to_points(min_burst_dist)
+
+
     bursts = []  # List to store detected bursts
     current_burst = []  # Temporary list for the current burst
 
@@ -225,11 +242,8 @@ def main(h5_file_path, config_file_path):
     print(save, plot)
     
     # Parse recording parameters
-    sampling_rate = float(config['Recording']['sampling_rate'])  # in seconds
-    max_spike_duration = float(config['Recording']['max_spike_duration'])  # in milliseconds
-
-    # Convert max spike duration to samples
-    max_spike_samples = max_spike_duration / sampling_rate
+    sampling_rate = float(config['Recording']['sampling_rate'])  # in milliseconds
+    firing_rate = float(config['Recording']['firing_rate'])  # in Hz
 
     try:
         percentage_thresholds = config['Spike detection']['threshold']
@@ -301,7 +315,7 @@ def main(h5_file_path, config_file_path):
                 print("Filtering Column %d from Trial %d"%(i, trial_id))
                 v_signal = FIR(v_signal, False, 100, 10000)
 
-            peaks, absolute_threshold = get_peaks(v_signal, percentage_thresholds[i], min_distance=min_spike_dist)
+            peaks, absolute_threshold = get_peaks(v_signal, percentage_thresholds[i], min_distance_ms=min_spike_dist, sampling_rate=sampling_rate)
 
             # Print detected peaks for debugging
             print(f"Trial {trial_id}, Column {column} detected peaks: {len(peaks)}")
@@ -310,7 +324,7 @@ def main(h5_file_path, config_file_path):
             time = np.arange(0,v_signal.shape[0],1)*sampling_rate
             peaks_time = time[peaks]
             
-            bursts = detect_bursts_from_spikes(peaks, min_spikes=3, min_spike_dist=min_spike_dist, max_spike_dist=max_spike_dist, min_burst_dist=min_burst_dist)
+            bursts = detect_bursts_from_spikes(peaks, sampling_rate, min_spikes=3, min_spike_dist=min_spike_dist, max_spike_dist=max_spike_dist, min_burst_dist=min_burst_dist)
 
             # Plot the signal, peaks, and bursts
             plot_signal_with_peaks_and_bursts(ax_i, v_signal, time, peaks, peaks_time, bursts, absolute_threshold)
