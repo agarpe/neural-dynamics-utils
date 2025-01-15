@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 colors= ['blue','red','green']
 # --- MAIN FUNCTION ---
-def main(config_file_path):
+def main(config_file_path, data_frame_path):
     """
     Main function to load the DataFrame and process it using configuration.
     Args:
@@ -19,14 +19,27 @@ def main(config_file_path):
 
     config = configparser.ConfigParser()
     config.read(config_file_path)
-    
-    try:
-        trials = config['Superposition']['trials']
-        trials = tuple([int(trial) for trial in trials.split()])
-    except:
-        trials = None
 
-    print(f"Trials parameter: {trials}")
+    # Load dataframe
+    df = pd.read_pickle(data_frame_path)
+
+    print(df)
+
+    triplets = [triplet.split() for triplet in config['Superposition']['triplets'].split('|')]
+    print(triplets)
+
+    for triplet in triplets:
+       for trial in triplet:
+            print(trial)
+            trial = int(trial)
+            print(trial)
+            waveform = df.loc[df['Trial'] == trial, 'Waveforms'].values[0]
+            print(waveform)
+            plt.plot(waveform.T)
+    plt.show()
+       
+
+    exit()
 
     waveforms_f = config['Superposition']['waveform_files']
     waveforms_f = [w for w in waveforms_f.split()]
@@ -87,8 +100,15 @@ if __name__ == "__main__":
         help="Path to the config (INI) file."
     )
 
+    # Define the arguments
+    parser.add_argument(
+        "dataframe_path",
+        type=str,
+        help="Path to the dataframe extended."
+    )
+
     # Parse the arguments
     args = parser.parse_args()
 
     # Example usage
-    main(config_file_path=args.config_file_path)
+    main(config_file_path=args.config_file_path, data_frame_path=args.dataframe_path)
