@@ -174,8 +174,8 @@ def plot_signal_with_peaks_and_bursts(ax, v_signal, time, peaks, peaks_time, bur
 def read_h5File(h5_file_path, trials=None, headers=''):
     # Step 2: Read the H5 file
     with h5py.File(h5_file_path, 'r') as f:
-        print("H5 file structure:")
-        f.visit(print)  # Print dataset structure
+        # print("H5 file structure:")
+        # f.visit(print)  # Print dataset structure
 
         all_dataframes = []
 
@@ -202,7 +202,7 @@ def read_h5File(h5_file_path, trials=None, headers=''):
                 dset = f[struct]  # Get trial data
                 data = dset[()]  # Get "values"
 
-                # Assuming columns are defined or available from elsewhere
+                # TODO set index in config file
                 columns = range(data.shape[1])  # Replace with specific column indices if needed
 
                 # Extract signal and store with trial label
@@ -329,7 +329,7 @@ def main(h5_file_path, config_file_path):
             # Plot the signal, peaks, and bursts
             plot_signal_with_peaks_and_bursts(ax_i, v_signal, time, peaks, peaks_time, bursts, absolute_threshold)
 
-            if save:
+            if save: # TODO reduce options of saving
                 # Save burst start and end indices and times
                 burst_start_end_indices = [(burst[0], burst[-1]) for burst in bursts]  # Start and end indices of each burst
                 burst_start_end_times = [(time[burst[0]], time[burst[-1]]) for burst in bursts]  # Start and end times of each burst
@@ -392,6 +392,9 @@ if __name__ == "__main__":
 
     # Call main with the parsed arguments
     main(args.h5_file_path, args.config_file_path)
+
+    # Not recomended: set path hardcoded
+    # main(data-test/STG-PD-extra.h5, data-test/STG-PD-extra.ini)
 
 
 # Example of use:
