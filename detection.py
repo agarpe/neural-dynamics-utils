@@ -10,36 +10,36 @@ import pickle
 
 def FIR(neuron_signal, is_lowpass, cutoff, sampling_rate = 10000):
 
-	nyquist = 0.5 * sampling_rate  # Nyquist frequency
+    nyquist = 0.5 * sampling_rate  # Nyquist frequency
 
-	# Design the FIR filter using the window method
-	num_taps = 101  # Number of taps (filter order + 1)
-	fir_coeff = signal.firwin(num_taps, cutoff/nyquist, pass_zero=is_lowpass)
+    # Design the FIR filter using the window method
+    num_taps = 101  # Number of taps (filter order + 1)
+    fir_coeff = signal.firwin(num_taps, cutoff/nyquist, pass_zero=is_lowpass)
 
-	# Apply the high-pass FIR filter using filtfilt for zero-phase distortion
-	signal_filtered = signal.filtfilt(fir_coeff, 1.0, neuron_signal)
+    # Apply the high-pass FIR filter using filtfilt for zero-phase distortion
+    signal_filtered = signal.filtfilt(fir_coeff, 1.0, neuron_signal)
 
-	# Plot the original signal and the filtered signal
-	plt.figure(figsize=(12, 6))
+    # Plot the original signal and the filtered signal
+    plt.figure(figsize=(12, 6))
 
-	plt.subplot(2, 1, 1)
-	plt.plot(neuron_signal, label='neuron signal')
-	plt.title('neuron signal')
-	plt.xlabel('Time [s]')
-	plt.ylabel('Amplitude')
-	plt.grid(True)
+    plt.subplot(2, 1, 1)
+    plt.plot(neuron_signal, label='neuron signal')
+    plt.title('neuron signal')
+    plt.xlabel('Time [s]')
+    plt.ylabel('Amplitude')
+    plt.grid(True)
 
-	plt.subplot(2, 1, 2)
-	plt.plot(signal_filtered, label='Filtered Signal', color='r')
-	plt.title('Filtered Signal (Lowpass 100 Hz FIR Filter)')
-	plt.xlabel('Time [s]')
-	plt.ylabel('Amplitude')
-	plt.grid(True)
+    plt.subplot(2, 1, 2)
+    plt.plot(signal_filtered, label='Filtered Signal', color='r')
+    plt.title('Filtered Signal (Lowpass 100 Hz FIR Filter)')
+    plt.xlabel('Time [s]')
+    plt.ylabel('Amplitude')
+    plt.grid(True)
 
-	plt.tight_layout()
-	plt.show()
+    plt.tight_layout()
+    plt.show()
 
-	return signal_filtered
+    return signal_filtered
 
 def get_peaks(neuron_signal, percentage_threshold, min_distance_ms, sampling_rate):
     min_distance = min_distance_ms / sampling_rate
@@ -257,6 +257,7 @@ def main(h5_file_path, config_file_path):
     config.read(config_file_path)
 
     save = config['Outcome']['save'].lower() == 'y'
+    save_all = config['Outcome']['save'].lower() == 'y'
     plot = config['Outcome']['plot'].lower() == 'y'
     print(save, plot)
     
@@ -362,7 +363,6 @@ def main(h5_file_path, config_file_path):
                 max_length = max(w.shape[0] for w in burst_waveforms)
 
                 burst_waveforms_padded = np.array([np.pad(w, (0, max_length - w.shape[0]), mode='constant') if w.shape[0] < max_length else w[:max_length] for w in burst_waveforms])
-                
             extended_data.append({
                 'Trial': trial_id,
                 'Type': trial_type,
@@ -379,7 +379,7 @@ def main(h5_file_path, config_file_path):
             })
 
 
-            if save: # TODO reduce options of saving
+            if save_all: # TODO reduce options of saving
                 save_data(extended_data[-1])
 
         if plot:
