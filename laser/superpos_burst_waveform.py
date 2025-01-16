@@ -6,7 +6,7 @@ import pickle as pkl
 import matplotlib.pyplot as plt
 
 
-colors= ['blue','red','green']
+colors= ['cornflowerblue','indianred','yellowgreen']
 # --- MAIN FUNCTION ---
 def main(config_file_path, data_frame_path):
     """
@@ -28,23 +28,42 @@ def main(config_file_path, data_frame_path):
     triplets = [triplet.split() for triplet in config['Superposition']['triplets'].split('|')]
     print(triplets)
 
-    for triplet in triplets:
-       for trial in triplet:
-            print(trial)
+    cols = len(triplets)//2
+    fig, ax = plt.subplots(2, cols, figsize=(12, 6))
+    ax = ax.flatten()
+    for i, triplet in enumerate(triplets):
+        for j, trial in enumerate(triplet):
             trial = int(trial)
-            print(trial)
-            waveform = df.loc[df['Trial'] == trial, 'Waveforms'].values[0]
-            print(waveform)
-            plt.plot(waveform.T)
-    plt.show()
-       
+            waveforms = df.loc[df['Trial'] == trial, 'Waveforms'].values[0]
+            if j == 1:
+                label = df.loc[df['Trial'] == trial, 'Type'].values[0]
+            else:
+                label = 'control' if i == 0 else 'recovery'
 
+            # Compute average waveform
+            try:    
+                aligned_waveforms = np.array([w-min(w) for w in waveforms])
+                w_mean = np.mean(aligned_waveforms, axis=0)
+                # w_mean -= np.max(w_mean)
+            except Exception as e:
+                print(e.args)
+                continue
+
+            # Plot average and traces
+            ax[i].plot(aligned_waveforms, color=colors[j], label=label,
+                       linewidth=0.01)
+            ax[i].plot(w_mean, color=colors[j], label=label)
+            if j == 1:
+                ax[i].set_title(label)
+
+    plt.tight_layout()
+    plt.show()
     exit()
 
     waveforms_f = config['Superposition']['waveform_files']
     waveforms_f = [w for w in waveforms_f.split()]
     print(waveforms_f)
-    
+
     title = config['Superposition']['title']
 
     data_file = config['Superposition']['trace_dataframe']
