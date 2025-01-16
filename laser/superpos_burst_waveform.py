@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 colors= ['blue','red','green']
 # --- MAIN FUNCTION ---
-def main(config_file_path):
+def main(config_file_path, data_frame_path):
     """
     Main function to load the DataFrame and process it using configuration.
     Args:
@@ -19,14 +19,27 @@ def main(config_file_path):
 
     config = configparser.ConfigParser()
     config.read(config_file_path)
-    
-    try:
-        trials = config['Superposition']['trials']
-        trials = tuple([int(trial) for trial in trials.split()])
-    except:
-        trials = None
 
-    print(f"Trials parameter: {trials}")
+    # Load dataframe
+    df = pd.read_pickle(data_frame_path)
+
+    print(df)
+
+    triplets = [triplet.split() for triplet in config['Superposition']['triplets'].split('|')]
+    print(triplets)
+
+    for triplet in triplets:
+       for trial in triplet:
+            print(trial)
+            trial = int(trial)
+            print(trial)
+            waveform = df.loc[df['Trial'] == trial, 'Waveforms'].values[0]
+            print(waveform)
+            plt.plot(waveform.T)
+    plt.show()
+       
+
+    exit()
 
     waveforms_f = config['Superposition']['waveform_files']
     waveforms_f = [w for w in waveforms_f.split()]
@@ -49,21 +62,22 @@ def main(config_file_path):
 
     waveforms = {trial: pkl.load(open(wf, 'rb')) for trial, wf in zip(trials, waveforms_f)}
 
-    print(waveforms)
 
     for i,w in enumerate(waveforms):
         type_for_trial = df[df['Trial'] == w]['Type'].unique()[0]
         print(type_for_trial)
 
-        w_mean = np.mean(waveforms[w], axis=0)
+
         try:
-            w_mean -= w_mean[0]
+            waveform = np.array([w-min(w) for w in waveforms[w]])
+            w_mean = np.mean(waveform, axis=0)
+            # w_mean -= np.max(w_mean)
         except Exception as e:
             print(e.args)
             continue
         
-        # w_mean = waveforms[w]
-
+        
+        plt.plot(waveform.T, color=colors[i], label=type_for_trial, linewidth=0.01) 
         plt.plot(w_mean.T, color=colors[i], label=type_for_trial)
 
     plt.title(title)
@@ -86,8 +100,15 @@ if __name__ == "__main__":
         help="Path to the config (INI) file."
     )
 
+    # Define the arguments
+    parser.add_argument(
+        "dataframe_path",
+        type=str,
+        help="Path to the dataframe extended."
+    )
+
     # Parse the arguments
     args = parser.parse_args()
 
     # Example usage
-    main(config_file_path=args.config_file_path)
+    main(config_file_path=args.config_file_path, data_frame_path=args.dataframe_path)
