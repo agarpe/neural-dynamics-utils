@@ -1,0 +1,4 @@
+name: neuronal-dynamics-utils
+channels:
+  - defaults
+prefix: /home/agarpe/anaconda3/envs/neuronal-dynamics-utils
