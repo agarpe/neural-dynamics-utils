@@ -75,15 +75,15 @@ def main(h5_file_path, config_file_path):
         for column in trial_data.columns[:-1]:  # Exclude 'Trial' column
             signal = trial_data[column].values
 
-            signal += np.min(signal)
+            v_signal += np.min(v_signal)
 
             # get the range of the voltage signal 
-            signal_range = np.max(signal) - np.min(signal)
-            prominence_percentage = np.max(signal)*0.9
+            signal_range = np.max(v_signal) - np.min(v_signal)
+            prominence_percentage = np.max(v_signal)*0.9
             print(prominence_percentage)
 
             # Detect peaks
-            peaks, properties = find_peaks(signal, width=(0, max_spike_samples), prominence=prominence_percentage)
+            peaks, properties = signal.find_peaks(v_signal, width=(0, max_spike_samples), prominence=prominence_percentage)
 
             # Plot signal and detected peaks
             plt.figure(figsize=(10, 6))
