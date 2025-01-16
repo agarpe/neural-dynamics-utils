@@ -36,7 +36,7 @@ def main(config_file_path, data_frame_path):
     fig_mean, ax_mean = plt.subplots(2, cols, figsize=(12, 8))
     ax_mean = ax_mean.flatten()
 
-    title = data_frame_path[data_frame_path.find('/')+1:
+    title = data_frame_path[data_frame_path.rfind('/')+1:
                             data_frame_path.rfind('_extended_data.pkl')]
     for i, triplet in enumerate(triplets):
         for j, trial in enumerate(triplet):
@@ -74,6 +74,8 @@ def main(config_file_path, data_frame_path):
     fig.tight_layout()
     fig_mean.tight_layout()
     
+    print(title)
+
     print("Saving at", config_file_path[:-4]+'_'+title+'.png')
     fig.savefig(config_file_path[:-4]+'_'+title+'.png', dpi=200, format='png')
     fig_mean.savefig(config_file_path[:-4]+'_'+title+'_average.pdf', dpi=200, format='pdf')
