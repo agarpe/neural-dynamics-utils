@@ -257,7 +257,7 @@ def main(h5_file_path, config_file_path):
     config.read(config_file_path)
 
     save = config['Outcome']['save'].lower() == 'y'
-    save_all = config['Outcome']['save'].lower() == 'y'
+    save_all = config['Outcome']['save_all'].lower() == 'y'
     plot = config['Outcome']['plot'].lower() == 'y'
     print(save, plot)
     
