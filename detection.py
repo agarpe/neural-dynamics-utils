@@ -286,9 +286,10 @@ def main(h5_file_path, config_file_path):
     except:
         trials = None
 
-    min_spike_dist = float(config['Recording']['min_spike_dist'])
-    max_spike_dist = float(config['Recording']['max_spike_dist'])
-    min_burst_dist = float(config['Recording']['min_burst_dist'])
+    # Parse burst detection parameters
+    min_spike_dist = float(config['Burst detection']['min_spike_dist'])
+    max_spike_dist = float(config['Burst detection']['max_spike_dist'])
+    min_burst_dist = float(config['Burst detection']['min_burst_dist'])
 
     df_signal = read_h5File(h5_file_path, trials)
 
