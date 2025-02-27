@@ -60,7 +60,7 @@ def parse_comma_file(filepath):
 
 def plot_data(ax, time, temperature, title):
     """ Plots Time vs Temperature """
-    ax.plot(time, temperature, marker='o', linestyle='-', label= 'Temperature Over Time'+title)
+    ax.plot(time, temperature, marker='o', linestyle='-', markersize = 2, label= 'Temperature Over Time'+title)
     ax.set_xlabel('Time')
     ax.set_ylabel('Temperature (°C)')
     
@@ -99,11 +99,25 @@ shared_time_length = max(df1['Temperature'].shape[0], df2['Termistor'].shape[0])
 # Create the shared_time array from 0 to N with step 1
 shared_time = np.arange(0, shared_time_length)
 
+
+
+#TODO: Función para estos dos ifs
 # If df1 has fewer rows, pad with NaNs
 if df1['Temperature'].shape[0] < shared_time_length:
     padding_len = shared_time_length - df1['Temperature'].shape[0]
     print(padding_len)
-    df1['Temperature'] = np.pad(df1['Temperature'].values, (0, padding_len), constant_values=np.nan)
+    
+    
+    # Pad the values of 'Termistor' with NaNs to match the shared_time_length
+    padded_data = np.pad(df1['Temperature'].values, (padding_len, 0), constant_values=np.nan)
+
+    # Reset the index to match the shared_time_length
+    df1 = df1.reset_index(drop=True)
+
+    # Ensure the DataFrame has the correct number of rows
+    df1 = df1.reindex(range(shared_time_length))
+    
+    df1['Temperature'] = padded_data
 
 # If df2 has fewer rows, pad with NaNs
 if df2['Termistor'].shape[0] < shared_time_length:
@@ -111,7 +125,7 @@ if df2['Termistor'].shape[0] < shared_time_length:
     print("Padding length:", padding_len)
 
     # Pad the values of 'Termistor' with NaNs to match the shared_time_length
-    padded_data = np.pad(df2['Termistor'].values, (0, padding_len), constant_values=np.nan)
+    padded_data = np.pad(df2['Termistor'].values, (padding_len, 0), constant_values=np.nan)
 
     # Reset the index to match the shared_time_length
     df2 = df2.reset_index(drop=True)
@@ -126,11 +140,9 @@ if df2['Termistor'].shape[0] < shared_time_length:
 ###PLOT###
 fig, ax = plt.subplots(1, 1, figsize=(10, 8))
 
-print(df1['Temperature'].shape)
-print(df2['Termistor'].shape)
 
 plot_data(ax, shared_time,df1['Temperature'], ' camera')  # Plot first dataset
-plot_data(ax, shared_time,df2['Termistor'], 'Termistor')  # Plot second dataset
+plot_data(ax, shared_time,df2['Termistor'], ' Termistor')  # Plot second dataset
 # plot_data(ax, df2['Time'], df2['Termistor'], 'Termistor')  # Plot second dataset
 #plot_data(df2['Time'],df2['TermistorWater'], 'TermistorWater')
 plt.legend()
