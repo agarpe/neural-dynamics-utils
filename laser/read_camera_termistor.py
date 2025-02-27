@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
@@ -25,7 +26,7 @@ def parse_standard_file(filepath):
 
     # Convert 'Temperature' column to float
     df['Temperature'] = df['Temperature'].astype(float)
-
+    print(df)
     return df
 
 def parse_comma_file(filepath):
@@ -57,15 +58,14 @@ def parse_comma_file(filepath):
 
     return df
 
-def plot_data(time, temperature, title):
+def plot_data(ax, time, temperature, title):
     """ Plots Time vs Temperature """
-    plt.figure(figsize=(10, 5))
-    plt.plot(time, temperature, marker='o', linestyle='-')
-    plt.xlabel('Time')
-    plt.ylabel('Temperature (°C)')
-    plt.title('Temperature Over Time'+title)
+    ax.plot(time, temperature, marker='o', linestyle='-', label= 'Temperature Over Time'+title)
+    ax.set_xlabel('Time')
+    ax.set_ylabel('Temperature (°C)')
+    
     plt.xticks(rotation=45)  # Rotate x-axis labels for better visibility
-    plt.grid()
+    # plt.grid()
 
 # Create the argument parser
 parser = argparse.ArgumentParser(description="Parses a .dat from OPI camera to dataframe and .csv from thermistor.")
@@ -92,14 +92,47 @@ comma_filepath = args.csv_file_path  # Replace with actual file path
 
 df1 = parse_standard_file(standard_filepath)
 df2 = parse_comma_file(comma_filepath)
-df2 = df2.iloc[::100]
+df2 = df2.iloc[::10]
+
+# Determine the maximum length of the 'Temperature' column
+shared_time_length = max(df1['Temperature'].shape[0], df2['Termistor'].shape[0])
+# Create the shared_time array from 0 to N with step 1
+shared_time = np.arange(0, shared_time_length)
+
+# If df1 has fewer rows, pad with NaNs
+if df1['Temperature'].shape[0] < shared_time_length:
+    padding_len = shared_time_length - df1['Temperature'].shape[0]
+    print(padding_len)
+    df1['Temperature'] = np.pad(df1['Temperature'].values, (0, padding_len), constant_values=np.nan)
+
+# If df2 has fewer rows, pad with NaNs
+if df2['Termistor'].shape[0] < shared_time_length:
+    padding_len = shared_time_length - df2['Termistor'].shape[0]
+    print("Padding length:", padding_len)
+
+    # Pad the values of 'Termistor' with NaNs to match the shared_time_length
+    padded_data = np.pad(df2['Termistor'].values, (0, padding_len), constant_values=np.nan)
+
+    # Reset the index to match the shared_time_length
+    df2 = df2.reset_index(drop=True)
+
+    # Ensure the DataFrame has the correct number of rows
+    df2 = df2.reindex(range(shared_time_length))
+    
+    df2['Termistor'] = padded_data
+
+# Now both df1 and df2 have the same number of rows
 
 ###PLOT###
+fig, ax = plt.subplots(1, 1, figsize=(10, 8))
 
+print(df1['Temperature'].shape)
+print(df2['Termistor'].shape)
 
-plot_data(df1['Time'],df1['Temperature'], ' camera')  # Plot first dataset
-plot_data(df2['Time'],df2['Termistor'], 'Termistor')  # Plot second dataset
+plot_data(ax, shared_time,df1['Temperature'], ' camera')  # Plot first dataset
+plot_data(ax, shared_time,df2['Termistor'], 'Termistor')  # Plot second dataset
+# plot_data(ax, df2['Time'], df2['Termistor'], 'Termistor')  # Plot second dataset
 #plot_data(df2['Time'],df2['TermistorWater'], 'TermistorWater')
-
+plt.legend()
 
 plt.show()
