@@ -45,16 +45,6 @@ def parse_comma_file(filepath):
 
     # Display the DataFrame
     print(df)
-    
-    """ Parses the new file format (comma-separated, HH:MM:SS.SSS time format). """
-    #df = pd.read_csv(filepath, sep=',', skiprows=1, usecols=[0, 1], names=['Time', 'Temperature'], encoding='utf-8', skip_blank_lines=True)
-
-    # print(df)
-    # # Convert 'Time' column to datetime format
-    # df['Time'] = pd.to_datetime('1900-01-01 ' + df['Time'], format='%Y-%m-%d %H:%M:%S.%f')
-    #
-    # # Convert 'Temperature' column to float, handling empty values
-    # df['Temperature'] = pd.to_numeric(df['Temperature'], errors='coerce')  # Converts invalid values to NaN
 
     return df
 
