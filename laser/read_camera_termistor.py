@@ -67,6 +67,18 @@ def plot_data(ax, time, temperature, title):
     plt.xticks(rotation=45)  # Rotate x-axis labels for better visibility
     # plt.grid()
 
+
+# Padding function
+def pad_dataframe(df, column_name, target_length):
+    """ Pads the specified column with NaNs if needed. """
+    if df[column_name].shape[0] < target_length:
+        padding_len = target_length - df[column_name].shape[0]
+        padded_data = np.pad(df[column_name].values, (padding_len, 0), constant_values=np.nan)
+        df = df.reset_index(drop=True).reindex(range(target_length))
+        df[column_name] = padded_data
+    return df
+
+
 # Create the argument parser
 parser = argparse.ArgumentParser(description="Parses a .dat from OPI camera to dataframe and .csv from thermistor.")
 
@@ -99,41 +111,9 @@ shared_time_length = max(df1['Temperature'].shape[0], df2['Termistor'].shape[0])
 # Create the shared_time array from 0 to N with step 1
 shared_time = np.arange(0, shared_time_length)
 
+df1 = pad_dataframe(df1, 'Temperature', shared_time_length)
+df2 = pad_dataframe(df2, 'Termistor', shared_time_length)
 
-
-#TODO: Función para estos dos ifs
-# If df1 has fewer rows, pad with NaNs
-if df1['Temperature'].shape[0] < shared_time_length:
-    padding_len = shared_time_length - df1['Temperature'].shape[0]
-    print(padding_len)
-    
-    
-    # Pad the values of 'Termistor' with NaNs to match the shared_time_length
-    padded_data = np.pad(df1['Temperature'].values, (padding_len, 0), constant_values=np.nan)
-
-    # Reset the index to match the shared_time_length
-    df1 = df1.reset_index(drop=True)
-
-    # Ensure the DataFrame has the correct number of rows
-    df1 = df1.reindex(range(shared_time_length))
-    
-    df1['Temperature'] = padded_data
-
-# If df2 has fewer rows, pad with NaNs
-if df2['Termistor'].shape[0] < shared_time_length:
-    padding_len = shared_time_length - df2['Termistor'].shape[0]
-    print("Padding length:", padding_len)
-
-    # Pad the values of 'Termistor' with NaNs to match the shared_time_length
-    padded_data = np.pad(df2['Termistor'].values, (padding_len, 0), constant_values=np.nan)
-
-    # Reset the index to match the shared_time_length
-    df2 = df2.reset_index(drop=True)
-
-    # Ensure the DataFrame has the correct number of rows
-    df2 = df2.reindex(range(shared_time_length))
-    
-    df2['Termistor'] = padded_data
 
 # Now both df1 and df2 have the same number of rows
 
