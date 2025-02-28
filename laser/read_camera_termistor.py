@@ -6,6 +6,7 @@ import argparse
 
 def parse_standard_file(filepath):
     """ Parses the first file format (semicolon-separated, HH:MM:SS,fff time format). """
+    print(filepath)
     with open(filepath, 'r', encoding='utf-8', errors='replace') as file:
         lines = file.readlines()
 
@@ -63,7 +64,7 @@ def pad_dataframe(df, column_name, target_length):
     """ Pads the specified column with NaNs if needed. """
     if df[column_name].shape[0] < target_length:
         padding_len = target_length - df[column_name].shape[0]
-        padded_data = np.pad(df[column_name].values, (padding_len, 0), constant_values=np.nan)
+        padded_data = np.pad(df[column_name].values, (0, padding_len), constant_values=np.nan)
         df = df.reset_index(drop=True).reindex(range(target_length))
         df[column_name] = padded_data
     return df
@@ -95,6 +96,7 @@ comma_filepath = args.csv_file_path  # Replace with actual file path to ignore a
 key_times_filepath = args.key_times_file
 
 df1 = parse_standard_file(standard_filepath)
+# df3 = parse_standard_file("/home/agarpe/Workspace/data/laser/thermal-camera-precission/test4_cameraonthetop_mean.dat")
 df2 = parse_comma_file(comma_filepath)
 df2 = df2.iloc[::10]
 
@@ -107,6 +109,10 @@ df1 = pad_dataframe(df1, 'Temperature', shared_time_length)
 df2 = pad_dataframe(df2, 'Termistor', shared_time_length)
 try:
     df2 = pad_dataframe(df2, 'TermistorWater', shared_time_length)
+except:
+    pass
+try:
+    df3 = pad_dataframe(df3, 'Temperature', shared_time_length)
 except:
     pass
 
@@ -125,11 +131,25 @@ try:
 except:
     pass
 
+try:
+    plot_data(ax, shared_time, df3['Temperature'], ' camera mean')  # Plot first dataset
+except:
+    pass
+
+
 # Plot vertical lines at key times
 for key_idx in key_indices:
     if key_idx < shared_time_length:
         ax.axvline(x=key_idx, color='r', linestyle='--', linewidth=0.5, label="Key Time" if key_idx == key_indices[0] else "")
 
 plt.legend()
+
+
+# plt.xlim(800,1600)
+
+
+plt.tight_layout()
+save_path = standard_filepath[:standard_filepath.rfind('test')+5]+"graph.png"
+plt.savefig(save_path, dpi=200, format='png')
 
 plt.show()
