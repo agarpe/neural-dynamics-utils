@@ -122,7 +122,7 @@ plot_data(ax, shared_time,df2['Termistor'], ' Termistor')  # Plot second dataset
 # Plot vertical lines at key times
 for key_idx in key_indices:
     if key_idx < shared_time_length:
-        ax.axvline(x=key_idx, color='r', linestyle='--', label="Key Time" if key_idx == key_indices[0] else "")
+        ax.axvline(x=key_idx, color='r', linestyle='--', linewidth=0.5, label="Key Time" if key_idx == key_indices[0] else "")
 
 plt.legend()
 
