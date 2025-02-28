@@ -95,25 +95,13 @@ def read_key_times(file_path):
 parser = argparse.ArgumentParser(description="Parses a .dat from OPI camera to dataframe and .csv from thermistor.")
 
 # Define the arguments
-parser.add_argument(
-    "dat_file_path",
-    type=str,
-    help="Path to the .dat file."
-)
-# Define the arguments
-parser.add_argument(
-    "csv_file_path",
-    type=str,
-    help="Path to the .csv file."
-)
+parser.add_argument("dat_file_path", type=str, help="Path to the .dat file.")
+parser.add_argument("csv_file_path", type=str, help="Path to the .csv file.")
 parser.add_argument("key_times_file", type=str, help="Path to the key times file.")  # New argument for key times
-# Parse the arguments
 args = parser.parse_args()
 
-
-# Example usage:
-standard_filepath = args.dat_file_path  # Replace with actual file path
-comma_filepath = args.csv_file_path  # Replace with actual file path
+standard_filepath = args.dat_file_path  # Replace with actual file path to ignore arguments
+comma_filepath = args.csv_file_path  # Replace with actual file path to ignore arguments
 key_times_filepath = args.key_times_file
 
 df1 = parse_standard_file(standard_filepath)
@@ -135,7 +123,6 @@ key_indices = read_key_times(key_times_filepath)
 
 ###PLOT###
 fig, ax = plt.subplots(1, 1, figsize=(10, 8))
-
 
 plot_data(ax, shared_time,df1['Temperature'], ' camera')  # Plot first dataset
 plot_data(ax, shared_time,df2['Termistor'], ' Termistor')  # Plot second dataset
