@@ -105,6 +105,10 @@ shared_time = np.arange(0, shared_time_length)
 
 df1 = pad_dataframe(df1, 'Temperature', shared_time_length)
 df2 = pad_dataframe(df2, 'Termistor', shared_time_length)
+try:
+    df2 = pad_dataframe(df2, 'TermistorWater', shared_time_length)
+except:
+    pass
 
 # Read key times and get indices
 key_indices = read_key_times(key_times_filepath)
@@ -114,10 +118,12 @@ key_indices = read_key_times(key_times_filepath)
 ###PLOT###
 fig, ax = plt.subplots(1, 1, figsize=(10, 8))
 
-plot_data(ax, shared_time,df1['Temperature'], ' camera')  # Plot first dataset
-plot_data(ax, shared_time,df2['Termistor'], ' Termistor')  # Plot second dataset
-# plot_data(ax, df2['Time'], df2['Termistor'], 'Termistor')  # Plot second dataset
-#plot_data(df2['Time'],df2['TermistorWater'], 'TermistorWater')
+plot_data(ax, shared_time, df1['Temperature'], ' camera')  # Plot first dataset
+plot_data(ax, shared_time, df2['Termistor'], ' Termistor')  # Plot second dataset
+try:
+    plot_data(ax, shared_time, df2['TermistorWater'], ' Termistor Water')  # Plot second dataset
+except:
+    pass
 
 # Plot vertical lines at key times
 for key_idx in key_indices:
