@@ -78,6 +78,18 @@ def pad_dataframe(df, column_name, target_length):
         df[column_name] = padded_data
     return df
 
+def read_key_times(file_path):
+    """ Reads key times from a file and converts them to indices. """
+    with open(file_path, 'r') as file:
+        times = file.read().splitlines()
+
+    key_indices = []
+    for t in times:
+        mm, ss = map(int, t.split(':'))
+        total_seconds = mm * 60 + ss  # Convert MM:SS to total seconds
+        key_indices.append(total_seconds)
+
+    return key_indices
 
 # Create the argument parser
 parser = argparse.ArgumentParser(description="Parses a .dat from OPI camera to dataframe and .csv from thermistor.")
@@ -94,6 +106,7 @@ parser.add_argument(
     type=str,
     help="Path to the .csv file."
 )
+parser.add_argument("key_times_file", type=str, help="Path to the key times file.")  # New argument for key times
 # Parse the arguments
 args = parser.parse_args()
 
@@ -101,6 +114,7 @@ args = parser.parse_args()
 # Example usage:
 standard_filepath = args.dat_file_path  # Replace with actual file path
 comma_filepath = args.csv_file_path  # Replace with actual file path
+key_times_filepath = args.key_times_file
 
 df1 = parse_standard_file(standard_filepath)
 df2 = parse_comma_file(comma_filepath)
@@ -114,6 +128,8 @@ shared_time = np.arange(0, shared_time_length)
 df1 = pad_dataframe(df1, 'Temperature', shared_time_length)
 df2 = pad_dataframe(df2, 'Termistor', shared_time_length)
 
+# Read key times and get indices
+key_indices = read_key_times(key_times_filepath)
 
 # Now both df1 and df2 have the same number of rows
 
@@ -125,6 +141,12 @@ plot_data(ax, shared_time,df1['Temperature'], ' camera')  # Plot first dataset
 plot_data(ax, shared_time,df2['Termistor'], ' Termistor')  # Plot second dataset
 # plot_data(ax, df2['Time'], df2['Termistor'], 'Termistor')  # Plot second dataset
 #plot_data(df2['Time'],df2['TermistorWater'], 'TermistorWater')
+
+# Plot vertical lines at key times
+for key_idx in key_indices:
+    if key_idx < shared_time_length:
+        ax.axvline(x=key_idx, color='r', linestyle='--', label="Key Time" if key_idx == key_indices[0] else "")
+
 plt.legend()
 
 plt.show()
