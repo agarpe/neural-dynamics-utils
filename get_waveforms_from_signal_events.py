@@ -60,6 +60,9 @@ print("Writing waveforms at",savepath)
 # waveform = cu.save_waveforms_new(signal,events,savepath,width_ms_l, width_ms_r,dt=dt,split=False,onoff=False) #onoff False because they have been read as single events.
 waveforms = cu.save_waveforms_from_signal(signal,events,savepath,dt=dt,width_l=ws_l, width_r=ws_r) 
 
+
+# Save time reference of the waveforms
+
 time = np.arange(0,signal.shape[0],1.0)
 time *= dt
 
