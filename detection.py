@@ -257,7 +257,7 @@ def main(h5_file_path, config_file_path):
     config.read(config_file_path)
 
     save = config['Outcome']['save'].lower() == 'y'
-    save_all = config['Outcome']['save'].lower() == 'y'
+    save_all = config['Outcome']['save_all'].lower() == 'y'
     plot = config['Outcome']['plot'].lower() == 'y'
     print(save, plot)
     
@@ -286,9 +286,10 @@ def main(h5_file_path, config_file_path):
     except:
         trials = None
 
-    min_spike_dist = float(config['Recording']['min_spike_dist'])
-    max_spike_dist = float(config['Recording']['max_spike_dist'])
-    min_burst_dist = float(config['Recording']['min_burst_dist'])
+    # Parse burst detection parameters
+    min_spike_dist = float(config['Burst detection']['min_spike_dist'])
+    max_spike_dist = float(config['Burst detection']['max_spike_dist'])
+    min_burst_dist = float(config['Burst detection']['min_burst_dist'])
 
     df_signal = read_h5File(h5_file_path, trials)
 
