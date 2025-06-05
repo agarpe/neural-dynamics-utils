@@ -5,85 +5,92 @@ import configparser
 import pickle as pkl
 import matplotlib.pyplot as plt
 
-def plot_waveforms():
-
 
 colors= ['cornflowerblue','crimson','yellowgreen']
-# --- MAIN FUNCTION ---
-def main(config_file_path, data_frame_path):
+
+def plot_triplet_waveforms(df, triplets, column_id, title, save_prefix):
     """
-    Main function to load the DataFrame and process it using configuration.
+    Plot waveforms for trial triplets with their average traces.
+
     Args:
-        config_file (str): Path to the configuration file.
-        data_file (str): Path to the data file to be loaded.
+        df (pd.DataFrame): DataFrame with 'Trial', 'Column_id', 'Waveforms', 'Type' columns.
+        triplets (list[list[str]]): List of trial triplets as lists of strings or integers.
+        column_id (int): Column ID to filter waveforms.
+        title (str): Plot title.
+        save_prefix (str): Path prefix for saving plot files.
     """
-    # Load config
-
-    config = configparser.ConfigParser()
-    config.read(config_file_path)
-
-    # Load dataframe
-    df = pd.read_pickle(data_frame_path)
-
-    print(df)
-
-    triplets = [triplet.split() for triplet in config['Superposition']['triplets'].split('|')]
-    column_id = int(config['Superposition']['column_id'])
-    print(triplets)
-
-    cols = len(triplets)//2
+    cols = len(triplets) // 2
     fig, ax = plt.subplots(2, cols, figsize=(12, 8))
     ax = ax.flatten()
 
     fig_mean, ax_mean = plt.subplots(2, cols, figsize=(12, 8))
     ax_mean = ax_mean.flatten()
 
-    title = data_frame_path[data_frame_path.rfind('/')+1:
-                            data_frame_path.rfind('_extended_data.pkl')]
     for i, triplet in enumerate(triplets):
         for j, trial in enumerate(triplet):
             trial = int(trial)
-            waveforms = df.loc[(df['Trial'] == trial) & 
-                               (df['Column_id'] == column_id),
-                               'Waveforms'].values[0]
-            if j == 1:
-                label = df.loc[df['Trial'] == trial, 'Type'].values[0]
-            else:
-                label = 'control' if i == 0 else 'recovery'
-
-            # Compute average waveform
             try:
-                # TODO align to first spike
-                aligned_waveforms = np.array([w-min(w) for w in waveforms])
-                w_mean = np.mean(aligned_waveforms, axis=0)
-                # w_mean -= np.max(w_mean)
-            except Exception as e:
-                print(e.args)
+                waveforms = df.loc[(df['Trial'] == trial) & 
+                                   (df['Column_id'] == column_id),
+                                   'Waveforms'].values[0]
+            except IndexError:
+                print(f"Trial {trial} not found.")
                 continue
 
-            # Plot average and traces
-            ax[i].plot(aligned_waveforms.T, color=colors[j], label=label,
-                       linewidth=0.01)
+            # Assign label for plotting
+            label = df.loc[df['Trial'] == trial, 'Type'].values[0] if j == 1 else 'control' if i == 0 else 'recovery'
+
+            try:
+                # Align waveforms by subtracting minimum value
+                aligned_waveforms = np.array([w - min(w) for w in waveforms])
+                w_mean = np.mean(aligned_waveforms, axis=0)
+            except Exception as e:
+                print(f"Error in trial {trial}: {e}")
+                continue
+
+            # Plot all aligned waveforms and their mean
+            ax[i].plot(aligned_waveforms.T, color=colors[j], label=label, linewidth=0.01)
             ax[i].plot(w_mean.T, color=colors[j], label=label)
             ax_mean[i].plot(w_mean.T, color=colors[j], label=label)
+
             if j == 1:
                 ax[i].set_title(label)
                 ax_mean[i].set_title(label)
 
-    fig.suptitle(title)    
-    fig_mean.suptitle(title)    
+    fig.suptitle(title)
+    fig_mean.suptitle(title)
 
     fig.tight_layout()
     fig_mean.tight_layout()
-    
-    print(title)
 
-    print("Saving at", config_file_path[:-4]+'_'+title+'.png')
-    fig.savefig(config_file_path[:-4]+'_'+title+'.png', dpi=200, format='png')
-    fig_mean.savefig(config_file_path[:-4]+'_'+title+'_average.pdf', dpi=200, format='pdf')
+    fig.savefig(f'{save_prefix}_{title}.png', dpi=200, format='png')
+    fig_mean.savefig(f'{save_prefix}_{title}_average.pdf', dpi=200, format='pdf')
 
     plt.show()
+
+def main(config_file_path, data_frame_path):
+    config = configparser.ConfigParser()
+    config.read(config_file_path)
+
+    # Load dataframe
+    df = pd.read_pickle(data_frame_path)
+
+    # Parse triplets and column ID from config
+    triplets = [triplet.split() for triplet in config['Superposition']['triplets'].split('|')]
+    column_id = int(config['Superposition']['column_id'])
+
+    # Extract a meaningful title from the file name
+    title = data_frame_path[data_frame_path.rfind('/')+1:
+                            data_frame_path.rfind('_extended_data.pkl')]
     
+    save_prefix = config_file_path[:-4]
+
+    # Plot waveforms for triplets
+    plot_triplet_waveforms(df, triplets, column_id, title, save_prefix)
+
+    # Placeholder for further analysis
+    # analyze_metrics(df, triplets, column_id)
+
 
 
 if __name__ == "__main__":
