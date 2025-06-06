@@ -25,73 +25,73 @@ def plot_parameter_metrics(df_metrics, powers, wavelengths, temperatures, trial_
         'temperature': temperatures,
     }
     #TODO refractor
-    # --- Plot 1: boxplots per metric, grouped by parameter values ---
-    for metric in metrics:
-        fig, axs = plt.subplots(1, 3, figsize=(18, 5), sharey=True)
-        fig.suptitle(f"Metric: {metric} boxplot grouped by parameters")
+    # # --- Plot 1: boxplots per metric, grouped by parameter values ---
+    # for metric in metrics:
+    #     fig, axs = plt.subplots(1, 3, figsize=(18, 5), sharey=True)
+    #     fig.suptitle(f"Metric: {metric} boxplot grouped by parameters")
         
-        metric_data = []
-        for col in selected_cols:
-            vals = df_metrics.loc[metric, col]
-            # ensure list or array
-            metric_data.append(vals if isinstance(vals, (list, np.ndarray)) else [vals])
+    #     metric_data = []
+    #     for col in selected_cols:
+    #         vals = df_metrics.loc[metric, col]
+    #         # ensure list or array
+    #         metric_data.append(vals if isinstance(vals, (list, np.ndarray)) else [vals])
 
-        # For each parameter
-        for i, (param_name, values) in enumerate(param_values.items()):
-            ax = axs[i]
-            cmap = plt.get_cmap('tab10')
-            colors = [cmap(j % 10) for j in range(len(values))]
+    #     # For each parameter
+    #     for i, (param_name, values) in enumerate(param_values.items()):
+    #         ax = axs[i]
+    #         cmap = plt.get_cmap('tab10')
+    #         colors = [cmap(j % 10) for j in range(len(values))]
 
-            xtick_locs = []
-            xtick_labels = []
-            used_positions = set()
+    #         xtick_locs = []
+    #         xtick_labels = []
+    #         used_positions = set()
 
-            for j, (val, col) in enumerate(zip(values, selected_cols)):
-                if np.isnan(val):
-                    continue
+    #         for j, (val, col) in enumerate(zip(values, selected_cols)):
+    #             if np.isnan(val):
+    #                 continue
 
-                y = df_metrics.loc[metric, col]
-                color = colors[j]
+    #             y = df_metrics.loc[metric, col]
+    #             color = colors[j]
 
-                # Jitter position
-                jitter_x = np.random.normal(0, 2)
-                pos = val + jitter_x
+    #             # Jitter position
+    #             jitter_x = np.random.normal(0, 2)
+    #             pos = val + jitter_x
 
-                # Boxplot
-                ax.boxplot([y], positions=[pos], widths=5,
-                        patch_artist=True,
-                        boxprops=dict(facecolor=color, color='black'),
-                        medianprops=dict(color='black'),
-                        whiskerprops=dict(color='black'),
-                        capprops=dict(color='black'),
-                        flierprops=dict(markerfacecolor=color, marker='o', alpha=0.3))
+    #             # Boxplot
+    #             ax.boxplot([y], positions=[pos], widths=5,
+    #                     patch_artist=True,
+    #                     boxprops=dict(facecolor=color, color='black'),
+    #                     medianprops=dict(color='black'),
+    #                     whiskerprops=dict(color='black'),
+    #                     capprops=dict(color='black'),
+    #                     flierprops=dict(markerfacecolor=color, marker='o', alpha=0.3))
 
-                # Scatter
-                scatter_jitter = np.random.normal(0, 0.5, size=len(y))
-                ax.scatter(np.full(len(y), pos) + scatter_jitter, y, s=10, alpha=0.6, color=color)
+    #             # Scatter
+    #             scatter_jitter = np.random.normal(0, 0.5, size=len(y))
+    #             ax.scatter(np.full(len(y), pos) + scatter_jitter, y, s=10, alpha=0.6, color=color)
 
-                # Legend
-                ax.plot([], [], color=color, label=col)  # dummy for legend
+    #             # Legend
+    #             ax.plot([], [], color=color, label=col)  # dummy for legend
 
-                # Only add xtick label once per unique param value
-                if val not in used_positions:
-                    xtick_locs.append(val)
-                    xtick_labels.append(str(val))
-                    used_positions.add(val)
+    #             # Only add xtick label once per unique param value
+    #             if val not in used_positions:
+    #                 xtick_locs.append(val)
+    #                 xtick_labels.append(str(val))
+    #                 used_positions.add(val)
 
-            ax.set_title(param_name)
-            ax.set_xlabel(param_name)
-            if i == 0:
-                ax.set_ylabel(metric)
-            ax.set_xticks(xtick_locs)
-            ax.set_xticklabels(xtick_labels)
-            ax.grid(True)
-            ax.legend(fontsize=8, loc='best')
+    #         ax.set_title(param_name)
+    #         ax.set_xlabel(param_name)
+    #         if i == 0:
+    #             ax.set_ylabel(metric)
+    #         ax.set_xticks(xtick_locs)
+    #         ax.set_xticklabels(xtick_labels)
+    #         ax.grid(True)
+    #         ax.legend(fontsize=8, loc='best')
 
-        plt.tight_layout(rect=[0, 0, 1, 0.95])
-        print("Saving fig", f"{save_prefix}_parameters_{metric}.png")
-        fig.savefig(f"{save_prefix}_parameters_{metric}.png",format='png', dpi=150)
-        # plt.show()
+    #     plt.tight_layout(rect=[0, 0, 1, 0.95])
+    #     print("Saving fig", f"{save_prefix}_parameters_{metric}.png")
+    #     fig.savefig(f"{save_prefix}_parameters_{metric}.png",format='png', dpi=150)
+    #     # plt.show()
 
 
         
@@ -138,7 +138,42 @@ def plot_parameter_metrics(df_metrics, powers, wavelengths, temperatures, trial_
         fig.savefig(f"{save_prefix}_parameters_scatter_{metric}.png",format='png', dpi=150)
         # plt.show()
 
-        
+        # --- Plot: color-coded mean of metric vs (power, wavelength) ---
+        for metric in metrics:
+            fig, ax = plt.subplots(figsize=(8, 6))
+            fig.suptitle(f"Mean {metric} vs Power and Wavelength")
+
+            powers_list = param_values['power']
+            wavelengths_list = param_values['wavelength']
+
+            means = []
+            for col in selected_cols:
+                vals = df_metrics.loc[metric, col]
+                vals_flat = vals if isinstance(vals, (list, np.ndarray)) else [vals]
+                means.append(np.nanmean(vals_flat))
+
+            scatter = ax.scatter(
+                powers_list,
+                wavelengths_list,
+                c=means,
+                cmap='viridis',
+                s=100,
+                edgecolors='k'
+            )
+
+            ax.set_xlabel('Power')
+            ax.set_ylabel('Wavelength')
+            ax.grid(True)
+
+            cbar = plt.colorbar(scatter, ax=ax)
+            cbar.set_label(f'Change from control {metric}')
+
+            plt.tight_layout()
+            save_path = f"{save_prefix}_heatmap_{metric}.png"
+            print("Saving fig", save_path)
+            fig.savefig(save_path, format='png', dpi=150)
+            # plt.show()
+
     # --- Plot 3: TEMPERATURE mean metric values per trial vs parameters with dual y-axis ---
     for metric in metrics:
         fig, ax1 = plt.subplots(figsize=(8, 6))
@@ -182,6 +217,89 @@ def plot_parameter_metrics(df_metrics, powers, wavelengths, temperatures, trial_
         fig.savefig(f"{save_prefix}_parameters_scatter-temperature_{metric}.png",format='png', dpi=150)
         # plt.show()
 
+def plot_parameter_metrics_heatmap(df_metrics, powers, wavelengths, temperatures, trial_numbers, save_prefix, parameter='temperature'):
+    """
+    df_metrics: DataFrame with rows=metrics, cols=columns like control0, param, recovery0 ...
+    config: dict with keys 'powers', 'wavelength', 'temperature' as space-separated strings
+    trial_numbers: list of ints, e.g. [2,4,6,8,10,12]
+    """
+    metrics = df_metrics.index.tolist()
+    columns = df_metrics.columns.tolist()
+    
+    selected_cols = [col for col in df_metrics.columns if any(str(t) in col for t in trial_numbers) and not col.startswith('control') and not col.startswith('recovery')]
+
+    # Dictionary of parameter values for selected trials
+    param_values = {
+        'power': powers,
+        'wavelength': wavelengths,
+        'temperature': temperatures,
+    }
+    # --- Plot: color-coded mean of metric vs (power, wavelength) ---
+    for metric in metrics:
+        fig, ax = plt.subplots(figsize=(8, 6))
+        fig.suptitle(f"Mean {metric} vs {parameter} and Wavelength")
+
+        powers_list = param_values[parameter]
+        wavelengths_list = param_values['wavelength']
+
+        means = []
+        for col in selected_cols:
+            vals = df_metrics.loc[metric, col]
+            vals_flat = vals if isinstance(vals, (list, np.ndarray)) else [vals]
+            means.append(np.nanmean(vals_flat))
+
+        scatter = ax.scatter(
+            powers_list,
+            wavelengths_list,
+            c=means,
+            cmap='viridis',
+            s=100,
+            edgecolors='k'
+        )
+
+        ax.set_xlabel(parameter)
+        ax.set_ylabel('Wavelength')
+        ax.grid(True)
+
+        cbar = plt.colorbar(scatter, ax=ax)
+        cbar.set_label(f'Change from control {metric}')
+
+        plt.tight_layout()
+        save_path = f"{save_prefix}_{parameter}_heatmap_{metric}.png"
+        print("Saving fig", save_path)
+        fig.savefig(save_path, format='png', dpi=150)
+        # plt.show()
+
+
+def get_differences(df_metrics):
+    # Prepare the new DataFrame to hold the differences
+    df_diff = pd.DataFrame(index=df_metrics.index)
+
+    # Iterate over columns in steps of 3: [control, stim, recovery]
+    columns = df_metrics.columns
+    i = 0
+    while i < len(columns) - 1:
+        col_control = columns[i]
+        col_stim = columns[i + 1]
+        
+        # Ensure the second column is a stimulation and not a recovery
+        if 'recovery' not in col_stim and 'control' in col_control:
+            diff_col_name = f"{col_stim}-diff"
+            # Subtract element-wise for each metric
+            # df_diff[diff_col_name] = abs(df_metrics[col_stim].apply(np.nanmean) - df_metrics[col_control].apply(np.nanmean))
+
+            #  For each metric (row), subtract mean of control from each value in stim
+            df_diff[diff_col_name] = df_metrics.apply(
+                lambda row: abs(np.array(row[col_stim]) - np.nanmean(row[col_control])),
+                axis=1
+            )
+            i += 3  # skip recovery
+        else:
+            i += 1  # move forward if structure doesn't match
+
+    # Done
+    print(df_diff.head())
+    return df_diff
 
 
 def main(config_file_path, data_frame_path):
@@ -213,7 +331,10 @@ def main(config_file_path, data_frame_path):
 
     print(df_metrics.columns)
 
-    plot_parameter_metrics(df_metrics, powers, wavelengths, temperatures, trials, save_prefix)
+    df_diff = get_differences(df_metrics)
+
+    plot_parameter_metrics_heatmap(df_diff, powers, wavelengths, temperatures, trials, save_prefix, parameter='power')
+    plot_parameter_metrics_heatmap(df_diff, powers, wavelengths, temperatures, trials, save_prefix, parameter='temperature')
 
 
 
