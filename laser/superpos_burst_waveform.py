@@ -1,3 +1,4 @@
+import superpos_functions as laser_utils
 import numpy as np
 import pandas as pd
 import argparse
@@ -8,6 +9,7 @@ import matplotlib.pyplot as plt
 
 colors= ['cornflowerblue','crimson','yellowgreen']
 
+d_metrics = {}
 def plot_triplet_waveforms(df, triplets, column_id, title, save_prefix):
     """
     Plot waveforms for trial triplets with their average traces.
@@ -38,7 +40,7 @@ def plot_triplet_waveforms(df, triplets, column_id, title, save_prefix):
                 continue
 
             # Assign label for plotting
-            label = df.loc[df['Trial'] == trial, 'Type'].values[0] if j == 1 else 'control' if i == 0 else 'recovery'
+            label = df.loc[df['Trial'] == trial, 'Type'].values[0] if j == 1 else 'control' if j == 0 else 'recovery'
 
             try:
                 # Align waveforms by subtracting minimum value
@@ -68,6 +70,96 @@ def plot_triplet_waveforms(df, triplets, column_id, title, save_prefix):
 
     plt.show()
 
+def clean_padded(waveforms):
+    cleaned = []
+    for waveform in waveforms:
+        while len(waveform) > 0 and waveform[-1] == 0:
+            waveform = waveform[:-1]
+        cleaned.append(waveform)
+    return cleaned
+
+
+def analyze_metrics(df, triplets, column_id, dt, vscale):
+    labels = []
+    for i, triplet in enumerate(triplets):
+        for j, trial in enumerate(triplet):
+            trial = int(trial)
+            try:
+                waveforms = df.loc[(df['Trial'] == trial) & 
+                                (df['Column_id'] == column_id),
+                                'Waveforms'].values[0]
+            except IndexError:
+                print(f"Trial {trial} not found.")
+                continue
+    
+            # Assign label for plotting
+            label = df.loc[df['Trial'] == trial, 'Type'].values[0] if j == 1 else 'control%d'%i if j == 0 else 'recovery%d'%i
+            print(label)
+            labels.append(label)
+            try:
+            # clean padded 0 in the end
+            
+                waveforms = clean_padded(waveforms)
+                # include metrics in the dict
+                d_metrics[label] = get_metrics(waveforms*vscale, dt)
+            except Exception as e:
+                print(f"Error in trial {trial}: {e}")
+                continue    
+   
+    # Plot boxplots
+    magnitudes = ['ms', 'mV', 'mV/ms', 'mV/ms']
+    metrics_names = ['duration', 'amplitude', 'slope_dep', 'slope_rep']
+    fig, ax = plt.subplots(ncols=4, figsize=(15, 5))
+    colors = ['cornflowerblue', 'firebrick', 'olivedrab', 'gold']  # Define your colors here
+
+    for i, metric_name in enumerate(metrics_names):
+        metric_data = [d_metrics[label][metric_name] for label in labels]  # Order metrics by sorted labels
+        bp = ax[i].boxplot(metric_data, labels=labels, patch_artist=True, showfliers=True)
+        # set_box_colors(bp, colors[i % len(colors)])  # Cycle through colors
+        ax[i].set_title(metric_name)
+        ax[i].set_ylabel(magnitudes[i])
+        # ax[i].tick_params(axis='x', rotation=45)
+        ax[i].spines['top'].set_visible(False)
+        ax[i].spines['right'].set_visible(False)
+
+    plt.tight_layout()
+    plt.show()
+
+    # print("Saving metrics at: ", img_name[:-4]+'metrics_boxplot.png')
+    # print("Saving metrics at: ", img_name[:-4]+'metrics_boxplot.pdf')
+
+    # plt.savefig(img_name[:-4] + 'metrics_boxplot.pdf', format='pdf')
+
+    return d_metrics
+
+import time
+def get_metric_values(waveforms, fun, dt, thres_val):
+    compute_metric = lambda w: fun(w, dt, thres_val=thres_val)
+
+    values1 = []
+    values2 = []
+    w_time = 0
+
+    for w in waveforms:
+        if w.shape[0] == 0:
+            continue
+        result = compute_metric(w)
+        if isinstance(result, tuple):
+            values1.append(result[0])
+            values2.append(result[1])
+        else:
+            values1.append(result)
+    
+    return values1, values2
+
+
+def get_metrics(waveforms, dt):
+    d_metrics = {}
+    d_metrics['duration'], _ = get_metric_values(waveforms, laser_utils.get_burst_duration_value, dt, thres_val=0.5)
+    d_metrics['amplitude'], _ = get_metric_values(waveforms, laser_utils.get_spike_amplitude, dt, thres_val=0.5)
+    d_metrics['slope_dep'], d_metrics['slope_rep'] = get_metric_values(waveforms, laser_utils.get_burst_slope, dt, thres_val=0.5)
+    return d_metrics
+
 def main(config_file_path, data_frame_path):
     config = configparser.ConfigParser()
     config.read(config_file_path)
@@ -85,11 +177,17 @@ def main(config_file_path, data_frame_path):
     
     save_prefix = config_file_path[:-4]
 
-    # Plot waveforms for triplets
-    plot_triplet_waveforms(df, triplets, column_id, title, save_prefix)
+    # Waveform analysis
+    time_step = df['Time'].iloc[0]  # e.g., 20000 Hz → 1/20000 s
+    dt = time_step[1]
 
-    # Placeholder for further analysis
-    # analyze_metrics(df, triplets, column_id)
+
+    # # Plot waveforms for triplets
+    plot_triplet_waveforms(df, triplets, column_id, title, save_prefix, dt, vscale=1000)
+
+    d_metrics = analyze_metrics(df, triplets, column_id, dt, vscale=1000)
+    # pkl.save(d_metrics, f'{save_prefix}_metrics.pkl')
+    
 
 
 
