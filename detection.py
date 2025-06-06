@@ -1,3 +1,38 @@
+"""
+Copyright (c) 2025 Grupo de Neurocomputación Biológica. Universidad Autónoma de Madrid
+Authors:
+    Alicia Garrido Peña
+    Pablo Sánchez
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided
+      with the distribution.
+    * Neither the name of the author nor the names of his contributors
+      may be used to endorse or promote products derived from this
+      software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+
 import numpy as np
 import scipy.signal as signal
 import matplotlib.pyplot as plt
@@ -364,6 +399,8 @@ def main(h5_file_path, config_file_path):
                 max_length = max(w.shape[0] for w in burst_waveforms)
 
                 burst_waveforms_padded = np.array([np.pad(w, (0, max_length - w.shape[0]), mode='constant') if w.shape[0] < max_length else w[:max_length] for w in burst_waveforms])
+            
+            # complete dataframe with all information
             extended_data.append({
                 'Trial': trial_id,
                 'Type': trial_type,
@@ -395,7 +432,8 @@ def main(h5_file_path, config_file_path):
         extended_path = h5_file_path[:-3] + "_extended_data.pkl"
         df_extended.to_pickle(extended_path)
 
-    print(f"Extended DataFrame saved to {extended_path}")
+        print(f"Extended DataFrame saved to {extended_path}")
+        print(f"Headers: {df_extended}")
 
 
 # This if ensures that main will not be called when this script is imported by other library
