@@ -84,8 +84,6 @@ def plot_triplet_waveforms(df, triplets, column_id, title, save_prefix, dt, vsca
     fig.savefig(f'{save_prefix}_{title}.png', dpi=200, format='png')
     fig_mean.savefig(f'{save_prefix}_{title}_average.pdf', dpi=200, format='pdf')
 
-    plt.show()
-
 def clean_padded(waveforms):
     cleaned = []
     for waveform in waveforms:
@@ -131,34 +129,11 @@ def analyze_metrics(df, triplets, column_id, dt, vscale):
             except Exception as e:
                 print(f"Error in trial {trial}: {e}")
                 continue    
-   
-    # Plot boxplots
-    magnitudes = ['ms', 'mV', 'mV/ms', 'mV/ms']
-    metrics_names = ['duration', 'amplitude', 'slope_dep', 'slope_rep']
-    fig, ax = plt.subplots(ncols=4, figsize=(15, 5))
-    colors = ['cornflowerblue', 'firebrick', 'olivedrab', 'gold']  # Define your colors here
 
-    for i, metric_name in enumerate(metrics_names):
-        metric_data = [d_metrics[label][metric_name] for label in labels]  # Order metrics by sorted labels
-        bp = ax[i].boxplot(metric_data, labels=labels, patch_artist=True, showfliers=True)
-        # set_box_colors(bp, colors[i % len(colors)])  # Cycle through colors
-        ax[i].set_title(metric_name)
-        ax[i].set_ylabel(magnitudes[i])
-        # ax[i].tick_params(axis='x', rotation=45)
-        ax[i].spines['top'].set_visible(False)
-        ax[i].spines['right'].set_visible(False)
+    df_metrics = pd.DataFrame(d_metrics)
 
-    plt.tight_layout()
-    plt.show()
+    return df_metrics
 
-    # print("Saving metrics at: ", img_name[:-4]+'metrics_boxplot.png')
-    # print("Saving metrics at: ", img_name[:-4]+'metrics_boxplot.pdf')
-
-    # plt.savefig(img_name[:-4] + 'metrics_boxplot.pdf', format='pdf')
-
-    return d_metrics
-
-import time
 def get_metric_values(waveforms, fun, dt, thres_val):
     compute_metric = lambda w: fun(w, dt, thres_val=thres_val)
 
@@ -188,6 +163,71 @@ def get_metrics(waveforms, dt):
     d_metrics['slope_dep'], d_metrics['slope_rep'] = get_metric_values(waveforms, laser_utils.get_burst_slope, dt, thres_val=0.5)
     return d_metrics
 
+def plot_metrics(df_metrics, selected_trials=None):
+
+    # Plot boxplots
+    # magnitudes = ['ms', 'mV', 'mV/ms', 'mV/ms']
+    # metrics_names = ['duration', 'amplitude', 'slope_dep', 'slope_rep']
+    # colors = ['cornflowerblue', 'firebrick', 'olivedrab', 'gold']  # Define your colors here
+
+    metrics = df_metrics.index
+    all_trials = df_metrics.columns
+
+    # Usa solo los trials seleccionados para el primer plot
+    trials = selected_trials if selected_trials is not None else all_trials
+
+    # ---------- Plot 1: un subplot por métrica ----------
+    fig, axs = plt.subplots(len(metrics), 1, figsize=(12, 10), sharex=True)
+
+    for i, metric in enumerate(metrics):
+        ax = axs[i]
+
+        data = [df_metrics.loc[metric, col] for col in trials]
+
+        ax.boxplot(data, positions=range(len(trials)), widths=0.5)
+
+        # Puntos con jitter
+        for j, points in enumerate(data):
+            jitter = np.random.normal(0, 0.05, size=len(points))
+            ax.plot(np.full(len(points), j) + jitter, points, 'o', alpha=0.4, markersize=4)
+
+        ax.set_title(metric)
+        ax.set_xticks(range(len(trials)))
+        ax.set_xticklabels(trials, rotation=45)
+
+    fig.suptitle("Plot 1: Métricas por trial seleccionado", fontsize=16)
+    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.show()
+
+    # fig, axs = plt.subplots(1, len(trials), figsize=(4 * len(trials), 6), sharey=True)
+
+    # for i, trial in enumerate(trials):
+    #     ax = axs[i]
+    #     data = [df_metrics.loc[metric, trial] for metric in metrics]
+        
+    #     # Boxplot
+    #     ax.boxplot(data, positions=range(len(metrics)), widths=0.5)
+        
+    #     # Scatter points (jittered)
+    #     for j, points in enumerate(data):
+    #         jitter = np.random.normal(0, 0.05, size=len(points))
+    #         ax.plot(np.full_like(points, j) + jitter, points, 'o', alpha=0.4, markersize=4)
+
+    #     ax.set_title(trial)
+    #     ax.set_xticks(range(len(metrics)))
+    #     ax.set_xticklabels(metrics, rotation=45)
+
+    #     fig.tight_layout()
+    #     plt.show()
+
+        # print("Saving metrics at: ", img_name[:-4]+'metrics_boxplot.png')
+        # print("Saving metrics at: ", img_name[:-4]+'metrics_boxplot.pdf')
+
+        # plt.savefig(img_name[:-4] + 'metrics_boxplot.pdf', format='pdf')
+
+RED = '\033[91m'
+RESET = '\033[0m'
+
 def main(config_file_path, data_frame_path):
     config = configparser.ConfigParser()
     config.read(config_file_path)
@@ -198,12 +238,14 @@ def main(config_file_path, data_frame_path):
     # Parse triplets and column ID from config
     triplets = [triplet.split() for triplet in config['Superposition']['triplets'].split('|')]
     column_id = int(config['Superposition']['column_id'])
+    compute_metrics = config['Superposition']['compute_metrics'].lower() == 'y'
 
     # Extract a meaningful title from the file name
     title = data_frame_path[data_frame_path.rfind('/')+1:
                             data_frame_path.rfind('_extended_data.pkl')]
     
     save_prefix = config_file_path[:-4]
+    
 
     # Waveform analysis
     time_step = df['Time'].iloc[0]  # e.g., 20000 Hz → 1/20000 s
@@ -211,14 +253,28 @@ def main(config_file_path, data_frame_path):
 
 
     # # Plot waveforms for triplets
-    plot_triplet_waveforms(df, triplets, column_id, title, save_prefix, dt, vscale=1000)
+    # plot_triplet_waveforms(df, triplets, column_id, title, save_prefix, dt, vscale=1000)
+    # plt.show()
 
-    # d_metrics = analyze_metrics(df, triplets, column_id, dt, vscale=1000)
-    # pd.DataFrame(d_metrics)
+    try:
+        if compute_metrics:
+            raise
+        df_metrics = pd.read_pickle(f'{save_prefix}_metrics.pkl')
+        print(f"{RED}{"Warning: Loading metrics from file"}{RESET}")
+    except:
+        print(f"{RED}{"Warning: metrics file not found, analyzing waveforms..."}{RESET}")
+        df_metrics = analyze_metrics(df, triplets, column_id, dt, vscale=1000)
+        print(f"Saving metrics dataframe {save_prefix}_metrics.pkl")
+        df_metrics.to_pickle(f'{save_prefix}_metrics.pkl')
 
-    # # pkl.save(d_metrics, f'{save_prefix}_metrics.pkl')
+    print(df_metrics.columns)
+
+    plot_metrics(df_metrics)
     
+    excluded = [col for col in df_metrics.columns if not any(k in col for k in ['control', 'recovery'])]
+    print(excluded)
 
+    plot_metrics(df_metrics, excluded)
 
 
 if __name__ == "__main__":
