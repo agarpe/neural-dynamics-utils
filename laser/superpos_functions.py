@@ -602,7 +602,7 @@ def get_spike_duration_value(waveform, dt, plot=False, v_scale=1):
 # 	dt time rate
 # Return:
 #	amplitude
-def get_spike_amplitude(spike,dt):
+def get_spike_amplitude(spike,dt, v_scale=1, thres_val=None):
 	spike = spike[~np.isnan(spike)] 
 	mx_value = np.max(spike) #maximum V value (spike)
 	mn_value = np.min(spike) #minimum V value (spike)
@@ -842,3 +842,150 @@ def clean_spikes(df, metrics, z_error=0.1):
 
 	print("Number of spikes discarded:", df_outliers.groupby(['file','type']).count())
 	return df
+
+def get_burst_duration_value(
+	burst_waveform, dt, slope_threshold=0.1, use_threshold=True,
+	thres_val=0.5, window=20, v_scale=1, plot=False
+	):
+	ini, end = get_burst_duration(burst_waveform, dt, slope_threshold,
+	thres_val, window, v_scale, plot)
+	return end-ini
+
+def get_burst_duration(
+	burst_waveform, dt, slope_threshold=0.1,
+	thres_val=0.5, window=20, v_scale=1, plot=False
+	):
+	"""
+	Calculates burst duration from a burst waveform segment using slope or threshold.
+
+	Parameters:
+	- burst_waveform: 1D array of the burst waveform
+	- dt: time step (e.g., in ms)
+	- slope_threshold: threshold for dV/dt when not using amplitude
+	- use_threshold: if True, use amplitude threshold instead of slope
+	- thres_val: amplitude threshold as fraction of peak (only if use_threshold=True)
+	- window: number of points to search before/after peaks
+	- v_scale: peak prominence factor for find_peaks
+	- plot: show waveform and markers
+
+	Returns:
+	- (start_time, end_time): times in same units as dt
+	"""
+
+	burst_waveform = burst_waveform[~np.isnan(burst_waveform)]
+
+	# Commented version because slows down execution
+	# # Find all spike peaks in the burst
+	# peaks, _ = find_peaks(burst_waveform, prominence=1*v_scale)
+	# if len(peaks) < 1:
+	# 	return (0, 0)
+
+	# first_peak = peaks[0]
+	# last_peak = peaks[-1]
+
+	# Define search window around the burst
+	# search_start = max(0, first_peak - window)
+	# search_end = min(len(burst_waveform), last_peak + window)
+	# segment = burst_waveform[search_start:search_end]
+	
+	segment = burst_waveform
+
+	peak_val = np.max(segment)
+	base_val = np.min(segment)
+	threshold_val = base_val + thres_val * (peak_val - base_val)
+
+	# Find first crossing above threshold
+	depol_idx = np.argmax(segment > threshold_val)
+	# Find last crossing above threshold
+	repol_idx = len(segment) - np.argmax(segment[::-1] > threshold_val) - 1
+
+	# # Convert back to full waveform indices
+	# depol_idx += search_start
+	# repol_idx += search_start
+
+	# Convert to time
+	start_time = depol_idx * dt
+	end_time = repol_idx * dt
+
+	if plot:
+		t = np.arange(len(burst_waveform)) * dt
+		plt.figure(figsize=(10, 4))
+		plt.plot(t, burst_waveform, label='Burst waveform')
+		# plt.plot(peaks * dt, burst_waveform[peaks], 'rx', label='Spikes')
+		# plt.axvline(start_time, color='g', linestyle='--', label='Depol Start')
+		# plt.axvline(end_time, color='r', linestyle='--', label='Repol End')
+		# plt.axvspan(first_peak * dt, last_peak * dt, color='orange', alpha=0.2, label='Peak Range')
+		plt.hlines(threshold_val, t[0], t[-1], color='purple', linestyle=':', label='Threshold')
+		plt.legend()
+		plt.title("Burst Duration via Threshold")
+		plt.xlabel("Time")
+		plt.ylabel("Amplitude")
+		plt.tight_layout()
+		plt.show()
+
+	return start_time, end_time
+
+def get_burst_slope(
+    waveform, dt, n_points=10,
+    slope_threshold=0.1,
+    thres_val=0.5, v_scale=1, window=20, plot=False
+):
+	"""
+	Compute depolarization and repolarization slopes from a waveform segment
+	using start/end timepoints from get_burst_duration_from_waveform().
+	thres_val: slope_position
+	Returns:
+	- (slope1, slope2): depolarization and repolarization slopes
+	"""
+	# 1. Get time of depolarization and repolarization
+	start_time, end_time = get_burst_duration(
+		burst_waveform=waveform,
+		dt=dt,
+		slope_threshold=slope_threshold,
+		thres_val=thres_val,
+		v_scale=v_scale,
+		window=window,
+		plot=False  # Don't double-plot here
+	)
+
+	# 2. Convert time to indices
+	idx1 = int(start_time / dt)
+	idx2 = int(end_time / dt)
+
+	half_window = int(n_points)
+	n_ms = dt * 2 * half_window
+
+	if (idx1 - half_window < 0 or idx1 + half_window >= len(waveform) or
+		idx2 - half_window < 0 or idx2 + half_window >= len(waveform)):
+		return 0, 0
+
+
+	# 3. Compute slopes
+	slope1 = (waveform[idx1 + half_window] - waveform[idx1 - half_window]) / n_ms
+	slope2 = (waveform[idx2 + half_window] - waveform[idx2 - half_window]) / n_ms
+
+	# 4. Plot if needed
+	if plot:
+		t = np.arange(len(waveform)) * dt
+		plt.figure(figsize=(10, 4))
+		plt.plot(t, waveform, label='Waveform', alpha=0.6)
+		plt.axvline(start_time, color='g', linestyle='--', label='Depol')
+		plt.axvline(end_time, color='r', linestyle='--', label='Repol')
+		plt.plot(
+			[dt * (idx1 - half_window), dt * (idx1 + half_window)],
+			[waveform[idx1 - half_window], waveform[idx1 + half_window]],
+			'b', linewidth=2, label='Slope 1'
+		)
+		plt.plot(
+			[dt * (idx2 - half_window), dt * (idx2 + half_window)],
+			[waveform[idx2 - half_window], waveform[idx2 + half_window]],
+			'b', linewidth=2, label='Slope 2'
+		)
+		plt.title("Waveform Slopes via get_burst_duration")
+		plt.xlabel("Time (ms)")
+		plt.ylabel("Amplitude")
+		plt.legend()
+		plt.tight_layout()
+		plt.show()
+
+	return slope1, slope2
