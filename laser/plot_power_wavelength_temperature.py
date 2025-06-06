@@ -24,7 +24,7 @@ def plot_parameter_metrics(df_metrics, powers, wavelengths, temperatures, trial_
         'wavelength': wavelengths,
         'temperature': temperatures,
     }
-
+    #TODO refractor
     # --- Plot 1: boxplots per metric, grouped by parameter values ---
     for metric in metrics:
         fig, axs = plt.subplots(1, 3, figsize=(18, 5), sharey=True)
@@ -109,7 +109,7 @@ def plot_parameter_metrics(df_metrics, powers, wavelengths, temperatures, trial_
 
         x = trial_numbers
         
-        # Plot power on left y-axis
+                # Plot power on left y-axis (unchanged)
         color1 = 'tab:blue'
         ax1.set_xlabel('Trial Number')
         ax1.set_ylabel('Power', color=color1)
@@ -117,27 +117,69 @@ def plot_parameter_metrics(df_metrics, powers, wavelengths, temperatures, trial_
         ax1.tick_params(axis='y', labelcolor=color1)
         ax1.grid(True)
 
-        # Plot wavelength on right y-axis
+        # Plot METRIC on right y-axis (previously wavelength)
         ax2 = ax1.twinx()
         color2 = 'tab:green'
-        ax2.set_ylabel('Wavelength', color=color2)
-        ax2.scatter(x, param_values['wavelength'], color=color2, label='Wavelength', marker='^')
+        ax2.set_ylabel(metric, color=color2)  # Now showing metric name
+        ax2.scatter(x, means, color=color2, label=metric, marker='^')  # Using metric values
         ax2.tick_params(axis='y', labelcolor=color2)
 
-        # Optional: plot temperature on third axis? matplotlib does not support triple y-axis well, so skip here
-
-        # Plot mean metric values on bottom x axis, for clarity plot as a line on secondary x axis
+        # Plot mean WAVELENGTH values on bottom x-axis (previously metric)
         ax3 = ax1.twiny()
         color3 = 'tab:red'
         ax3.set_xlim(ax1.get_xlim())
         ax3.set_xticks(x)
-        ax3.set_xticklabels([f"{m:.2f}" for m in means], rotation=45)
-        ax3.set_xlabel(f'Mean {metric} per Trial', color=color3)
+        ax3.set_xticklabels([f"{w:.2f}" for w in wavelengths], rotation=45)  # Now showing wavelength means
+        ax3.set_xlabel('Wavelength per Trial', color=color3)
         ax3.tick_params(axis='x', labelcolor=color3)
 
         plt.tight_layout()
         print("Saving fig", f"{save_prefix}_parameters_scatter_{metric}.png")
         fig.savefig(f"{save_prefix}_parameters_scatter_{metric}.png",format='png', dpi=150)
+        # plt.show()
+
+        
+    # --- Plot 3: TEMPERATURE mean metric values per trial vs parameters with dual y-axis ---
+    for metric in metrics:
+        fig, ax1 = plt.subplots(figsize=(8, 6))
+        fig.suptitle(f"Metric: {metric} mean vs parameters")
+
+        # Get means per trial for selected columns
+        means = []
+        for col in selected_cols:
+            vals = df_metrics.loc[metric, col]
+            vals_flat = vals if isinstance(vals, (list, np.ndarray)) else [vals]
+            means.append(np.nanmean(vals_flat))
+
+        x = trial_numbers
+        
+                # Plot power on left y-axis (unchanged)
+        color1 = 'tab:blue'
+        ax1.set_xlabel('Trial Number')
+        ax1.set_ylabel('Temperature', color=color1)
+        ax1.scatter(x, param_values['temperature'], color=color1, label='Temperature', marker='o')
+        ax1.tick_params(axis='y', labelcolor=color1)
+        ax1.grid(True)
+
+        # Plot METRIC on right y-axis (previously wavelength)
+        ax2 = ax1.twinx()
+        color2 = 'tab:green'
+        ax2.set_ylabel(metric, color=color2)  # Now showing metric name
+        ax2.scatter(x, means, color=color2, label=metric, marker='^')  # Using metric values
+        ax2.tick_params(axis='y', labelcolor=color2)
+
+        # Plot mean WAVELENGTH values on bottom x-axis (previously metric)
+        ax3 = ax1.twiny()
+        color3 = 'tab:red'
+        ax3.set_xlim(ax1.get_xlim())
+        ax3.set_xticks(x)
+        ax3.set_xticklabels([f"{w:.2f}" for w in wavelengths], rotation=45)  # Now showing wavelength means
+        ax3.set_xlabel('Wavelength per Trial', color=color3)
+        ax3.tick_params(axis='x', labelcolor=color3)
+
+        plt.tight_layout()
+        print("Saving fig", f"{save_prefix}_parameters_scatter-temperature_{metric}.png")
+        fig.savefig(f"{save_prefix}_parameters_scatter-temperature_{metric}.png",format='png', dpi=150)
         # plt.show()
 
 
