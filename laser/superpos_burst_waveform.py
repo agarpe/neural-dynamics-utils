@@ -163,7 +163,7 @@ def get_metrics(waveforms, dt):
     d_metrics['slope_dep'], d_metrics['slope_rep'] = get_metric_values(waveforms, laser_utils.get_burst_slope, dt, thres_val=0.5)
     return d_metrics
 
-def plot_metrics(df_metrics, selected_trials=None):
+def plot_metrics(df_metrics, save_prefix, selected_trials=None):
 
     # Plot boxplots
     # magnitudes = ['ms', 'mV', 'mV/ms', 'mV/ms']
@@ -179,51 +179,44 @@ def plot_metrics(df_metrics, selected_trials=None):
     # ---------- Plot 1: un subplot por métrica ----------
     fig, axs = plt.subplots(len(metrics), 1, figsize=(12, 10), sharex=True)
 
+    # Define the color cycle
+    if selected_trials is None:
+        colors = ['cornflowerblue', 'crimson', 'yellowgreen']
+    else:
+        # Get default matplotlib color cycle
+        prop_cycle = plt.rcParams['axes.prop_cycle']
+        colors = prop_cycle.by_key()['color']
+
     for i, metric in enumerate(metrics):
         ax = axs[i]
-
+        
         data = [df_metrics.loc[metric, col] for col in trials]
-
-        ax.boxplot(data, positions=range(len(trials)), widths=0.5)
-
-        # Puntos con jitter
+        
+        # Create boxplot with specified colors
+        boxplot = ax.boxplot(data, positions=range(len(trials)), widths=0.5, patch_artist=True)
+        
+        # Set colors for boxes
+        for j, box in enumerate(boxplot['boxes']):
+            box.set_facecolor(colors[j % len(colors)])
+        
+        # Puntos con jitter with matching colors
         for j, points in enumerate(data):
             jitter = np.random.normal(0, 0.05, size=len(points))
-            ax.plot(np.full(len(points), j) + jitter, points, 'o', alpha=0.4, markersize=4)
-
+            ax.plot(np.full(len(points), j) + jitter, points, 'o', alpha=0.4, 
+                    markersize=4, color=colors[j % len(colors)])
+        
         ax.set_title(metric)
         ax.set_xticks(range(len(trials)))
         ax.set_xticklabels(trials, rotation=45)
 
-    fig.suptitle("Plot 1: Métricas por trial seleccionado", fontsize=16)
+    fig.suptitle("Metrics per trial", fontsize=16)
     fig.tight_layout(rect=[0, 0, 1, 0.95])
-    plt.show()
 
-    # fig, axs = plt.subplots(1, len(trials), figsize=(4 * len(trials), 6), sharey=True)
-
-    # for i, trial in enumerate(trials):
-    #     ax = axs[i]
-    #     data = [df_metrics.loc[metric, trial] for metric in metrics]
-        
-    #     # Boxplot
-    #     ax.boxplot(data, positions=range(len(metrics)), widths=0.5)
-        
-    #     # Scatter points (jittered)
-    #     for j, points in enumerate(data):
-    #         jitter = np.random.normal(0, 0.05, size=len(points))
-    #         ax.plot(np.full_like(points, j) + jitter, points, 'o', alpha=0.4, markersize=4)
-
-    #     ax.set_title(trial)
-    #     ax.set_xticks(range(len(metrics)))
-    #     ax.set_xticklabels(metrics, rotation=45)
-
-    #     fig.tight_layout()
-    #     plt.show()
-
-        # print("Saving metrics at: ", img_name[:-4]+'metrics_boxplot.png')
-        # print("Saving metrics at: ", img_name[:-4]+'metrics_boxplot.pdf')
-
-        # plt.savefig(img_name[:-4] + 'metrics_boxplot.pdf', format='pdf')
+    if selected_trials is None:
+        fig.savefig(f"{save_prefix}_metrics_all.png", format='png', dpi=200)
+    else:
+        fig.savefig(f"{save_prefix}_metrics_lasers.png", format='png', dpi=200)
+    # plt.show()
 
 RED = '\033[91m'
 RESET = '\033[0m'
@@ -253,7 +246,7 @@ def main(config_file_path, data_frame_path):
 
 
     # # Plot waveforms for triplets
-    # plot_triplet_waveforms(df, triplets, column_id, title, save_prefix, dt, vscale=1000)
+    plot_triplet_waveforms(df, triplets, column_id, title, save_prefix, dt, vscale=1000)
     # plt.show()
 
     try:
@@ -269,12 +262,12 @@ def main(config_file_path, data_frame_path):
 
     print(df_metrics.columns)
 
-    plot_metrics(df_metrics)
+    plot_metrics(df_metrics, save_prefix)
     
     excluded = [col for col in df_metrics.columns if not any(k in col for k in ['control', 'recovery'])]
     print(excluded)
 
-    plot_metrics(df_metrics, excluded)
+    plot_metrics(df_metrics, save_prefix, excluded)
 
 
 if __name__ == "__main__":
