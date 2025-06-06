@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 colors= ['cornflowerblue','crimson','yellowgreen']
 
 d_metrics = {}
-def plot_triplet_waveforms(df, triplets, column_id, title, save_prefix):
+def plot_triplet_waveforms(df, triplets, column_id, title, save_prefix, dt, vscale):
     """
     Plot waveforms for trial triplets with their average traces.
 
@@ -43,21 +43,34 @@ def plot_triplet_waveforms(df, triplets, column_id, title, save_prefix):
             label = df.loc[df['Trial'] == trial, 'Type'].values[0] if j == 1 else 'control' if j == 0 else 'recovery'
 
             try:
+                # Remove possible zero padded
+                waveforms = np.array(padded_to_min(waveforms))
+                # Scale waveforms
+                waveforms *= vscale
                 # Align waveforms by subtracting minimum value
                 aligned_waveforms = np.array([w - min(w) for w in waveforms])
+                # getting average
                 w_mean = np.mean(aligned_waveforms, axis=0)
             except Exception as e:
                 print(f"Error in trial {trial}: {e}")
                 continue
 
+
+            print("getting time")
+            w_time = np.arange(len(waveforms[0])) * dt
+
+            print("plotting")
             # Plot all aligned waveforms and their mean
-            ax[i].plot(aligned_waveforms.T, color=colors[j], label=label, linewidth=0.01)
-            ax[i].plot(w_mean.T, color=colors[j], label=label)
-            ax_mean[i].plot(w_mean.T, color=colors[j], label=label)
+            ax[i].plot(w_time, aligned_waveforms.T, color=colors[j], label=label, linewidth=0.01)
+            ax[i].plot(w_time, w_mean.T, color=colors[j], label=label)
+            ax_mean[i].plot(w_time, w_mean.T, color=colors[j], label=label)
 
             if j == 1:
                 ax[i].set_title(label)
                 ax_mean[i].set_title(label)
+            
+            ax[i].set_ylabel("mV")
+            ax[i].set_xlabel("ms")
 
     fig.suptitle(title)
     fig_mean.suptitle(title)
@@ -78,6 +91,16 @@ def clean_padded(waveforms):
         cleaned.append(waveform)
     return cleaned
 
+def padded_to_min(waveforms):
+    cleaned = []
+    for waveform in waveforms:
+        i = len(waveform) - 1
+        min = np.min(waveform)
+        while i > 0 and waveform[i] == 0:
+            waveform[i] = min
+            i -= 1
+        cleaned.append(waveform)
+    return cleaned
 
 def analyze_metrics(df, triplets, column_id, dt, vscale):
     labels = []
@@ -143,7 +166,9 @@ def get_metric_values(waveforms, fun, dt, thres_val):
     for w in waveforms:
         if w.shape[0] == 0:
             continue
+        # apply lambda function
         result = compute_metric(w)
+
         if isinstance(result, tuple):
             values1.append(result[0])
             values2.append(result[1])
@@ -185,8 +210,10 @@ def main(config_file_path, data_frame_path):
     # # Plot waveforms for triplets
     plot_triplet_waveforms(df, triplets, column_id, title, save_prefix, dt, vscale=1000)
 
-    d_metrics = analyze_metrics(df, triplets, column_id, dt, vscale=1000)
-    # pkl.save(d_metrics, f'{save_prefix}_metrics.pkl')
+    # d_metrics = analyze_metrics(df, triplets, column_id, dt, vscale=1000)
+    # pd.DataFrame(d_metrics)
+
+    # # pkl.save(d_metrics, f'{save_prefix}_metrics.pkl')
     
 
 
