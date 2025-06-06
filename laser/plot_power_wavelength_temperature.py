@@ -164,13 +164,10 @@ def main(config_file_path, data_frame_path):
     
 
     try:
-        df_metrics = pd.read_pickle(f'{save_prefix}_metrics.pkl')
-        print("Warning: Loading metrics from file")
+        df_metrics = pd.read_pickle(data_frame_path)
+        print(f"Warning: Loading metrics dataframe from {data_frame_path}")
     except:
-        print("Warning: metrics file not found, analyzing waveforms...")
-        df_metrics = analyze_metrics(df, triplets, column_id, dt, vscale=1000)
-        print(f"Saving metrics dataframe {save_prefix}_metrics.pkl")
-        df_metrics.to_pickle(f'{save_prefix}_metrics.pkl')
+        print("Warning: metrics file not found, run superpos_burst_waveform first...")
 
     print(df_metrics.columns)
 
@@ -193,7 +190,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "dataframe_path",
         type=str,
-        help="Path to the dataframe extended."
+        help="Path to the metrics dataframe."
     )
 
     args = parser.parse_args()
