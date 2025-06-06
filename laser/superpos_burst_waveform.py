@@ -44,9 +44,12 @@ def plot_triplet_waveforms(df, triplets, column_id, title, save_prefix, dt, vsca
 
             try:
                 # Remove possible zero padded
+                print("Fixing pad and v-scaling")
                 waveforms = np.array(padded_to_min(waveforms))
                 # Scale waveforms
                 waveforms *= vscale
+
+                print("Aligning and averaging")
                 # Align waveforms by subtracting minimum value
                 aligned_waveforms = np.array([w - min(w) for w in waveforms])
                 # getting average
@@ -56,10 +59,10 @@ def plot_triplet_waveforms(df, triplets, column_id, title, save_prefix, dt, vsca
                 continue
 
 
-            print("getting time")
+            print("Getting time")
             w_time = np.arange(len(waveforms[0])) * dt
 
-            print("plotting")
+            print("Plotting")
             # Plot all aligned waveforms and their mean
             ax[i].plot(w_time, aligned_waveforms.T, color=colors[j], label=label, linewidth=0.01)
             ax[i].plot(w_time, w_mean.T, color=colors[j], label=label)
