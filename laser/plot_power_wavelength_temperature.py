@@ -89,8 +89,8 @@ def plot_parameter_metrics(df_metrics, powers, wavelengths, temperatures, trial_
             ax.legend(fontsize=8, loc='best')
 
         plt.tight_layout(rect=[0, 0, 1, 0.95])
-        print("Saving fig", f"{save_prefix}_parameters_{param_name}.pdf")
-        plt.savefig(f"{save_prefix}_parameters_{param_name}.pdf",format='pdf')
+        print("Saving fig", f"{save_prefix}_parameters_{metric}.png")
+        fig.savefig(f"{save_prefix}_parameters_{metric}.png",format='png', dpi=150)
         # plt.show()
 
 
@@ -136,8 +136,8 @@ def plot_parameter_metrics(df_metrics, powers, wavelengths, temperatures, trial_
         ax3.tick_params(axis='x', labelcolor=color3)
 
         plt.tight_layout()
-        print("Saving fig", f"{save_prefix}_parameters_scatter.pdf")
-        plt.savefig(f"{save_prefix}_parameters_scatter.pdf",format='pdf')
+        print("Saving fig", f"{save_prefix}_parameters_scatter_{metric}.png")
+        fig.savefig(f"{save_prefix}_parameters_scatter_{metric}.png",format='png', dpi=150)
         # plt.show()
 
 
