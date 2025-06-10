@@ -121,18 +121,19 @@ def add_isi_metrics(df_metrics, df_original, triplets, column_id):
                 continue
             
             label = df_original.loc[df_original['Trial'] == trial, 'Type'].values[0] if j == 1 else f'control{i}' if j == 0 else f'recovery{i}'
-            
+
+
+            # Compute trial IBI
+            burst_end = [burst[1] for burst in burst_times[:-1]]
+            burst_ini = [burst[0] for burst in burst_times[1:]]
+
+            ibis = [ini-end for ini, end in zip(burst_end, burst_ini)]
+
             for burst in burst_times:
                 spikes = peaks_times[np.where(peaks_times > burst[0])]
                 spikes = spikes[np.where(spikes < burst[1])]
                 isis.append(np.mean(np.diff(spikes)))
                 n_spikes.append(len(spikes))
-                
-                # TODO include differently, innecesary repetition
-                burst_end = [burst[1] for burst in bursts[:-1]]
-                burst_ini = [burst[1] for burst in bursts[1:]]
-
-                ibis.append(burst_end-burst_ini)
                 
             if len(peaks_times) > 1:
                 new_rows['isis'][label] = isis
