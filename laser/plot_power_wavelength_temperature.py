@@ -166,7 +166,7 @@ def plot_parameter_metrics(df_metrics, powers, wavelengths, temperatures, trial_
             ax.grid(True)
 
             cbar = plt.colorbar(scatter, ax=ax)
-            cbar.set_label(f'Change from control {metric}')
+            cbar.set_label(f'{metric}: abs(laser - mean(control)')
 
             plt.tight_layout()
             save_path = f"{save_prefix}_heatmap_{metric}.png"
@@ -252,7 +252,7 @@ def plot_parameter_metrics_heatmap(df_metrics, powers, wavelengths, temperatures
             powers_list,
             wavelengths_list,
             c=means,
-            cmap='viridis',
+            cmap='hot_r',
             s=100,
             edgecolors='k'
         )
