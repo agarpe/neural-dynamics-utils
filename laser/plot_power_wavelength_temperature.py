@@ -39,20 +39,22 @@ def plot_parameter_metrics_heatmap(df_metrics, powers, wavelengths, temperatures
             means.append(np.nanmean(vals_flat))
 
         scatter = ax.scatter(
-            powers_list,
             wavelengths_list,
-            c=means,
+            means,
+            c=powers_list,
             cmap='hot_r',
             s=100,
             edgecolors='k'
         )
 
-        ax.set_xlabel(parameter)
-        ax.set_ylabel('Wavelength')
+        metric_label = f'{metric}: abs(laser - mean(control)'
+
+        ax.set_xlabel('Wavelength')
+        ax.set_ylabel(metric_label)
         ax.grid(True)
 
         cbar = plt.colorbar(scatter, ax=ax)
-        cbar.set_label(f'Change from control {metric}')
+        cbar.set_label(parameter)
 
         plt.tight_layout()
         save_path = f"{save_prefix}_{parameter}_heatmap_{metric}.png"
