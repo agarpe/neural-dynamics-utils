@@ -28,7 +28,9 @@ def padded_to_min(waveforms):
         cleaned.append(waveform)
     return cleaned
 
+
 def analyze_metrics(df, triplets, column_id, dt, vscale):
+    d_metrics = {}
     labels = []
     for i, triplet in enumerate(triplets):
         for j, trial in enumerate(triplet):
@@ -57,7 +59,10 @@ def analyze_metrics(df, triplets, column_id, dt, vscale):
 
     df_metrics = pd.DataFrame(d_metrics)
 
+    df_metrics = add_isi_metrics(df_metrics, df, triplets, column_id)
+
     return df_metrics
+
 
 def get_metric_values(waveforms, fun, dt, thres_val):
     compute_metric = lambda w: fun(w, dt, thres_val=thres_val)
@@ -86,7 +91,57 @@ def get_metrics(waveforms, dt):
     d_metrics['duration'], _ = get_metric_values(waveforms, laser_utils.get_burst_duration_value, dt, thres_val=0.5)
     d_metrics['amplitude'], _ = get_metric_values(waveforms, laser_utils.get_spike_amplitude, dt, thres_val=0.5)
     d_metrics['slope_dep'], d_metrics['slope_rep'] = get_metric_values(waveforms, laser_utils.get_burst_slope, dt, thres_val=0.5)
+    
     return d_metrics
+
+
+def add_isi_metrics(df_metrics, df_original, triplets, column_id):
+    # Crear un diccionario para almacenar los nuevos datos por fila
+    new_rows = {
+        'isis': {},
+        'n_spikes': {}
+    }
+    
+    for i, triplet in enumerate(triplets):
+        for j, trial in enumerate(triplet):
+            isis = []
+            n_spikes = []
+            trial = int(trial)
+            try:
+                peaks_times = df_original.loc[(df_original['Trial'] == trial) & 
+                                           (df_original['Column_id'] == column_id),
+                                           'Peaks_Times'].values[0]
+                burst_times = df_original.loc[(df_original['Trial'] == trial) & 
+                                           (df_original['Column_id'] == column_id),
+                                           'Bursts_Times'].values[0]
+            except IndexError:
+                print(f"Trial {trial} not found for ISI calculation.")
+                continue
+            
+            label = df_original.loc[df_original['Trial'] == trial, 'Type'].values[0] if j == 1 else f'control{i}' if j == 0 else f'recovery{i}'
+            
+            for burst in burst_times:
+                spikes = peaks_times[np.where(peaks_times > burst[0])]
+                spikes = spikes[np.where(spikes < burst[1])]
+                isis.append(np.mean(np.diff(spikes)))
+                n_spikes.append(len(spikes))
+            
+            if len(peaks_times) > 1:
+                new_rows['isis'][label] = isis
+                new_rows['n_spikes'][label] = n_spikes
+            else:
+                new_rows['isis'][label] = []
+                new_rows['n_spikes'][label] = 0
+    
+    # Crear nuevos DataFrames para cada métrica y concatenarlos verticalmente
+    df_isi = pd.DataFrame([new_rows['isis']], index=['isis'])
+    df_n_spikes = pd.DataFrame([new_rows['n_spikes']], index=['n_spikes'])
+    print(df_metrics)
+    print(df_isi)
+    print(df_n_spikes)
+    # Concatenar con el DataFrame original
+    return pd.concat([df_metrics, df_isi, df_n_spikes])
+
 
 def plot_metrics(df_metrics, save_prefix, selected_trials=None):
 
@@ -141,10 +196,11 @@ def plot_metrics(df_metrics, save_prefix, selected_trials=None):
         fig.savefig(f"{save_prefix}_metrics_all.png", format='png', dpi=200)
     else:
         fig.savefig(f"{save_prefix}_metrics_lasers.png", format='png', dpi=200)
-    # plt.show()
+    plt.show()
 
 RED = '\033[91m'
 RESET = '\033[0m'
+   
 
 def main(config_file_path, data_frame_path):
     config = configparser.ConfigParser()
@@ -169,21 +225,26 @@ def main(config_file_path, data_frame_path):
     time_step = df['Time'].iloc[0]  # e.g., 20000 Hz → 1/20000 s
     dt = time_step[1]
 
-
-    # # Plot waveforms for triplets
-    plot_triplet_waveforms(df, triplets, column_id, title, save_prefix, dt, vscale=1000)
-    # plt.show()
+    file_name = f'{save_prefix}_waveform_metrics.pkl'
 
     try:
-        if compute_metrics:
-            raise
-        df_metrics = pd.read_pickle(f'{save_prefix}_metrics.pkl')
-        print(f"{RED}{"Warning: Loading metrics from file"}{RESET}")
-    except:
-        print(f"{RED}{"Warning: metrics file not found, analyzing waveforms..."}{RESET}")
+        df_metrics = pd.read_pickle(f'{file_name}')
+        print(f"Warning: Metrics file already exists")
+
+        print(df_metrics)
+
+        overwrite = input("Do you want to overwrite it? (y/n): ").lower()
+        if overwrite == 'y':
+            print(f"Warning: Recomputing metrics and overwriting file")
+            df_metrics = analyze_metrics(df, triplets, column_id, dt, vscale=1000)
+            df_metrics.to_pickle(f'{file_name}')
+        else:
+            exit()
+    except FileNotFoundError:
+        print(f"Warning: Metrics file not found, analyzing waveforms...")
         df_metrics = analyze_metrics(df, triplets, column_id, dt, vscale=1000)
-        print(f"Saving metrics dataframe {save_prefix}_metrics.pkl")
-        df_metrics.to_pickle(f'{save_prefix}_metrics.pkl')
+        print(f"Saving metrics dataframe {file_name}")
+        df_metrics.to_pickle(f'{file_name}')
 
     print(df_metrics.columns)
 
