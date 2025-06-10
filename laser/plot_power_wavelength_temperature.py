@@ -43,7 +43,7 @@ def plot_parameter_metrics_heatmap(df_metrics, powers, wavelengths, temperatures
             edgecolors='k'
         )
 
-        metric_label = f'{metric}: abs(laser - mean(control)'
+        metric_label = f'{metric}: abs(mean(laser) - mean(control)'
 
         ax.set_xlabel('Wavelength')
         ax.set_ylabel(metric_label)
