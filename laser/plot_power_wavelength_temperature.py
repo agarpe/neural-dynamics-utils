@@ -32,15 +32,11 @@ def plot_parameter_metrics_heatmap(df_metrics, powers, wavelengths, temperatures
         powers_list = param_values[parameter]
         wavelengths_list = param_values['wavelength']
 
-        means = []
-        for col in selected_cols:
-            vals = df_metrics.loc[metric, col]
-            vals_flat = vals if isinstance(vals, (list, np.ndarray)) else [vals]
-            means.append(np.nanmean(vals_flat))
+        metrics = df_metrics.loc[metric, selected_cols]
 
         scatter = ax.scatter(
             wavelengths_list,
-            means,
+            metrics,
             c=powers_list,
             cmap='hot_r',
             s=100,
@@ -78,13 +74,13 @@ def get_differences(df_metrics):
         if 'recovery' not in col_stim and 'control' in col_control:
             diff_col_name = f"{col_stim}-diff"
             # Subtract element-wise for each metric
-            # df_diff[diff_col_name] = abs(df_metrics[col_stim].apply(np.nanmean) - df_metrics[col_control].apply(np.nanmean))
+            df_diff[diff_col_name] = abs(df_metrics[col_stim].apply(np.nanmean) - df_metrics[col_control].apply(np.nanmean))
 
             #  For each metric (row), subtract mean of control from each value in stim
-            df_diff[diff_col_name] = df_metrics.apply(
-                lambda row: abs(np.array(row[col_stim]) - np.nanmean(row[col_control])),
-                axis=1
-            )
+            # df_diff[diff_col_name] = df_metrics.apply(
+            #     lambda row: abs(np.array(row[col_stim]) - np.nanmean(row[col_control])),
+            #     axis=1
+            # )
             i += 3  # skip recovery
         else:
             i += 1  # move forward if structure doesn't match
