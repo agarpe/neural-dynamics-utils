@@ -99,13 +99,15 @@ def add_isi_metrics(df_metrics, df_original, triplets, column_id):
     # Crear un diccionario para almacenar los nuevos datos por fila
     new_rows = {
         'isis': {},
-        'n_spikes': {}
+        'n_spikes': {},
+        'ibis': {}
     }
     
     for i, triplet in enumerate(triplets):
         for j, trial in enumerate(triplet):
             isis = []
             n_spikes = []
+            ibis = []
             trial = int(trial)
             try:
                 peaks_times = df_original.loc[(df_original['Trial'] == trial) & 
@@ -125,22 +127,29 @@ def add_isi_metrics(df_metrics, df_original, triplets, column_id):
                 spikes = spikes[np.where(spikes < burst[1])]
                 isis.append(np.mean(np.diff(spikes)))
                 n_spikes.append(len(spikes))
-            
+                
+                # TODO include differently, innecesary repetition
+                burst_end = [burst[1] for burst in bursts[:-1]]
+                burst_ini = [burst[1] for burst in bursts[1:]]
+
+                ibis.append(burst_end-burst_ini)
+                
             if len(peaks_times) > 1:
                 new_rows['isis'][label] = isis
                 new_rows['n_spikes'][label] = n_spikes
+                new_rows['ibis'][label] = ibis
             else:
                 new_rows['isis'][label] = []
                 new_rows['n_spikes'][label] = 0
+                new_rows['n_spikes'][label] = []
     
     # Crear nuevos DataFrames para cada métrica y concatenarlos verticalmente
     df_isi = pd.DataFrame([new_rows['isis']], index=['isis'])
     df_n_spikes = pd.DataFrame([new_rows['n_spikes']], index=['n_spikes'])
-    print(df_metrics)
-    print(df_isi)
-    print(df_n_spikes)
+    df_n_ibis = pd.DataFrame([new_rows['ibis']], index=['ibis'])
+
     # Concatenar con el DataFrame original
-    return pd.concat([df_metrics, df_isi, df_n_spikes])
+    return pd.concat([df_metrics, df_isi, df_n_spikes, df_n_ibis])
 
 
 def plot_metrics(df_metrics, save_prefix, selected_trials=None):
