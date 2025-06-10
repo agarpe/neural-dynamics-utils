@@ -16,6 +16,15 @@ If you use this code, please cite the corresponding articles:
 
 
 # How to use
+
+Install conda environment to avoid dependencies error:
+
+	conda env create -f neural-dynamics-utils.yaml
+
+	conda activate neural-dynamics-utils
+
+Ready to go!
+
 ## Waveform superposition and analysis
 1. Create a ini file as the one in data-test/STG
 2. Detect spikes/bursts.
