@@ -7,7 +7,7 @@ import configparser
 import pickle as pkl
 import matplotlib.pyplot as plt
 
-def plot_parameter_metrics_heatmap(df_metrics, powers, wavelengths, temperatures, trial_numbers, save_prefix, parameter='temperature'):
+def plot_parameter_metrics_heatmap(df_metrics, param_values, trial_numbers, save_prefix, x_label, map_label):
     """
     df_metrics: DataFrame with rows=metrics, cols=columns like control0, param, recovery0 ...
     config: dict with keys 'powers', 'wavelength', 'temperature' as space-separated strings
@@ -18,26 +18,20 @@ def plot_parameter_metrics_heatmap(df_metrics, powers, wavelengths, temperatures
     
     selected_cols = [col for col in df_metrics.columns if any(str(t) in col for t in trial_numbers) and not col.startswith('control') and not col.startswith('recovery')]
 
-    # Dictionary of parameter values for selected trials
-    param_values = {
-        'power': powers,
-        'wavelength': wavelengths,
-        'temperature': temperatures,
-    }
     # --- Plot: color-coded mean of metric vs (power, wavelength) ---
     for metric in metrics:
         fig, ax = plt.subplots(figsize=(8, 6))
-        fig.suptitle(f"Mean {metric} vs {parameter} and Wavelength")
+        fig.suptitle(f"Mean {metric} vs {x_label} and {map_label}")
 
-        powers_list = param_values[parameter]
-        wavelengths_list = param_values['wavelength']
+        parameter_list = param_values[map_label]
+        wavelengths_list = param_values[x_label]
 
         metrics = df_metrics.loc[metric, selected_cols]
 
         scatter = ax.scatter(
             wavelengths_list,
             metrics,
-            c=powers_list,
+            c=parameter_list,
             cmap='hot_r',
             s=100,
             edgecolors='k'
@@ -45,15 +39,15 @@ def plot_parameter_metrics_heatmap(df_metrics, powers, wavelengths, temperatures
 
         metric_label = f'{metric}: abs(mean(laser) - mean(control)'
 
-        ax.set_xlabel('Wavelength')
+        ax.set_xlabel(x_label)
         ax.set_ylabel(metric_label)
         ax.grid(True)
 
         cbar = plt.colorbar(scatter, ax=ax)
-        cbar.set_label(parameter)
+        cbar.set_label(map_label)
 
         plt.tight_layout()
-        save_path = f"{save_prefix}_{parameter}_heatmap_{metric}.png"
+        save_path = f"{save_prefix}_{map_label}_heatmap_{metric}.png"
         print("Saving fig", save_path)
         fig.savefig(save_path, format='png', dpi=150)
         # plt.show()
@@ -102,15 +96,14 @@ def main(config_file_path, data_frame_path):
     powers = [float(power) for power in config['Power-wavelengths']['powers'].split()]
     wavelengths = [float(wl) for wl in config['Power-wavelengths']['wavelengths'].split()]
     temperatures = [float(temp) for temp in config['Power-wavelengths']['temperatures'].split()]
+    locations = config['Power-wavelengths']['locations'].split()
     
-
     # Extract a meaningful title from the file name
     title = data_frame_path[data_frame_path.rfind('/')+1:
                             data_frame_path.rfind('_extended_data.pkl')]
     
     save_prefix = config_file_path[:-4]
     
-
     try:
         df_metrics = pd.read_pickle(data_frame_path)
         print(f"Warning: Loading metrics dataframe from {data_frame_path}")
@@ -121,8 +114,18 @@ def main(config_file_path, data_frame_path):
 
     df_diff = get_differences(df_metrics)
 
-    plot_parameter_metrics_heatmap(df_diff, powers, wavelengths, temperatures, trials, save_prefix, parameter='power')
-    plot_parameter_metrics_heatmap(df_diff, powers, wavelengths, temperatures, trials, save_prefix, parameter='temperature')
+    # Dictionary of parameter values for selected trials
+    param_values = {
+        'power': powers,
+        'wavelength': wavelengths,
+        'temperature': temperatures,
+        'locations': locations
+    }
+
+    plot_parameter_metrics_heatmap(df_diff, param_values, trials, save_prefix, x_label='wavelength', map_label='power')
+    plot_parameter_metrics_heatmap(df_diff, param_values, trials, save_prefix, x_label='wavelength', map_label='temperature')
+    if locations != []:
+        plot_parameter_metrics_heatmap(df_diff, param_values, trials, save_prefix, x_label='locations', map_label='temperature')
 
 
 
