@@ -52,6 +52,52 @@ def plot_parameter_metrics_heatmap(df_metrics, param_values, trial_numbers, save
         fig.savefig(save_path, format='png', dpi=150)
         # plt.show()
 
+def plot_parameter_metrics_heatmapv2(df_metrics, param_values, trial_numbers, save_prefix, x_label, map_label):
+    """
+    df_metrics: DataFrame with rows=metrics, cols=columns like control0, param, recovery0 ...
+    config: dict with keys 'powers', 'wavelength', 'temperature' as space-separated strings
+    trial_numbers: list of ints, e.g. [2,4,6,8,10,12]
+    """
+    metrics = df_metrics.index.tolist()
+    columns = df_metrics.columns.tolist()
+    
+    selected_cols = [col for col in df_metrics.columns if any(str(t) in col for t in trial_numbers) and not col.startswith('control') and not col.startswith('recovery')]
+
+    # --- Plot: color-coded mean of metric vs (power, wavelength) ---
+    for metric in metrics:
+        fig, ax = plt.subplots(figsize=(8, 6))
+        fig.suptitle(f"Mean {metric} vs {x_label} and {map_label}")
+
+        parameter_list = param_values[map_label]
+        wavelengths_list = param_values[x_label]
+
+        metrics = df_metrics.loc[metric, selected_cols]
+
+        scatter = ax.scatter(
+            wavelengths_list,
+            parameter_list,
+            c=metrics,
+            cmap='hot_r',
+            s=100,
+            edgecolors='k'
+        )
+
+        metric_label = f'{metric}: abs(mean(laser) - mean(control)'
+
+        ax.set_xlabel(x_label)
+        ax.set_ylabel(map_label)
+        ax.grid(True)
+
+        cbar = plt.colorbar(scatter, ax=ax)
+        cbar.set_label(metric_label)
+
+        plt.tight_layout()
+        save_path = f"{save_prefix}_{map_label}_heatmap_{metric}_v2.png"
+        print("Saving fig", save_path)
+        fig.savefig(save_path, format='png', dpi=150)
+        # plt.show()
+
+
 
 def get_differences(df_metrics):
     # Prepare the new DataFrame to hold the differences
@@ -124,6 +170,11 @@ def main(config_file_path, data_frame_path):
 
     plot_parameter_metrics_heatmap(df_diff, param_values, trials, save_prefix, x_label='wavelength', map_label='power')
     plot_parameter_metrics_heatmap(df_diff, param_values, trials, save_prefix, x_label='wavelength', map_label='temperature')
+
+
+    plot_parameter_metrics_heatmapv2(df_diff, param_values, trials, save_prefix, x_label='wavelength', map_label='power')
+    plot_parameter_metrics_heatmapv2(df_diff, param_values, trials, save_prefix, x_label='wavelength', map_label='temperature')
+
     if locations != []:
         plot_parameter_metrics_heatmap(df_diff, param_values, trials, save_prefix, x_label='locations', map_label='temperature')
 
