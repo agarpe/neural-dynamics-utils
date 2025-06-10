@@ -47,6 +47,10 @@ Ready to go!
 
 	Warning: First time this script is called it will analyze and generate waveform metrics dataframe, file-extension_metrics.pkl. Next time you run the script it will load the dataframe if found, unless you force it with config parameter "compute_metrics"
 
+	The resulting metrics dataframe has the following structure:
+	
+	
+
 4. Compare metrics with laser parameters by running plot_power_wavelength_temperature.py with *_metrics.pkl file
 
 		 python laser/plot_power_wavelength_temperature.py data-test/Exp1.ini ../data/data-test/Exp1_metrics.pkl
