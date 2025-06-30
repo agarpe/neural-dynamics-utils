@@ -399,6 +399,8 @@ def main(h5_file_path, config_file_path):
                 max_length = max(w.shape[0] for w in burst_waveforms)
 
                 burst_waveforms_padded = np.array([np.pad(w, (0, max_length - w.shape[0]), mode='constant') if w.shape[0] < max_length else w[:max_length] for w in burst_waveforms])
+            else:
+                burst_waveforms_padded = np.array([])
             
             # complete dataframe with all information
             extended_data.append({
