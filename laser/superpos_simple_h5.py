@@ -5,8 +5,11 @@ import numpy as np
 import sys
 import argparse 
 from scipy.signal import find_peaks
-# colors = ['teal', 'lightsalmon', 'darkseagreen','maroon','teal', 'brown', 'blue', 'green','maroon']
-# colors=['b', 'r', 'g', 'brown', 'teal', 'maroon', 'lightsalmon', 'darkseagreen', 'k']
+
+colors=['b', 'r', 'g', 'k']
+
+colors = plt.cm.tab20(np.linspace(0,1,10))
+
 
 ap = argparse.ArgumentParser()
 
@@ -34,6 +37,7 @@ if args['trials'] is not None:
 else:
 	trials = args['trials']
 
+
 #Open file 
 try:
 	f = h5py.File(filename, 'r')		
@@ -42,23 +46,18 @@ except:
 	exit()
 
 
-w_l= 3500
-w_r= 3500
+w_l= 300
+w_r= 350
 
-colors = plt.cm.coolwarm(np.linspace(0,2,len(trials)))
-# colors=['b', 'r', 'g', 'brown', 'teal', 'maroon', 'lightsalmon', 'darkseagreen', 'k']
 
 n_trial=1
 while 1:
 	
 	trial = "Trial"+str(n_trial)
 	struct = '/'+trial+'/Synchronous Data/Channel Data'
-	print(n_trial)
+
 	try:
 		dset = f[struct]
-		if trials is not None and n_trial not in trials:
-			n_trial+=1
-			continue
 		data = dset[()]
 	except KeyError as e:
 		if 'Channel Data' in e.args[0]:
@@ -69,13 +68,15 @@ while 1:
 			print("No trials left. %d files generated"%n_trial)
 			break
 
+	if trials is not None and n_trial not in trials:
+		n_trial+=1
+		continue
 
 	print("Ploting trial", n_trial)
 
 	try:
 		signal = data[:,columns]
 		signal = signal.reshape(signal.shape[0])
-		shutter = data[:,1].reshape(signal.shape[0])
 	except Exception as e:
 		print("Warning: ", e.args)
 		signal = np.array([])
@@ -83,27 +84,21 @@ while 1:
 	amp = np.max(signal) - np.min(signal)
 	max_height = amp - amp*0.05
 	max_height = np.max(signal) - amp*0.05
-	# max_height = 0.04
 	# print(amp, max_height)
 
 	spikes_t, spikes_v = find_peaks(signal, height=max_height, distance=100)
 
-	# plt.plot(shutter)
-	# plt.show()
 	# plt.figure()
-	# plt.plot(shutter/100)
-
 	# plt.plot(signal)
 	# plt.plot(spikes_t, signal[spikes_t], 'x')
 	# plt.show()
-	# print(spikes_t)
+	print(len(spikes_t))
 
 	waveforms = np.array([signal[spike-w_l:spike+w_r] for spike in spikes_t[1:-1]])
+	waveforms -= np.mean(waveforms)
 
-	waveforms = np.array([w-w[0] for w in waveforms])
-
-	plt.plot(waveforms.T, color=colors[(trials.index(n_trial))%(len(trials))], alpha=0.2, linewidth=0.4)
-	plt.plot(np.mean(waveforms, axis=0),linewidth=3, color=colors[(trials.index(n_trial))%(len(trials))], label=str(n_trial))
+	plt.plot(waveforms.T, color=colors[trials.index(n_trial)%len(trials)], alpha=0.2, linewidth=0.8)
+	plt.plot(np.mean(waveforms, axis=0),linewidth=3, color=colors[trials.index(n_trial)], label=str(n_trial))
 	plt.legend()
 
 	n_trial+=1
