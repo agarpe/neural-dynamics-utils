@@ -103,66 +103,6 @@ def padded_to_min(waveforms):
         cleaned.append(waveform)
     return cleaned
 
-def analyze_metrics(df, triplets, column_id, dt, vscale):
-    labels = []
-    for i, triplet in enumerate(triplets):
-        for j, trial in enumerate(triplet):
-            trial = int(trial)
-            try:
-                waveforms = df.loc[(df['Trial'] == trial) & 
-                                (df['Column_id'] == column_id),
-                                'Waveforms'].values[0]
-            except IndexError:
-                print(f"Trial {trial} not found.")
-                continue
-    
-            # Assign label for plotting
-            label = df.loc[df['Trial'] == trial, 'Type'].values[0] if j == 1 else 'control%d'%i if j == 0 else 'recovery%d'%i
-            print(label)
-            labels.append(label)
-            try:
-            # clean padded 0 in the end
-            
-                waveforms = clean_padded(waveforms)
-                # include metrics in the dict
-                d_metrics[label] = get_metrics(waveforms*vscale, dt)
-            except Exception as e:
-                print(f"Error in trial {trial}: {e}")
-                continue    
-
-    df_metrics = pd.DataFrame(d_metrics)
-
-    return df_metrics
-
-def get_metric_values(waveforms, fun, dt, thres_val):
-    compute_metric = lambda w: fun(w, dt, thres_val=thres_val)
-
-    values1 = []
-    values2 = []
-    w_time = 0
-
-    for w in waveforms:
-        if w.shape[0] == 0:
-            continue
-        # apply lambda function
-        result = compute_metric(w)
-
-        if isinstance(result, tuple):
-            values1.append(result[0])
-            values2.append(result[1])
-        else:
-            values1.append(result)
-    
-    return values1, values2
-
-
-def get_metrics(waveforms, dt):
-    d_metrics = {}
-    d_metrics['duration'], _ = get_metric_values(waveforms, laser_utils.get_burst_duration_value, dt, thres_val=0.5)
-    d_metrics['amplitude'], _ = get_metric_values(waveforms, laser_utils.get_spike_amplitude, dt, thres_val=0.5)
-    d_metrics['slope_dep'], d_metrics['slope_rep'] = get_metric_values(waveforms, laser_utils.get_burst_slope, dt, thres_val=0.5)
-    return d_metrics
-
 def plot_metrics(df_metrics, save_prefix, selected_trials=None):
 
     # Plot boxplots
@@ -231,7 +171,6 @@ def main(config_file_path, data_frame_path):
     # Parse triplets and column ID from config
     triplets = [triplet.split() for triplet in config['Superposition']['triplets'].split('|')]
     column_id = int(config['Superposition']['column_id'])
-    compute_metrics = config['Superposition']['compute_metrics'].lower() == 'y'
 
     # Extract a meaningful title from the file name
     title = data_frame_path[data_frame_path.rfind('/')+1:
@@ -248,27 +187,6 @@ def main(config_file_path, data_frame_path):
     # # Plot waveforms for triplets
     plot_triplet_waveforms(df, triplets, column_id, title, save_prefix, dt, vscale=1000)
     # plt.show()
-
-    try:
-        if compute_metrics:
-            raise
-        df_metrics = pd.read_pickle(f'{save_prefix}_metrics.pkl')
-        print(f"{RED}{"Warning: Loading metrics from file"}{RESET}")
-    except:
-        print(f"{RED}{"Warning: metrics file not found, analyzing waveforms..."}{RESET}")
-        df_metrics = analyze_metrics(df, triplets, column_id, dt, vscale=1000)
-        print(f"Saving metrics dataframe {save_prefix}_metrics.pkl")
-        df_metrics.to_pickle(f'{save_prefix}_metrics.pkl')
-
-    print(df_metrics.columns)
-
-    plot_metrics(df_metrics, save_prefix)
-    
-    excluded = [col for col in df_metrics.columns if not any(k in col for k in ['control', 'recovery'])]
-    print(excluded)
-
-    plot_metrics(df_metrics, save_prefix, excluded)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process an H5 file and a config file.")
