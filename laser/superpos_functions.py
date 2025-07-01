@@ -547,23 +547,23 @@ def get_spike_duration(spike,dt,tol=2, thres_val=0.5, max_dur = 5, v_scale=1, pl
 	spike = spike[~np.isnan(spike)]
 
 	peaks, properties = find_peaks(spike, prominence=1*v_scale, width=20)
-	print(peaks)
+	# print(peaks)
 
 	#Warning: this may fail for not centered waveforms	
 	if len(peaks)>1: # in case spike has several peaks, gets mid one.
 		mid_peak = np.isclose(len(spike)//2, peaks, atol=10)
 		peaks = peaks[mid_peak]
 	
-	print(peaks)
+	# print(peaks)
 	results_half = peak_widths(spike, peaks, rel_height=thres_val)
 
-	print(results_half)
+	# print(results_half)
 	x=spike
 	if plot:
 		plt.figure()
 		plt.plot(x)
 		plt.hlines(results_half[1][0],results_half[2][0]*dt, results_half[3][0]*dt, color="C2")
-	plt.show()
+		plt.show()
 	try: 
 
 		duration_vals = np.array([results_half[2][0], results_half[3][0]])
