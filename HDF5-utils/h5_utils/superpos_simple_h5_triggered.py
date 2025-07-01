@@ -8,7 +8,7 @@ import os
 
 dt = 0.1  # Sampling rate in ms
 w_l = 300  # Left window
-w_r = 600  # Right window
+w_r = 500  # Right window
 group_colors = {'control': 'cornflowerblue', 'laser': 'firebrick'}
 
 def load_data(filepath):
@@ -28,39 +28,62 @@ def classify_trial(data, key_col):
     except Exception as e:
         print("Error classifying trial:", e)
         return None
-    
-def analyze_windows_within_trial(data, col_signal, key_col, win_size_ms=1000, step_ms=1000):
+
+def analyze_blocks_by_shutter(data, col_signal, key_col, dt, w_l, w_r):
     """
-    Analiza ventanas dentro de un trial y clasifica cada una como 'laser' o 'control'.
+    Analiza bloques completos definidos por el estado del shutter (0 o 1) 
+    y clasifica cada uno como 'laser' o 'control'.
+
+    Parámetros:
+    - data: ndarray de forma (n_samples, n_features)
+    - col_signal: índice de la columna de la señal
+    - key_col: índice de la columna del shutter (0 o 1)
+    - dt: tamaño del paso temporal (en segundos)
+    - w_l, w_r: muestras a izquierda y derecha del pico para extraer forma de onda
     """
     signal = data[:, col_signal] * 1000  # Convertir a mV
     shutter = data[:, key_col]
 
-    win_size = int(win_size_ms / dt)
-    step_size = int(step_ms / dt)
-
     n_samples = len(signal)
     waveforms_by_group = {'laser': [], 'control': []}
 
-    for start in range(0, n_samples - win_size, step_size):
-        end = start + win_size
+    # Detectar cambios de estado en el shutter
+    transitions = np.where(np.diff(shutter.astype(int)) != 0)[0] + 1
+    # Añadir inicio y fin como límites de bloques
+    block_starts = np.concatenate(([0], transitions))
+    block_ends = np.concatenate((transitions, [n_samples]))
+
+    for start, end in zip(block_starts, block_ends):
         win_signal = signal[start:end]
         win_shutter = shutter[start:end]
-
-        group = 'laser' if np.max(win_shutter) > 1 else 'control'
+        # fig, ax = plt.subplots(nrows=2)
+        # ax[0].plot(win_signal)
+        # ax[1].plot(win_shutter)
+        # plt.show()
+        group = 'laser' if np.mean(win_shutter) > 0.5 else 'control'
 
         amp = np.max(win_signal) - np.min(win_signal)
+        if amp < 10:
+            continue
         max_height = np.max(win_signal) - amp * 0.3
-        spikes_t, _ = find_peaks(win_signal, height=max_height, distance=1000)
+        
+        spikes_t, _ = find_peaks(win_signal, height=max_height, distance=200)  # 1 s en muestras
 
-        for spike in spikes_t:
-            if spike - w_l >= 0 and spike + w_r < len(win_signal):
-                waveform = win_signal[spike - w_l:spike + w_r]
-                # waveform -= waveform[0]
-                waveforms_by_group[group].append(waveform)
-        print(len(waveforms_by_group[group]))
+        # fig, ax = plt.subplots(nrows=2)
+        # ax[0].plot(win_signal)
+        # ax[0].plot(spikes_t, np.ones(spikes_t.shape), 'x')
+        # ax[1].plot(win_shutter)
+        # plt.show()
+
+        for spike in spikes_t[1:-1]:
+            waveform = win_signal[max(0, spike - w_l):min(spike + w_r, len(win_signal))]
+            # waveform -= waveform[0]
+            waveforms_by_group[group].append(waveform)
+
+        print(f"{group}: {len(waveforms_by_group[group])} spikes en bloque ({start*dt:.2f}s - {end*dt:.2f}s)")
 
     return waveforms_by_group
+
 
 def get_metric_mean(waveforms, fun):
     values1 = []
@@ -83,22 +106,10 @@ def get_metrics(waveforms):
         'slope_rep': get_metric_mean(waveforms, laser_utils.get_slope)[1]
     }
 
-def plot_trial_waveforms(waveforms, label, group, output_dir=None):
+def plot_trial_waveforms(waveforms, group):
     time = np.arange(waveforms.shape[1]) * dt
-    plt.figure(figsize=(8, 5))
-    plt.title(f"Trial {label} ({group})")
-    plt.plot(time, waveforms.T, color=group_colors[group], alpha=0.4, linewidth=0.4)
-    plt.plot(time, np.mean(waveforms, axis=0), color=group_colors[group], linewidth=1.5, label='Mean waveform')
-    plt.xlabel("ms")
-    plt.ylabel("mV")
-    plt.legend()
-    plt.show()
-    if output_dir:
-        filename = os.path.join(output_dir, f"{label}.png")
-        plt.savefig(filename, dpi=150, bbox_inches='tight')
-    else:
-        plt.show()
-    plt.close()
+    plt.plot(time, waveforms.T, color=group_colors[group], alpha=0.3, linewidth=0.4)
+    plt.plot(time, np.mean(waveforms, axis=0), color=group_colors[group], linewidth=2, label=f"{group} mean")
 
 def plot_summary_metrics(metrics_by_group):
     magnitudes = ['ms', 'mV', 'mV/ms', 'mV/ms']
@@ -152,18 +163,22 @@ def main():
         except KeyError:
             break
 
-        try:
-            print("Getting data from Trial",trial_name)
-            waveforms_by_group = analyze_windows_within_trial(data, col_signal, key_col)
-        except:
-            print(f"Invalid channel in trial {n_trial}")
-            n_trial += 1
-            continue
+        # try:
+        #     print("Getting data from Trial",trial_name)
+        #     waveforms_by_group = analyze_blocks_by_shutter(data, col_signal, key_col,dt,w_l,w_r)
+        # except:
+        #     print(f"Invalid channel in trial {n_trial}")
+        #     n_trial += 1
+        #     continue
+        waveforms_by_group = analyze_blocks_by_shutter(data, col_signal, key_col, dt, w_l, w_r)
 
+        plt.figure(figsize=(8, 5))
+        plt.title(f"Trial {n_trial} - Waveforms by Group")
 
         for group in ['control', 'laser']:
             waveforms = np.array(waveforms_by_group[group])
-            print("Analyzing group ", group)
+            print("Analyzing group:", group)
+
             if len(waveforms) == 0:
                 continue
 
@@ -174,8 +189,19 @@ def main():
                 metrics_by_group[group] = []
             metrics_by_group[group].append(metrics)
 
-            plot_trial_waveforms(waveforms, label, group, output_dir)
+            plot_trial_waveforms(waveforms, group)  # label no es necesario aquí
 
+        plt.xlabel("ms")
+        plt.ylabel("mV")
+        plt.legend(title="Groups")
+        plt.tight_layout()
+
+        if output_dir:
+            filename = os.path.join(output_dir, f"trial{n_trial}_waveforms.png")
+            plt.savefig(filename, dpi=150, bbox_inches='tight')
+
+        plt.show()
+        plt.close()
 
 
         n_trial += 1
@@ -190,7 +216,7 @@ def main():
             avg_metrics[group][key] = np.mean([m[key] for m in metrics_list])
 
     plot_summary_metrics(avg_metrics)
-    plot_difference_metrics(avg_metrics)
+    # plot_difference_metrics(avg_metrics)
 
 if __name__ == "__main__":
     main()
