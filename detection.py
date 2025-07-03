@@ -193,7 +193,7 @@ def plot_signal_with_peaks_and_bursts(ax, v_signal, time, peaks, peaks_time, bur
 # Input: h5_file_path: path to the file
 #        trials: String with trials separated by whitespace e.g. "1 2 5 7"
 #        headers: label to each column in the dataframe
-def read_h5File(h5_file_path, trials=None, headers=''):
+def read_h5File(h5_file_path, trials=None, headers='', column_index=None):
     # Step 2: Read the H5 file
     with h5py.File(h5_file_path, 'r') as f:
         # print("H5 file structure:")
@@ -225,8 +225,12 @@ def read_h5File(h5_file_path, trials=None, headers=''):
                 data = dset[()]  # Get "values"
 
                 # TODO set index in config file
-                columns = range(data.shape[1])  # Replace with specific column indices if needed
+                if column_index is None:
+                    columns = range(data.shape[1])  # Replace with specific column indices if needed
+                else:
+                    columns = column_index
 
+                print(columns)
                 # Extract signal and store with trial label
                 signal = data[:, columns]
                 df_trial = pd.DataFrame(signal, columns=[f"Col{i}" for i in columns])
@@ -326,12 +330,20 @@ def main(h5_file_path, config_file_path):
     max_spike_dist = float(config['Burst detection']['max_spike_dist'])
     min_burst_dist = float(config['Burst detection']['min_burst_dist'])
 
-    df_signal = read_h5File(h5_file_path, trials)
-
     # Parse additional input parameters from the config file
     trial_types = config['Input']['type'].strip('"').split()
     column_names = config['Input']['column_names'].strip('"').split()
+    try:
+        column_index = config['Input']['column_index'].strip().split()
+        column_index = [int(x) for x in column_index]
+    except:
+        column_index = None
 
+    # TODO inlude input check: name, 
+
+
+    df_signal = read_h5File(h5_file_path, trials, column_index=column_index)
+    
     # Update column names in the dataframe
     df_signal.columns = column_names + ['Trial']
 
@@ -399,9 +411,9 @@ def main(h5_file_path, config_file_path):
                 max_length = max(w.shape[0] for w in burst_waveforms)
 
                 burst_waveforms_padded = np.array([np.pad(w, (0, max_length - w.shape[0]), mode='constant') if w.shape[0] < max_length else w[:max_length] for w in burst_waveforms])
-            else:
+            else: # if no burst detected
                 burst_waveforms_padded = np.array([])
-            
+
             # complete dataframe with all information
             extended_data.append({
                 'Trial': trial_id,
