@@ -239,6 +239,8 @@ def main(config_file_path, data_frame_path):
 
     try:
         df_metrics = pd.read_pickle(f'{file_name}')
+
+        print(f"{RED}{'Warning: Metrics file already exists'}{RESET}")
         print(f"Warning: Metrics file already exists")
 
         print(df_metrics)
